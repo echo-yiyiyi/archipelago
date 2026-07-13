@@ -50,9 +50,48 @@ The script will:
 ./run.sh task_9ba58a6197114140877a1df1754d2993
 ```
 
+## Running up to 32 Tasks Concurrently
+
+Use the separate concurrency launcher. It preserves `main.py` and invokes it
+once per task, so the agent execution command and configuration are unchanged.
+Each task receives an isolated Docker Compose project and host port; sharing the
+normal `localhost:8080` environment would mix task files and results.
+
+```bash
+# Run indices 0 through 31 (at most 32 at once)
+./run_concurrency.sh 0-31
+
+# Explicit task IDs or indices; comma-separated ranges are also supported
+./run_concurrency.sh --concurrency 32 0,4,9 task_9ba58a6197114140877a1df1754d2993
+
+# Queue all dataset tasks while keeping at most 32 running
+./run_concurrency.sh --all --concurrency 32
+```
+
+The launcher allocates ports `18080`–`18111` by default. Change the range when
+those ports are occupied:
+
+```bash
+./run_concurrency.sh --base-port 28080 0-31
+```
+
+Run-level files are written to `output/concurrent/<run-id>/`:
+
+- `runner.log` — serialized, human-readable launcher events.
+- `events.jsonl` — the same start/finish/failure events as one JSON object per line.
+- `logs/worker-<n>_<task>.log` — complete stdout/stderr for each task; task output
+  never streams into the shared terminal.
+- `manifest.json` — final results and paths to each task log.
+
+Task artifacts are stored under `tasks/<task_id>/` inside the same run directory,
+so separate concurrent runs never overwrite one another. Containers are removed
+as each task finishes; pass `--keep-environments` when debugging a task
+environment.
+
 ## Output
 
-Results are saved to `output/<task_id>/`:
+For a concurrent run, results are saved to
+`output/concurrent/<run-id>/tasks/<task_id>/`:
 
 | File | Description |
 |------|-------------|

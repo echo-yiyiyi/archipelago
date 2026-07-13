@@ -32,6 +32,10 @@ AGENTS_DIR = Path(os.environ.get("AGENTS_DIR", ARCHIPELAGO_DIR / "agents"))
 GRADING_DIR = Path(os.environ.get("GRADING_DIR", ARCHIPELAGO_DIR / "grading"))
 
 ENV_URL = os.environ.get("ENV_URL", "http://localhost:8080")
+# The concurrent launcher sets this to its unique run directory so every task
+# artifact stays with the logs and manifest for that run. Single-task runs keep
+# the existing output/<task_id>/ location.
+TASK_OUTPUT_ROOT = Path(os.environ.get("TASK_OUTPUT_ROOT", EXAMPLE_DIR / "output"))
 HF_DATASET = "mercor/apex-agents"
 SUBSYSTEMS = ["filesystem", ".apps_data"]
 
@@ -185,7 +189,7 @@ def main():
 
     trajectory_id = f"hf_{task['task_id']}_{uuid.uuid4().hex[:8]}"
     grading_run_id = f"gr_{uuid.uuid4().hex[:8]}"
-    output_dir = EXAMPLE_DIR / "output" / task["task_id"]
+    output_dir = TASK_OUTPUT_ROOT / task["task_id"]
     output_dir.mkdir(parents=True, exist_ok=True)
 
     log("=" * 60)

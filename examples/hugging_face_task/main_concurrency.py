@@ -1,0 +1,415 @@
+#!/usr/bin/env python3
+"""Run complete Hugging Face task pipelines concurrently.
+
+The existing main.py remains the single-task implementation.  This file only
+allocates isolated Docker environments and invokes main.py once per task, so
+environment setup, agent execution, snapshots, and grading keep their original
+logic.
+"""
+
+from __future__ import annotations
+
+import argparse
+import concurrent.futures
+import json
+import os
+import queue
+import re
+import shutil
+import socket
+import subprocess
+import sys
+import threading
+import time
+import uuid
+from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
+from pathlib import Path
+
+EXAMPLE_DIR = Path(os.environ.get("EXAMPLE_DIR", Path(__file__).parent)).resolve()
+ARCHIPELAGO_DIR = Path(
+    os.environ.get("ARCHIPELAGO_DIR", EXAMPLE_DIR.parent.parent)
+).resolve()
+SOURCE_ENVIRONMENT_DIR = Path(
+    os.environ.get("ENVIRONMENT_DIR", ARCHIPELAGO_DIR / "environment")
+).resolve()
+AGENTS_DIR = Path(os.environ.get("AGENTS_DIR", ARCHIPELAGO_DIR / "agents")).resolve()
+DEFAULT_IMAGE = "archipelago-hf-environment:concurrency"
+
+
+@dataclass(frozen=True)
+class WorkerSlot:
+    number: int
+    port: int
+
+
+@dataclass
+class TaskResult:
+    selector: str
+    worker: int
+    port: int
+    returncode: int
+    log_file: str
+    elapsed_seconds: float
+    error: str | None = None
+
+
+class RunLogger:
+    """Serialize launcher output while task subprocesses write to their own files."""
+
+    def __init__(self, run_dir: Path) -> None:
+        self._lock = threading.Lock()
+        self._text_log = run_dir / "runner.log"
+        self._event_log = run_dir / "events.jsonl"
+
+    def log(self, message: str, *, event: str = "info", **fields: object) -> None:
+        now = datetime.now(timezone.utc)
+        timestamp = now.isoformat(timespec="milliseconds").replace("+00:00", "Z")
+        context = " ".join(f"{key}={value}" for key, value in fields.items())
+        line = f"[{timestamp}] {event.upper()}: {message}"
+        if context:
+            line = f"{line} | {context}"
+        record = {"timestamp": timestamp, "event": event, "message": message, **fields}
+
+        # ThreadPoolExecutor workers use this shared lock, so a launcher event
+        # is always a complete line in both the terminal and run-level logs.
+        with self._lock:
+            print(line, flush=True)
+            with self._text_log.open("a") as text_log:
+                text_log.write(line + "\n")
+            with self._event_log.open("a") as event_log:
+                event_log.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+
+_run_logger: RunLogger | None = None
+
+
+def log(message: str, *, event: str = "info", **fields: object) -> None:
+    """Log a launcher event without allowing concurrent workers to interleave it."""
+    if _run_logger is None:
+        print(f"[{time.strftime('%H:%M:%S')}] {event.upper()}: {message}", flush=True)
+        return
+    _run_logger.log(message, event=event, **fields)
+
+
+def parse_selectors(values: list[str]) -> list[str]:
+    """Expand numeric ranges and comma lists while preserving task IDs."""
+    selectors: list[str] = []
+    for value in values:
+        for item in value.split(","):
+            item = item.strip()
+            match = re.fullmatch(r"(\d+)-(\d+)", item)
+            if match:
+                start, end = map(int, match.groups())
+                if end < start:
+                    raise ValueError(f"invalid range {item!r}: end is before start")
+                selectors.extend(str(index) for index in range(start, end + 1))
+            elif item:
+                selectors.append(item)
+
+    seen: set[str] = set()
+    duplicates = {item for item in selectors if item in seen or seen.add(item)}
+    if duplicates:
+        raise ValueError(f"duplicate task selectors: {', '.join(sorted(duplicates))}")
+    return selectors
+
+
+def selectors_from_dataset() -> list[str]:
+    """Load every task ID; imported lazily so --help needs no HF dependency."""
+    from huggingface_hub import hf_hub_download
+
+    path = hf_hub_download(
+        "mercor/apex-agents", "tasks_and_rubrics.json", repo_type="dataset"
+    )
+    with open(path) as handle:
+        return [task["task_id"] for task in json.load(handle)]
+
+
+def validate_ports(base_port: int, count: int) -> None:
+    """Fail before starting work if one of the requested ports is occupied."""
+    sockets: list[socket.socket] = []
+    try:
+        for port in range(base_port, base_port + count):
+            listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            listener.bind(("127.0.0.1", port))
+            sockets.append(listener)
+    except OSError as error:
+        raise RuntimeError(f"port {port} is unavailable: {error}") from error
+    finally:
+        for listener in sockets:
+            listener.close()
+
+
+def build_environment_image(image: str) -> None:
+    """Build once so 32 compose projects do not rebuild the same image."""
+    log("Building shared environment image", image=image)
+    subprocess.run(
+        [
+            "docker",
+            "build",
+            "--tag",
+            image,
+            "--file",
+            str(SOURCE_ENVIRONMENT_DIR / "Dockerfile"),
+            str(ARCHIPELAGO_DIR),
+        ],
+        check=True,
+    )
+
+
+def compose_project_name(run_id: str, worker: int) -> str:
+    slug = re.sub(r"[^a-z0-9_-]", "_", run_id.lower()).strip("_-")
+    slug = slug[:40] or uuid.uuid4().hex[:8]
+    return f"archipelago_hf_{slug}_w{worker:02d}"
+
+
+def write_worker_environment(worker_dir: Path, port: int, image: str) -> None:
+    """Create one compose directory with an isolated project and host port."""
+    worker_dir.mkdir(parents=True, exist_ok=True)
+
+    source_env = SOURCE_ENVIRONMENT_DIR / ".env"
+    source_env_example = SOURCE_ENVIRONMENT_DIR / ".env.example"
+    if source_env.exists():
+        shutil.copy2(source_env, worker_dir / ".env")
+    elif source_env_example.exists():
+        shutil.copy2(source_env_example, worker_dir / ".env")
+    else:
+        (worker_dir / ".env").touch()
+
+    # There is deliberately no container_name. COMPOSE_PROJECT_NAME supplies a
+    # unique name, and each service maps a different host port to container 8080.
+    compose = f'''services:
+  environment:
+    image: {json.dumps(image)}
+    pull_policy: never
+    ports:
+      - "127.0.0.1:{port}:8080"
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+'''
+    (worker_dir / "docker-compose.yml").write_text(compose)
+
+
+def cleanup_environment(worker_dir: Path, environment: dict[str, str]) -> None:
+    subprocess.run(
+        ["docker", "compose", "down", "-v", "--remove-orphans"],
+        cwd=worker_dir,
+        env=environment,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+
+
+def safe_log_name(selector: str) -> str:
+    return re.sub(r"[^A-Za-z0-9_.-]", "_", selector)[:120] or "task"
+
+
+def run_task(
+    selector: str,
+    slot: WorkerSlot,
+    run_dir: Path,
+    image: str,
+    keep_environments: bool,
+) -> TaskResult:
+    """Invoke the unchanged single-task main.py in one isolated environment."""
+    started = time.monotonic()
+    worker_dir = run_dir / "environments" / f"worker-{slot.number:02d}"
+    log_file = run_dir / "logs" / (
+        f"worker-{slot.number:02d}_{safe_log_name(selector)}.log"
+    )
+    write_worker_environment(worker_dir, slot.port, image)
+
+    environment = os.environ.copy()
+    environment.update(
+        {
+            "EXAMPLE_DIR": str(EXAMPLE_DIR),
+            "ARCHIPELAGO_DIR": str(ARCHIPELAGO_DIR),
+            "AGENTS_DIR": str(AGENTS_DIR),
+            "ENVIRONMENT_DIR": str(worker_dir),
+            "ENV_URL": f"http://127.0.0.1:{slot.port}",
+            # Keep all task artifacts under this concurrent run rather than
+            # reusing output/<task_id>/ across separate runs.
+            "TASK_OUTPUT_ROOT": str(run_dir / "tasks"),
+            "COMPOSE_PROJECT_NAME": compose_project_name(
+                run_dir.name, slot.number
+            ),
+        }
+    )
+
+    returncode = 1
+    error_message: str | None = None
+    try:
+        command = [
+            "uv",
+            "run",
+            "python",
+            str(EXAMPLE_DIR / "main.py"),
+            selector,
+        ]
+        with open(log_file, "w") as output:
+            completed = subprocess.run(
+                command,
+                cwd=AGENTS_DIR,
+                env=environment,
+                stdout=output,
+                stderr=subprocess.STDOUT,
+                check=False,
+            )
+        returncode = completed.returncode
+    except Exception as error:  # Preserve other tasks and record launcher errors.
+        error_message = f"{type(error).__name__}: {error}"
+    finally:
+        if not keep_environments:
+            cleanup_environment(worker_dir, environment)
+
+    return TaskResult(
+        selector=selector,
+        worker=slot.number,
+        port=slot.port,
+        returncode=returncode,
+        log_file=str(log_file),
+        elapsed_seconds=round(time.monotonic() - started, 1),
+        error=error_message,
+    )
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "selectors",
+        nargs="*",
+        help="Task IDs, indices, comma lists, or numeric ranges (for example 0-31).",
+    )
+    parser.add_argument("--all", action="store_true", help="Queue every dataset task.")
+    parser.add_argument(
+        "--concurrency", type=int, default=32, help="Maximum running tasks (default: 32)."
+    )
+    parser.add_argument(
+        "--base-port", type=int, default=18080, help="First environment host port."
+    )
+    parser.add_argument(
+        "--environment-image", default=DEFAULT_IMAGE, help="Shared Docker image tag."
+    )
+    parser.add_argument(
+        "--skip-build", action="store_true", help="Use an already-built environment image."
+    )
+    parser.add_argument("--run-id", help="Run output directory name.")
+    parser.add_argument(
+        "--keep-environments",
+        action="store_true",
+        help="Keep the last container in each worker slot for debugging.",
+    )
+    args = parser.parse_args()
+
+    if args.concurrency < 1:
+        parser.error("--concurrency must be at least 1")
+    if not 1 <= args.base_port <= 65536 - args.concurrency:
+        parser.error("--base-port leaves insufficient valid ports")
+    if args.all and args.selectors:
+        parser.error("use either selectors or --all, not both")
+
+    try:
+        selectors = selectors_from_dataset() if args.all else parse_selectors(args.selectors)
+    except ValueError as error:
+        parser.error(str(error))
+    if not selectors:
+        parser.error("provide selectors (for example 0-31) or use --all")
+
+    worker_count = min(args.concurrency, len(selectors))
+    try:
+        validate_ports(args.base_port, worker_count)
+    except RuntimeError as error:
+        parser.error(str(error))
+
+    run_id = args.run_id or time.strftime("run_%Y%m%d_%H%M%S_") + uuid.uuid4().hex[:8]
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+", run_id):
+        parser.error("--run-id may contain only letters, digits, _, -, and .")
+    run_dir = EXAMPLE_DIR / "output" / "concurrent" / run_id
+    (run_dir / "logs").mkdir(parents=True, exist_ok=False)
+    global _run_logger
+    _run_logger = RunLogger(run_dir)
+
+    if not args.skip_build:
+        try:
+            build_environment_image(args.environment_image)
+        except (OSError, subprocess.CalledProcessError) as error:
+            log("Failed to build environment image", event="error", error=str(error))
+            return 1
+
+    available_slots: queue.Queue[WorkerSlot] = queue.Queue()
+    for number in range(worker_count):
+        available_slots.put(WorkerSlot(number, args.base_port + number))
+
+    def scheduled_task(selector: str) -> TaskResult:
+        slot = available_slots.get()
+        try:
+            log(
+                "Task started",
+                event="task_started",
+                task=selector,
+                worker=slot.number,
+                port=slot.port,
+            )
+            return run_task(
+                selector, slot, run_dir, args.environment_image, args.keep_environments
+            )
+        finally:
+            available_slots.put(slot)
+
+    log(
+        "Run started",
+        event="run_started",
+        task_count=len(selectors),
+        concurrency=worker_count,
+    )
+    log("Run files", run_dir=str(run_dir))
+    results: list[TaskResult] = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=worker_count) as executor:
+        future_to_selector = {
+            executor.submit(scheduled_task, selector): selector for selector in selectors
+        }
+        for future in concurrent.futures.as_completed(future_to_selector):
+            result = future.result()
+            results.append(result)
+            log(
+                "Task finished",
+                event="task_finished" if result.returncode == 0 else "task_failed",
+                task=result.selector,
+                worker=result.worker,
+                port=result.port,
+                returncode=result.returncode,
+                elapsed_seconds=result.elapsed_seconds,
+                log_file=result.log_file,
+                error=result.error,
+            )
+
+    order = {selector: index for index, selector in enumerate(selectors)}
+    results.sort(key=lambda item: order[item.selector])
+    failed = [result for result in results if result.returncode != 0]
+    manifest = {
+        "run_id": run_id,
+        "requested_concurrency": args.concurrency,
+        "worker_count": worker_count,
+        "environment_image": args.environment_image,
+        "results": [asdict(result) for result in results],
+    }
+    (run_dir / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    log(
+        "Run finished",
+        event="run_finished",
+        succeeded=len(results) - len(failed),
+        failed=len(failed),
+        manifest=str(run_dir / "manifest.json"),
+    )
+    return 1 if failed else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
