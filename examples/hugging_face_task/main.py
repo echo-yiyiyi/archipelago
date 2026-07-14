@@ -32,6 +32,7 @@ AGENTS_DIR = Path(os.environ.get("AGENTS_DIR", ARCHIPELAGO_DIR / "agents"))
 GRADING_DIR = Path(os.environ.get("GRADING_DIR", ARCHIPELAGO_DIR / "grading"))
 
 ENV_URL = os.environ.get("ENV_URL", "http://localhost:8080")
+ENV_CONTAINER_NETWORK = os.environ.get("ENV_CONTAINER_NETWORK")
 # The concurrent launcher sets this to its unique run directory so every task
 # artifact stays with the logs and manifest for that run. Single-task runs keep
 # the existing output/<task_id>/ location.
@@ -90,15 +91,68 @@ def populate_subsystems(root: Path, output_dir: Path, label: str):
 def wait_for_health(url: str, timeout: int = 120) -> bool:
     """Wait for environment to be healthy."""
     start = time.time()
+    last_error = None
     while time.time() - start < timeout:
         try:
             resp = httpx.get(f"{url}/health", timeout=5)
             if resp.status_code == 200:
                 return True
-        except httpx.RequestError:
-            pass
+            last_error = f"HTTP {resp.status_code}: {resp.text[:200]}"
+        except httpx.RequestError as error:
+            last_error = str(error)
         time.sleep(1)
+    if last_error:
+        log(f"Last health check error: {last_error}")
     return False
+
+
+def use_container_network_url():
+    """Use the environment container's internal IP when requested by the launcher."""
+    global ENV_URL
+
+    if not ENV_CONTAINER_NETWORK:
+        return
+
+    compose_ps = subprocess.run(
+        ["docker", "compose", "ps", "-q", "environment"],
+        cwd=ENVIRONMENT_DIR,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    container_id = compose_ps.stdout.strip()
+    if not container_id:
+        raise RuntimeError("Docker Compose did not return an environment container ID")
+
+    inspect_result = subprocess.run(
+        ["docker", "inspect", container_id],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    container = json.loads(inspect_result.stdout)[0]
+    networks = container["NetworkSettings"]["Networks"]
+    network = networks.get(ENV_CONTAINER_NETWORK)
+    if not network:
+        available = ", ".join(sorted(networks)) or "none"
+        raise RuntimeError(
+            f"Container is not attached to {ENV_CONTAINER_NETWORK!r}; "
+            f"available networks: {available}"
+        )
+
+    address = network.get("IPAddress")
+    if not address:
+        raise RuntimeError(
+            f"Container has no IPv4 address on {ENV_CONTAINER_NETWORK!r}"
+        )
+
+    ENV_URL = f"http://{address}:8080"
+    for key in ("NO_PROXY", "no_proxy"):
+        hosts = [host for host in os.environ.get(key, "").split(",") if host]
+        if address not in hosts:
+            hosts.append(address)
+        os.environ[key] = ",".join(hosts)
+    log(f"Using environment container URL: {ENV_URL}")
 
 
 def start_environment():
@@ -123,6 +177,20 @@ def start_environment():
     )
     if result.returncode != 0:
         log("ERROR: Failed to start environment")
+        sys.exit(1)
+
+    try:
+        use_container_network_url()
+    except (
+        KeyError,
+        IndexError,
+        json.JSONDecodeError,
+        OSError,
+        RuntimeError,
+        subprocess.CalledProcessError,
+    ) as error:
+        subprocess.run(["docker", "compose", "logs"], cwd=ENVIRONMENT_DIR)
+        log(f"ERROR: Failed to resolve environment container address: {error}")
         sys.exit(1)
 
     log("Waiting for environment to be healthy...")
@@ -274,7 +342,8 @@ Don't over-explain. Be concise but show your thinking.
 """
     initial_messages = [
         {"role": "system", "content": system_prompt},
-        {"role": "user", "content": task["prompt"]},
+        # {"role": "user", "content": task["prompt"]},
+        {"role": "user", "content": "please use the toolbelt_list_tools tool to list the tools available and then add the code execution tool and use it to curl google.com and tell me the response."},
     ]
     with open(output_dir / "initial_messages.json", "w") as f:
         json.dump(initial_messages, f, indent=2)

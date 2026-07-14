@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import concurrent.futures
+import ipaddress
 import json
 import os
 import queue
@@ -35,6 +36,10 @@ SOURCE_ENVIRONMENT_DIR = Path(
 ).resolve()
 AGENTS_DIR = Path(os.environ.get("AGENTS_DIR", ARCHIPELAGO_DIR / "agents")).resolve()
 DEFAULT_IMAGE = "archipelago-hf-environment:concurrency"
+DEFAULT_PROXY_IMAGE = "archipelago-hf-runtime-proxy:concurrency"
+RUNTIME_PROXY_URL = "http://squid:3128"
+DEFAULT_RUNTIME_NETWORK_CIDR = "10.253.0.0/16"
+RUNTIME_NETWORK_PREFIX = 28
 
 
 @dataclass(frozen=True)
@@ -157,14 +162,126 @@ def build_environment_image(image: str) -> None:
     )
 
 
+def build_proxy_image(image: str) -> None:
+    """Build the small runtime-only proxy image once per launcher run."""
+    log("Building shared runtime proxy image", image=image)
+    subprocess.run(
+        [
+            "docker",
+            "build",
+            "--tag",
+            image,
+            str(EXAMPLE_DIR / "proxy"),
+        ],
+        check=True,
+    )
+
+
 def compose_project_name(run_id: str, worker: int) -> str:
     slug = re.sub(r"[^a-z0-9_-]", "_", run_id.lower()).strip("_-")
     slug = slug[:40] or uuid.uuid4().hex[:8]
     return f"archipelago_hf_{slug}_w{worker:02d}"
 
 
-def write_worker_environment(worker_dir: Path, port: int, image: str) -> None:
-    """Create one compose directory with an isolated project and host port."""
+def shared_resource_name(run_id: str, suffix: str) -> str:
+    slug = re.sub(r"[^a-z0-9_-]", "_", run_id.lower()).strip("_-")
+    slug = slug[:40] or uuid.uuid4().hex[:8]
+    return f"archipelago_hf_{slug}_{suffix}"
+
+
+def allocate_runtime_subnets(count: int) -> list[str]:
+    """Allocate small explicit subnets without consuming Docker default pools."""
+    cidr = os.environ.get("RUNTIME_NETWORK_CIDR", DEFAULT_RUNTIME_NETWORK_CIDR)
+    network = ipaddress.ip_network(cidr)
+    if not isinstance(network, ipaddress.IPv4Network):
+        raise ValueError("RUNTIME_NETWORK_CIDR must be an IPv4 network")
+    if network.prefixlen > RUNTIME_NETWORK_PREFIX:
+        raise ValueError(
+            f"RUNTIME_NETWORK_CIDR must be /{RUNTIME_NETWORK_PREFIX} or larger"
+        )
+    capacity = 1 << (RUNTIME_NETWORK_PREFIX - network.prefixlen)
+    if count > capacity:
+        raise ValueError(
+            f"RUNTIME_NETWORK_CIDR {network} provides {capacity} worker networks, "
+            f"but {count} are required"
+        )
+    subnet_size = 1 << (32 - RUNTIME_NETWORK_PREFIX)
+    start = int(network.network_address)
+    return [
+        str(ipaddress.ip_network((start + index * subnet_size, RUNTIME_NETWORK_PREFIX)))
+        for index in range(count)
+    ]
+
+
+def write_shared_proxy(
+    run_dir: Path, proxy_image: str, runtime_networks: list[tuple[str, str]]
+) -> Path:
+    """Write the one Squid service shared by every worker in this run."""
+    proxy_dir = run_dir / "proxy"
+    proxy_dir.mkdir(parents=True)
+    service_networks = "\n".join(
+        f"""      runtime_{index:02d}:
+        aliases:
+          - squid"""
+        for index in range(len(runtime_networks))
+    )
+    network_definitions = "\n".join(
+        f"""  runtime_{index:02d}:
+    name: {json.dumps(network)}
+    internal: true
+    attachable: true
+    ipam:
+      config:
+        - subnet: {json.dumps(subnet)}"""
+        for index, (network, subnet) in enumerate(runtime_networks)
+    )
+    compose = f"""services:
+  squid:
+    image: {json.dumps(proxy_image)}
+    pull_policy: never
+    networks:
+      egress:
+        gw_priority: 1
+{service_networks}
+    healthcheck:
+      test: ["CMD-SHELL", "squidclient -h 127.0.0.1 -p 3128 mgr:info >/dev/null 2>&1"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+      start_period: 2s
+
+networks:
+  egress: {{}}
+{network_definitions}
+"""
+    (proxy_dir / "docker-compose.yml").write_text(compose)
+    return proxy_dir
+
+
+def start_shared_proxy(proxy_dir: Path, environment: dict[str, str]) -> None:
+    subprocess.run(
+        ["docker", "compose", "up", "-d", "--wait", "--wait-timeout", "60"],
+        cwd=proxy_dir,
+        env=environment,
+        check=True,
+    )
+
+
+def cleanup_shared_proxy(proxy_dir: Path, environment: dict[str, str]) -> None:
+    subprocess.run(
+        ["docker", "compose", "down", "-v", "--remove-orphans"],
+        cwd=proxy_dir,
+        env=environment,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+
+
+def write_worker_environment(
+    worker_dir: Path, port: int, image: str, runtime_network: str
+) -> None:
+    """Create one worker attached only to the run-scoped internal network."""
     worker_dir.mkdir(parents=True, exist_ok=True)
 
     source_env = SOURCE_ENVIRONMENT_DIR / ".env"
@@ -176,6 +293,8 @@ def write_worker_environment(worker_dir: Path, port: int, image: str) -> None:
     else:
         (worker_dir / ".env").touch()
 
+    no_proxy = os.environ.get("SQUID_NO_PROXY", "localhost,127.0.0.1,environment")
+
     # There is deliberately no container_name. COMPOSE_PROJECT_NAME supplies a
     # unique name, and each service maps a different host port to container 8080.
     compose = f'''services:
@@ -184,6 +303,15 @@ def write_worker_environment(worker_dir: Path, port: int, image: str) -> None:
     pull_policy: never
     ports:
       - "127.0.0.1:{port}:8080"
+    networks:
+      - runtime
+    environment:
+      HTTP_PROXY: {json.dumps(RUNTIME_PROXY_URL)}
+      HTTPS_PROXY: {json.dumps(RUNTIME_PROXY_URL)}
+      NO_PROXY: {json.dumps(no_proxy)}
+      http_proxy: {json.dumps(RUNTIME_PROXY_URL)}
+      https_proxy: {json.dumps(RUNTIME_PROXY_URL)}
+      no_proxy: {json.dumps(no_proxy)}
     env_file:
       - .env
     healthcheck:
@@ -192,6 +320,11 @@ def write_worker_environment(worker_dir: Path, port: int, image: str) -> None:
       timeout: 10s
       retries: 3
       start_period: 10s
+
+networks:
+  runtime:
+    external: true
+    name: {json.dumps(runtime_network)}
 '''
     (worker_dir / "docker-compose.yml").write_text(compose)
 
@@ -217,6 +350,7 @@ def run_task(
     run_dir: Path,
     image: str,
     keep_environments: bool,
+    runtime_network: str,
 ) -> TaskResult:
     """Invoke the unchanged single-task main.py in one isolated environment."""
     started = time.monotonic()
@@ -224,7 +358,7 @@ def run_task(
     log_file = run_dir / "logs" / (
         f"worker-{slot.number:02d}_{safe_log_name(selector)}.log"
     )
-    write_worker_environment(worker_dir, slot.port, image)
+    write_worker_environment(worker_dir, slot.port, image, runtime_network)
 
     environment = os.environ.copy()
     environment.update(
@@ -234,6 +368,10 @@ def run_task(
             "AGENTS_DIR": str(AGENTS_DIR),
             "ENVIRONMENT_DIR": str(worker_dir),
             "ENV_URL": f"http://127.0.0.1:{slot.port}",
+            # Docker may ignore published ports for containers attached only to
+            # an internal network. main.py resolves and uses this network's
+            # container IP after Compose starts the environment.
+            "ENV_CONTAINER_NETWORK": runtime_network,
             # Keep all task artifacts under this concurrent run rather than
             # reusing output/<task_id>/ across separate runs.
             "TASK_OUTPUT_ROOT": str(run_dir / "tasks"),
@@ -298,7 +436,12 @@ def main() -> int:
         "--environment-image", default=DEFAULT_IMAGE, help="Shared Docker image tag."
     )
     parser.add_argument(
-        "--skip-build", action="store_true", help="Use an already-built environment image."
+        "--proxy-image", default=DEFAULT_PROXY_IMAGE, help="Shared runtime proxy image tag."
+    )
+    parser.add_argument(
+        "--skip-build",
+        action="store_true",
+        help="Use already-built environment and proxy images.",
     )
     parser.add_argument("--run-id", help="Run output directory name.")
     parser.add_argument(
@@ -324,6 +467,10 @@ def main() -> int:
 
     worker_count = min(args.concurrency, len(selectors))
     try:
+        runtime_subnets = allocate_runtime_subnets(worker_count)
+    except ValueError as error:
+        parser.error(str(error))
+    try:
         validate_ports(args.base_port, worker_count)
     except RuntimeError as error:
         parser.error(str(error))
@@ -339,9 +486,24 @@ def main() -> int:
     if not args.skip_build:
         try:
             build_environment_image(args.environment_image)
+            build_proxy_image(args.proxy_image)
         except (OSError, subprocess.CalledProcessError) as error:
-            log("Failed to build environment image", event="error", error=str(error))
+            log("Failed to build run images", event="error", error=str(error))
             return 1
+
+    runtime_networks = [
+        (shared_resource_name(run_id, f"runtime_{number:02d}"), runtime_subnets[number])
+        for number in range(worker_count)
+    ]
+    proxy_dir = write_shared_proxy(run_dir, args.proxy_image, runtime_networks)
+    proxy_environment = os.environ.copy()
+    proxy_environment["COMPOSE_PROJECT_NAME"] = shared_resource_name(run_id, "proxy")
+    try:
+        start_shared_proxy(proxy_dir, proxy_environment)
+    except (OSError, subprocess.CalledProcessError) as error:
+        cleanup_shared_proxy(proxy_dir, proxy_environment)
+        log("Failed to start shared runtime proxy", event="error", error=str(error))
+        return 1
 
     available_slots: queue.Queue[WorkerSlot] = queue.Queue()
     for number in range(worker_count):
@@ -358,7 +520,12 @@ def main() -> int:
                 port=slot.port,
             )
             return run_task(
-                selector, slot, run_dir, args.environment_image, args.keep_environments
+                selector,
+                slot,
+                run_dir,
+                args.environment_image,
+                args.keep_environments,
+                runtime_networks[slot.number][0],
             )
         finally:
             available_slots.put(slot)
@@ -368,27 +535,33 @@ def main() -> int:
         event="run_started",
         task_count=len(selectors),
         concurrency=worker_count,
+        runtime_proxy=RUNTIME_PROXY_URL,
+        runtime_network_count=len(runtime_networks),
     )
     log("Run files", run_dir=str(run_dir))
     results: list[TaskResult] = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=worker_count) as executor:
-        future_to_selector = {
-            executor.submit(scheduled_task, selector): selector for selector in selectors
-        }
-        for future in concurrent.futures.as_completed(future_to_selector):
-            result = future.result()
-            results.append(result)
-            log(
-                "Task finished",
-                event="task_finished" if result.returncode == 0 else "task_failed",
-                task=result.selector,
-                worker=result.worker,
-                port=result.port,
-                returncode=result.returncode,
-                elapsed_seconds=result.elapsed_seconds,
-                log_file=result.log_file,
-                error=result.error,
-            )
+    try:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=worker_count) as executor:
+            future_to_selector = {
+                executor.submit(scheduled_task, selector): selector for selector in selectors
+            }
+            for future in concurrent.futures.as_completed(future_to_selector):
+                result = future.result()
+                results.append(result)
+                log(
+                    "Task finished",
+                    event="task_finished" if result.returncode == 0 else "task_failed",
+                    task=result.selector,
+                    worker=result.worker,
+                    port=result.port,
+                    returncode=result.returncode,
+                    elapsed_seconds=result.elapsed_seconds,
+                    log_file=result.log_file,
+                    error=result.error,
+                )
+    finally:
+        if not args.keep_environments:
+            cleanup_shared_proxy(proxy_dir, proxy_environment)
 
     order = {selector: index for index, selector in enumerate(selectors)}
     results.sort(key=lambda item: order[item.selector])
@@ -398,6 +571,10 @@ def main() -> int:
         "requested_concurrency": args.concurrency,
         "worker_count": worker_count,
         "environment_image": args.environment_image,
+        "proxy_image": args.proxy_image,
+        "runtime_networks": [
+            {"name": name, "subnet": subnet} for name, subnet in runtime_networks
+        ],
         "results": [asdict(result) for result in results],
     }
     (run_dir / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")

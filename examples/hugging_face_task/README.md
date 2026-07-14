@@ -57,6 +57,13 @@ once per task, so the agent execution command and configuration are unchanged.
 Each task receives an isolated Docker Compose project and host port; sharing the
 normal `localhost:8080` environment would mix task files and results.
 
+Each run also starts one shared Squid container. Every worker has its own
+`internal: true` Docker network and can reach the shared proxy as
+`http://squid:3128`, but workers cannot reach one another or bypass the proxy
+for direct Internet access. The proxy allowlist lives in `proxy/squid.conf`.
+The launcher assigns explicit `/28` subnets from `10.253.0.0/16`; set
+`RUNTIME_NETWORK_CIDR` to a different non-overlapping IPv4 CIDR when needed.
+
 ```bash
 # Run indices 0 through 31 (at most 32 at once)
 ./run_concurrency.sh 0-31
@@ -86,7 +93,8 @@ Run-level files are written to `output/concurrent/<run-id>/`:
 Task artifacts are stored under `tasks/<task_id>/` inside the same run directory,
 so separate concurrent runs never overwrite one another. Containers are removed
 as each task finishes; pass `--keep-environments` when debugging a task
-environment.
+environment. With that flag, the shared proxy and run-scoped networks are also
+kept so the retained workers remain usable.
 
 ## Output
 

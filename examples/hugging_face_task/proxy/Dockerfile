@@ -1,0 +1,11 @@
+FROM debian:trixie-slim
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends ca-certificates squid squidclient \
+ && rm -rf /var/lib/apt/lists/*
+
+COPY squid.conf /etc/squid/squid.conf
+
+EXPOSE 3128
+
+CMD ["squid", "-N", "-f", "/etc/squid/squid.conf"]
