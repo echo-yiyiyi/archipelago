@@ -4,6 +4,8 @@
     "reasoning_effort": "low",
     "allowed_openai_params": [
       "reasoning_effort"
-    ]
+    ],
+    "vertex_project": "apex-safety",
+    "vertex_location": "global"
   }
 }

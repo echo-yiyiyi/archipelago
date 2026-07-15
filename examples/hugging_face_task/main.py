@@ -342,8 +342,8 @@ Don't over-explain. Be concise but show your thinking.
 """
     initial_messages = [
         {"role": "system", "content": system_prompt},
-        # {"role": "user", "content": task["prompt"]},
-        {"role": "user", "content": "please use the toolbelt_list_tools tool to list the tools available and then add the code execution tool and use it to curl google.com and tell me the response."},
+        {"role": "user", "content": task["prompt"]},
+        # {"role": "user", "content": "please use the toolbelt_list_tools tool to list the tools available and then add the code execution tool and use it to curl google.com and tell me the response."},
     ]
     with open(output_dir / "initial_messages.json", "w") as f:
         json.dump(initial_messages, f, indent=2)

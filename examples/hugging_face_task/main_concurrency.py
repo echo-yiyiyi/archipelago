@@ -13,6 +13,7 @@ import argparse
 import concurrent.futures
 import ipaddress
 import json
+import math
 import os
 import queue
 import re
@@ -40,6 +41,9 @@ DEFAULT_PROXY_IMAGE = "archipelago-hf-runtime-proxy:concurrency"
 RUNTIME_PROXY_URL = "http://squid:3128"
 DEFAULT_RUNTIME_NETWORK_CIDR = "10.253.0.0/16"
 RUNTIME_NETWORK_PREFIX = 28
+SCORE_SUMMARY_FILENAME = os.environ.get(
+    "SCORE_SUMMARY_FILENAME", "score_summary.json"
+)
 
 
 @dataclass(frozen=True)
@@ -344,6 +348,59 @@ def safe_log_name(selector: str) -> str:
     return re.sub(r"[^A-Za-z0-9_.-]", "_", selector)[:120] or "task"
 
 
+def update_score_summary(run_dir: Path) -> dict[str, object]:
+    """Atomically refresh run-level scores from every available grades.json."""
+    task_scores: list[dict[str, object]] = []
+    for grades_file in sorted((run_dir / "tasks").glob("*/grades.json")):
+        try:
+            grades = json.loads(grades_file.read_text())
+            final_score = grades["scoring_results"]["final_score"]
+        except (OSError, json.JSONDecodeError, KeyError, TypeError):
+            # Another task may still be writing its file. Its own completion
+            # event will trigger another full scan after the file is complete.
+            continue
+
+        if (
+            isinstance(final_score, bool)
+            or not isinstance(final_score, (int, float))
+            or not math.isfinite(final_score)
+        ):
+            continue
+
+        score = float(final_score)
+        task_scores.append(
+            {
+                "task_id": grades_file.parent.name,
+                "final_score": score,
+                "passed_at_1": score == 1.0,
+                "grades_file": str(grades_file.relative_to(run_dir)),
+            }
+        )
+
+    task_count = len(task_scores)
+    pass_at_1_count = sum(bool(task["passed_at_1"]) for task in task_scores)
+    summary: dict[str, object] = {
+        "updated_at": datetime.now(timezone.utc)
+        .isoformat(timespec="milliseconds")
+        .replace("+00:00", "Z"),
+        "completed_task_count": task_count,
+        "average_mean_score": (
+            sum(float(task["final_score"]) for task in task_scores) / task_count
+            if task_count
+            else 0.0
+        ),
+        "average_pass_at_1_percent": pass_at_1_count / task_count if task_count else 0.0,
+        "pass_at_1_count": pass_at_1_count,
+        "tasks": task_scores,
+    }
+
+    summary_file = run_dir / SCORE_SUMMARY_FILENAME
+    temporary_file = summary_file.with_name(summary_file.name + ".tmp")
+    temporary_file.write_text(json.dumps(summary, indent=2) + "\n")
+    temporary_file.replace(summary_file)
+    return summary
+
+
 def run_task(
     selector: str,
     slot: WorkerSlot,
@@ -482,6 +539,7 @@ def main() -> int:
     (run_dir / "logs").mkdir(parents=True, exist_ok=False)
     global _run_logger
     _run_logger = RunLogger(run_dir)
+    update_score_summary(run_dir)
 
     if not args.skip_build:
         try:
@@ -548,6 +606,7 @@ def main() -> int:
             for future in concurrent.futures.as_completed(future_to_selector):
                 result = future.result()
                 results.append(result)
+                score_summary = update_score_summary(run_dir)
                 log(
                     "Task finished",
                     event="task_finished" if result.returncode == 0 else "task_failed",
@@ -558,6 +617,12 @@ def main() -> int:
                     elapsed_seconds=result.elapsed_seconds,
                     log_file=result.log_file,
                     error=result.error,
+                    completed_task_count=score_summary["completed_task_count"],
+                    average_mean_score=score_summary["average_mean_score"],
+                    average_pass_at_1_percent=score_summary[
+                        "average_pass_at_1_percent"
+                    ],
+                    score_summary_file=str(run_dir / SCORE_SUMMARY_FILENAME),
                 )
     finally:
         if not args.keep_environments:
