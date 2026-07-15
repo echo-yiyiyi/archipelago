@@ -101,6 +101,7 @@ class ReSumManager:
         self.running_summary: str | None = None
         self.messages_summarized: int = 0
         self.max_tokens: int = 128000
+        self.summarization_records: list[dict[str, Any]] = []
 
         # Full message history preserved across summarizations.
         # When summarize() is called, the pre-summarization messages are
@@ -175,7 +176,9 @@ class ReSumManager:
         return current_tokens > threshold
 
     async def summarize(
-        self, messages: list[LitellmAnyMessage]
+        self,
+        messages: list[LitellmAnyMessage],
+        trigger: str = "manual",
     ) -> list[LitellmAnyMessage]:
         """Summarize messages, keeping recent ones verbatim."""
         # non_system includes synthetic summary messages — intentionally.
@@ -233,8 +236,44 @@ class ReSumManager:
         else:
             conversation = formatted
 
-        # Generate summary
-        summary = await self._call_llm(SUMMARY_PROMPT.format(conversation=conversation))
+        summary_prompt = SUMMARY_PROMPT.format(conversation=conversation)
+        # History was extended above with every real message present at the
+        # trigger, so its length now maps directly to the final trajectory.
+        trajectory_message_count = len(system_messages) + len(
+            self._pre_summarization_history
+        )
+        record: dict[str, Any] = {
+            "summarization_index": len(self.summarization_records) + 1,
+            "model": self.model,
+            "trigger": trigger,
+            # Zero-based index in the final trajectory. ReSum starts after this
+            # message has been added to the live context.
+            "trigger_after_trajectory_message_index": trajectory_message_count - 1,
+            "runtime_summarized_message_range": {
+                "start": summarize_start,
+                "end_exclusive": summarize_end,
+            },
+            "input": {
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "Summarize AI agent work sessions.",
+                    },
+                    {"role": "user", "content": summary_prompt},
+                ]
+            },
+            "output": None,
+        }
+        self.summarization_records.append(record)
+
+        # Generate summary and retain both successful and failed attempts for audit.
+        try:
+            summary = await self._call_llm(summary_prompt)
+        except Exception as e:
+            record["error"] = {"type": type(e).__name__, "message": str(e)}
+            raise
+
+        record["output"] = {"summary": summary}
 
         self.running_summary = summary
 

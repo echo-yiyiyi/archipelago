@@ -123,7 +123,9 @@ class ReActAgent:
             logger.bind(message_type="resum").info("Summarizing context")
             try:
                 before = len(self.messages)
-                self.messages = await self.resum.summarize(self.messages)
+                self.messages = await self.resum.summarize(
+                    self.messages, trigger="proactive_threshold"
+                )
                 # Only flag a compaction when context was actually reduced;
                 # summarize() can no-op and return the messages unchanged.
                 if len(self.messages) < before:
@@ -144,7 +146,9 @@ class ReActAgent:
         except ContextWindowExceededError:
             logger.warning("Context exceeded, summarizing")
             before = len(self.messages)
-            self.messages = await self.resum.summarize(self.messages)
+            self.messages = await self.resum.summarize(
+                self.messages, trigger="context_window_exceeded"
+            )
             if len(self.messages) < before:
                 self._usage_tracker.track_compaction()
             return
@@ -460,6 +464,7 @@ class ReActAgent:
             status=self.status,
             time_elapsed=time.time() - self.start_time if self.start_time else 0,
             usage=self._usage_tracker.to_dict(),
+            summarization_records=self.resum.summarization_records,
         )
 
     async def run(self) -> AgentTrajectoryOutput:

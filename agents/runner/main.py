@@ -5,6 +5,7 @@ Main orchestrator for running agents.
 import argparse
 import asyncio
 import json
+from pathlib import Path
 from typing import Any, cast
 
 from loguru import logger
@@ -21,6 +22,17 @@ from runner.utils.logging.main import setup_logger, teardown_logger
 from runner.utils.settings import get_settings
 
 # from runner.save.main import save_results
+
+
+def save_summarization_artifacts(
+    trajectory_path: str, records: list[dict[str, Any]]
+) -> None:
+    """Write ReSum audit records beside the trajectory output."""
+    output_dir = Path(trajectory_path).parent
+    for index, record in enumerate(records, start=1):
+        artifact_path = output_dir / f"sumerize_{index}.json"
+        with artifact_path.open("w") as f:
+            json.dump(record, f, indent=2, ensure_ascii=False)
 
 
 async def main(
@@ -230,3 +242,4 @@ if __name__ == "__main__":
     if args.output:
         with open(args.output, "w") as f:
             f.write(result.model_dump_json(indent=2))
+        save_summarization_artifacts(args.output, result.summarization_records)

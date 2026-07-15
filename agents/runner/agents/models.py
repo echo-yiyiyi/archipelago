@@ -9,7 +9,7 @@ from typing import Any
 from litellm.types.llms.openai import AllMessageValues
 from litellm.types.utils import Message
 from openai.types.responses.easy_input_message_param import EasyInputMessageParam
-from pydantic import BaseModel, SerializeAsAny, field_validator
+from pydantic import BaseModel, Field, SerializeAsAny, field_validator
 
 from runner.models import TaskFieldSchema
 from runner.save._normalize import normalize_messages_for_report
@@ -152,6 +152,11 @@ class AgentTrajectoryOutput(BaseModel):
     status: AgentStatus
     time_elapsed: float
     usage: dict[str, Any] | None = None
+    # Local runner artifacts for auditing context compactions. Excluded from the
+    # trajectory payload because each record is written to a separate JSON file.
+    summarization_records: list[dict[str, Any]] = Field(
+        default_factory=list, exclude=True
+    )
 
     @field_validator("messages", mode="before")
     @classmethod
