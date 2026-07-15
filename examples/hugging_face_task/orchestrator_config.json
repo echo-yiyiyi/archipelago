@@ -1,9 +1,13 @@
 {
-  "model": "gemini/gemini-3-flash",
+  "model": "vertex_ai/gemini-3-flash-preview",
   "extra_args": {
     "reasoning_effort": "high",
+    "verbosity": "medium",
+    "allowed_openai_params": [
+      "reasoning_effort",
+      "verbosity"
+    ],
     "temperature": 1.0,
-    "max_tokens": 65536,
-    "verbosity": "medium"
+    "max_tokens": 65536
   }
 }
