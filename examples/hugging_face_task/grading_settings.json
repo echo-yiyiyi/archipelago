@@ -1,4 +1,6 @@
 {
-  "llm_judge_model": "openai/gpt-4.1-mini",
-  "llm_judge_extra_args": null
+  "llm_judge_model": "gemini/gemini-3-flash",
+  "llm_judge_extra_args": {
+    "reasoning_effort": "low"
+  }
 }
