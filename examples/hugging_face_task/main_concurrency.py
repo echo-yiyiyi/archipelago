@@ -17,6 +17,7 @@ import math
 import os
 import queue
 import re
+import signal
 import shutil
 import socket
 import subprocess
@@ -44,6 +45,8 @@ RUNTIME_NETWORK_PREFIX = 28
 SCORE_SUMMARY_FILENAME = os.environ.get(
     "SCORE_SUMMARY_FILENAME", "score_summary.json"
 )
+COMPOSE_CLEANUP_TIMEOUT_SECONDS = 60
+PROCESS_TERMINATION_GRACE_SECONDS = 10
 
 
 @dataclass(frozen=True)
@@ -61,6 +64,83 @@ class TaskResult:
     log_file: str
     elapsed_seconds: float
     error: str | None = None
+
+
+class ActiveProcesses:
+    """Track task subprocess groups so Ctrl-C can stop them deterministically."""
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._processes: dict[str, subprocess.Popen[bytes]] = {}
+
+    def add(self, selector: str, process: subprocess.Popen[bytes]) -> None:
+        with self._lock:
+            self._processes[selector] = process
+
+    def remove(self, selector: str, process: subprocess.Popen[bytes]) -> None:
+        with self._lock:
+            if self._processes.get(selector) is process:
+                del self._processes[selector]
+
+    def terminate_all(self) -> None:
+        """Terminate whole task process groups, escalating after a short grace."""
+        with self._lock:
+            processes = list(self._processes.items())
+
+        if not processes:
+            return
+
+        log(
+            "Stopping active task subprocesses",
+            event="shutdown",
+            process_count=len(processes),
+        )
+        for selector, process in processes:
+            if process.poll() is not None:
+                continue
+            try:
+                os.killpg(process.pid, signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+            except OSError as error:
+                log(
+                    "Failed to terminate task process group",
+                    event="warning",
+                    task=selector,
+                    pid=process.pid,
+                    error=str(error),
+                )
+
+        deadline = time.monotonic() + PROCESS_TERMINATION_GRACE_SECONDS
+        while time.monotonic() < deadline:
+            if all(process.poll() is not None for _, process in processes):
+                return
+            time.sleep(0.1)
+
+        remaining = [
+            (selector, process)
+            for selector, process in processes
+            if process.poll() is None
+        ]
+        if remaining:
+            log(
+                "Force-killing task subprocesses after grace period",
+                event="warning",
+                process_count=len(remaining),
+            )
+        for selector, process in remaining:
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            except OSError as error:
+                log(
+                    "Failed to kill task process group",
+                    event="warning",
+                    task=selector,
+                    pid=process.pid,
+                    error=str(error),
+                )
 
 
 class RunLogger:
@@ -272,14 +352,7 @@ def start_shared_proxy(proxy_dir: Path, environment: dict[str, str]) -> None:
 
 
 def cleanup_shared_proxy(proxy_dir: Path, environment: dict[str, str]) -> None:
-    subprocess.run(
-        ["docker", "compose", "down", "-v", "--remove-orphans"],
-        cwd=proxy_dir,
-        env=environment,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        check=False,
-    )
+    cleanup_compose_project(proxy_dir, environment, resource="shared proxy")
 
 
 def write_worker_environment(
@@ -334,14 +407,45 @@ networks:
 
 
 def cleanup_environment(worker_dir: Path, environment: dict[str, str]) -> None:
-    subprocess.run(
-        ["docker", "compose", "down", "-v", "--remove-orphans"],
-        cwd=worker_dir,
-        env=environment,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        check=False,
-    )
+    cleanup_compose_project(worker_dir, environment, resource=worker_dir.name)
+
+
+def cleanup_compose_project(
+    project_dir: Path, environment: dict[str, str], *, resource: str
+) -> None:
+    """Bring down a Compose project without allowing cleanup to hang forever."""
+    command = ["docker", "compose", "down", "-v", "--remove-orphans"]
+    try:
+        completed = subprocess.run(
+            command,
+            cwd=project_dir,
+            env=environment,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+            timeout=COMPOSE_CLEANUP_TIMEOUT_SECONDS,
+        )
+        if completed.returncode != 0:
+            log(
+                "Docker Compose cleanup failed",
+                event="warning",
+                resource=resource,
+                returncode=completed.returncode,
+            )
+    except subprocess.TimeoutExpired:
+        log(
+            "Docker Compose cleanup timed out",
+            event="warning",
+            resource=resource,
+            timeout_seconds=COMPOSE_CLEANUP_TIMEOUT_SECONDS,
+        )
+    except OSError as error:
+        log(
+            "Docker Compose cleanup could not start",
+            event="warning",
+            resource=resource,
+            error=str(error),
+        )
 
 
 def safe_log_name(selector: str) -> str:
@@ -408,6 +512,8 @@ def run_task(
     image: str,
     keep_environments: bool,
     runtime_network: str,
+    stop_requested: threading.Event,
+    active_processes: ActiveProcesses,
 ) -> TaskResult:
     """Invoke the unchanged single-task main.py in one isolated environment."""
     started = time.monotonic()
@@ -441,6 +547,16 @@ def run_task(
     returncode = 1
     error_message: str | None = None
     try:
+        if stop_requested.is_set():
+            return TaskResult(
+                selector=selector,
+                worker=slot.number,
+                port=slot.port,
+                returncode=130,
+                log_file=str(log_file),
+                elapsed_seconds=round(time.monotonic() - started, 1),
+                error="Run interrupted before task subprocess started",
+            )
         command = [
             "uv",
             "run",
@@ -449,15 +565,19 @@ def run_task(
             selector,
         ]
         with open(log_file, "w") as output:
-            completed = subprocess.run(
+            process = subprocess.Popen(
                 command,
                 cwd=AGENTS_DIR,
                 env=environment,
                 stdout=output,
                 stderr=subprocess.STDOUT,
-                check=False,
+                start_new_session=True,
             )
-        returncode = completed.returncode
+            active_processes.add(selector, process)
+            try:
+                returncode = process.wait()
+            finally:
+                active_processes.remove(selector, process)
     except Exception as error:  # Preserve other tasks and record launcher errors.
         error_message = f"{type(error).__name__}: {error}"
     finally:
@@ -567,9 +687,16 @@ def main() -> int:
     for number in range(worker_count):
         available_slots.put(WorkerSlot(number, args.base_port + number))
 
+    stop_requested = threading.Event()
+    active_processes = ActiveProcesses()
+
     def scheduled_task(selector: str) -> TaskResult:
+        if stop_requested.is_set():
+            raise concurrent.futures.CancelledError()
         slot = available_slots.get()
         try:
+            if stop_requested.is_set():
+                raise concurrent.futures.CancelledError()
             log(
                 "Task started",
                 event="task_started",
@@ -584,6 +711,8 @@ def main() -> int:
                 args.environment_image,
                 args.keep_environments,
                 runtime_networks[slot.number][0],
+                stop_requested,
+                active_processes,
             )
         finally:
             available_slots.put(slot)
@@ -598,33 +727,94 @@ def main() -> int:
     )
     log("Run files", run_dir=str(run_dir))
     results: list[TaskResult] = []
+    interrupted = False
+    executor = concurrent.futures.ThreadPoolExecutor(max_workers=worker_count)
+    pending: dict[concurrent.futures.Future[TaskResult], str] = {}
+    selectors_to_start = iter(selectors)
+
+    def submit_next() -> bool:
+        if stop_requested.is_set():
+            return False
+        try:
+            selector = next(selectors_to_start)
+        except StopIteration:
+            return False
+        pending[executor.submit(scheduled_task, selector)] = selector
+        return True
+
+    def record_result(result: TaskResult) -> None:
+        results.append(result)
+        score_summary = update_score_summary(run_dir)
+        log(
+            "Task finished",
+            event="task_finished" if result.returncode == 0 else "task_failed",
+            task=result.selector,
+            worker=result.worker,
+            port=result.port,
+            returncode=result.returncode,
+            elapsed_seconds=result.elapsed_seconds,
+            log_file=result.log_file,
+            error=result.error,
+            completed_task_count=score_summary["completed_task_count"],
+            average_mean_score=score_summary["average_mean_score"],
+            average_pass_at_1_percent=score_summary[
+                "average_pass_at_1_percent"
+            ],
+            score_summary_file=str(run_dir / SCORE_SUMMARY_FILENAME),
+        )
+
     try:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=worker_count) as executor:
-            future_to_selector = {
-                executor.submit(scheduled_task, selector): selector for selector in selectors
-            }
-            for future in concurrent.futures.as_completed(future_to_selector):
-                result = future.result()
-                results.append(result)
-                score_summary = update_score_summary(run_dir)
-                log(
-                    "Task finished",
-                    event="task_finished" if result.returncode == 0 else "task_failed",
-                    task=result.selector,
-                    worker=result.worker,
-                    port=result.port,
-                    returncode=result.returncode,
-                    elapsed_seconds=result.elapsed_seconds,
-                    log_file=result.log_file,
-                    error=result.error,
-                    completed_task_count=score_summary["completed_task_count"],
-                    average_mean_score=score_summary["average_mean_score"],
-                    average_pass_at_1_percent=score_summary[
-                        "average_pass_at_1_percent"
-                    ],
-                    score_summary_file=str(run_dir / SCORE_SUMMARY_FILENAME),
-                )
+        for _ in range(worker_count):
+            if not submit_next():
+                break
+
+        while pending:
+            done, _ = concurrent.futures.wait(
+                pending, return_when=concurrent.futures.FIRST_COMPLETED
+            )
+            for future in done:
+                pending.pop(future)
+                try:
+                    record_result(future.result())
+                except concurrent.futures.CancelledError:
+                    pass
+                if not stop_requested.is_set():
+                    submit_next()
+    except KeyboardInterrupt:
+        interrupted = True
+        stop_requested.set()
+        # Further Ctrl-C signals must not interrupt worker and Compose cleanup.
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
+        log(
+            "Interrupt received; stopping new tasks and cleaning up",
+            event="shutdown",
+            active_task_count=len(pending),
+        )
+        for future in pending:
+            future.cancel()
+        active_processes.terminate_all()
     finally:
+        executor.shutdown(wait=True, cancel_futures=True)
+        # Collect task results that completed while shutdown was in progress.
+        for future in list(pending):
+            if future.cancelled() or not future.done():
+                continue
+            try:
+                record_result(future.result())
+            except concurrent.futures.CancelledError:
+                pass
+
+        if interrupted and not args.keep_environments:
+            log("Verifying worker Compose cleanup", event="shutdown")
+            for slot_number in range(worker_count):
+                worker_dir = run_dir / "environments" / f"worker-{slot_number:02d}"
+                if not worker_dir.exists():
+                    continue
+                worker_environment = os.environ.copy()
+                worker_environment["COMPOSE_PROJECT_NAME"] = compose_project_name(
+                    run_dir.name, slot_number
+                )
+                cleanup_environment(worker_dir, worker_environment)
         if not args.keep_environments:
             cleanup_shared_proxy(proxy_dir, proxy_environment)
 
@@ -637,6 +827,9 @@ def main() -> int:
         "worker_count": worker_count,
         "environment_image": args.environment_image,
         "proxy_image": args.proxy_image,
+        "interrupted": interrupted,
+        "requested_task_count": len(selectors),
+        "finished_task_count": len(results),
         "runtime_networks": [
             {"name": name, "subnet": subnet} for name, subnet in runtime_networks
         ],
@@ -644,12 +837,15 @@ def main() -> int:
     }
     (run_dir / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     log(
-        "Run finished",
-        event="run_finished",
+        "Run interrupted" if interrupted else "Run finished",
+        event="run_interrupted" if interrupted else "run_finished",
         succeeded=len(results) - len(failed),
         failed=len(failed),
+        unfinished=len(selectors) - len(results),
         manifest=str(run_dir / "manifest.json"),
     )
+    if interrupted:
+        return 130
     return 1 if failed else 0
 
 

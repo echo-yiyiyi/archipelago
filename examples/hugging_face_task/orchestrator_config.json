@@ -1,5 +1,5 @@
 {
-  "model": "vertex_ai/gemini-3-flash-preview",
+  "model": "vertex_ai/gemini-3.5-flash",
   "extra_args": {
     "reasoning_effort": "high",
     "verbosity": "medium",
