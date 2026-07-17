@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Archipelago Run Viewer</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <div><span class="eyebrow">LOCAL OBSERVATORY</span><h1>Archipelago Runs</h1></div>
+    <div class="source" title="{{ runs_dir }}"><span class="pulse"></span>{{ runs_dir }}</div>
+  </header>
+  <main class="shell">
+    <aside class="sidebar">
+      <div class="section-head"><h2>Runs</h2><button id="refresh" class="icon-btn" title="Refresh">↻</button></div>
+      <label class="search"><span>⌕</span><input id="run-search" placeholder="Filter runs…"></label>
+      <div id="run-list" class="run-list"><div class="loading">Scanning…</div></div>
+    </aside>
+    <section class="workspace">
+      <div id="empty" class="empty"><div class="empty-mark">A</div><h2>Select a run</h2><p>Explore task trajectories, tool calls, and run analytics.</p></div>
+      <div id="run-view" class="hidden">
+        <div class="run-header">
+          <div class="run-identity"><span class="eyebrow">SELECTED RUN</span><h2 id="run-title"></h2><div id="run-score-summary" class="run-score-summary"><span class="score-loading">Loading score summary…</span></div></div>
+          <nav class="tabs"><button class="tab active" data-tab="trajectories">Trajectories</button><button class="tab" data-tab="analytics">Analytics</button></nav>
+        </div>
+        <div id="trajectories-panel" class="panel split-panel">
+          <aside class="task-pane">
+            <div class="task-toolbar"><label class="search"><span>⌕</span><input id="task-search" placeholder="Filter tasks…"></label><span id="task-count"></span></div>
+            <div id="task-list" class="task-list"></div>
+          </aside>
+          <section class="trajectory-pane">
+            <div id="trajectory-empty" class="empty small"><h2>Select a task</h2><p>Messages are numbered and collapsed by default.</p></div>
+            <div id="trajectory-view" class="hidden">
+              <div class="trajectory-head"><div><span class="eyebrow">TRAJECTORY</span><h3 id="task-title"></h3></div><span id="message-count" class="count-pill"></span></div>
+              <div id="messages" class="messages"></div>
+            </div>
+          </section>
+        </div>
+        <div id="analytics-panel" class="panel analytics hidden">
+          <div class="analytics-intro"><div><span class="eyebrow">RUN ANALYTICS</span><h3>Completed rounds and task durations</h3><p>Run the repository's two analytics scripts and view their latest output.</p></div><button id="generate-analytics" class="primary">Generate / Refresh</button></div>
+          <div id="analytics-status" class="notice">Generate analytics for the selected run.</div>
+          <div id="summary-cards" class="summary-grid"></div>
+          <div id="round-plot-wrap" class="plot-card hidden"><img id="round-plot" alt="Completed task round distribution"></div>
+          <div id="plot-wrap" class="plot-card hidden"><img id="duration-plot" alt="Completed task durations"></div>
+          <div id="command-output" class="command-output"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

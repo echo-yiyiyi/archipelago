@@ -8,6 +8,8 @@ import csv
 import json
 import re
 import statistics
+
+import matplotlib.pyplot as plt
 from collections import Counter
 from pathlib import Path
 
@@ -101,6 +103,23 @@ def main() -> None:
     json_path = run_dir / "completed_round_summary.json"
     json_path.write_text(json.dumps(summary, indent=2) + "\n")
 
+    labels = list(summary["round_distribution"].keys())
+    counts = list(summary["round_distribution"].values())
+    fig, ax = plt.subplots(figsize=(11, 5.8))
+    fig.patch.set_facecolor("#FAFBFC")
+    ax.set_facecolor("white")
+    ax.bar(labels, counts, color="#2878B5", edgecolor="white", linewidth=0.8)
+    ax.set_title("Completed task round distribution", loc="left", fontweight="bold")
+    ax.set_xlabel("ReAct rounds")
+    ax.set_ylabel("Completed tasks")
+    ax.grid(axis="y", color="#DCE3E8", linewidth=0.8)
+    ax.set_axisbelow(True)
+    ax.spines[["top", "right"]].set_visible(False)
+    fig.suptitle(f"{run_dir.name} — agent rounds", x=0.08, y=0.98, ha="left", fontsize=15, fontweight="bold")
+    plot_path = run_dir / "completed_round_distribution.png"
+    fig.savefig(plot_path, dpi=180, bbox_inches="tight", facecolor=fig.get_facecolor())
+    plt.close(fig)
+
     print(f"Run: {summary['run_id']}")
     print(
         f"Completed: {summary['completed_tasks']} "
@@ -117,6 +136,7 @@ def main() -> None:
     print("Distribution: " + ", ".join(f"{key} rounds={value}" for key, value in summary["round_distribution"].items()))
     print(f"CSV: {csv_path}")
     print(f"JSON: {json_path}")
+    print(f"Plot: {plot_path}")
 
 
 if __name__ == "__main__":
