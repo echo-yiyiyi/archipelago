@@ -540,6 +540,7 @@ def run_task(
     image: str,
     proxy_image: str,
     keep_environments: bool,
+    skip_grading: bool,
     runtime_network: str,
     stop_requested: threading.Event,
     active_processes: ActiveProcesses,
@@ -595,6 +596,8 @@ def run_task(
             str(EXAMPLE_DIR / "main.py"),
             selector,
         ]
+        if skip_grading:
+            command.append("--skip-grading")
         with open(log_file, "w") as output:
             process = subprocess.Popen(
                 command,
@@ -650,6 +653,11 @@ def main() -> int:
         "--skip-build",
         action="store_true",
         help="Use already-built environment and proxy images.",
+    )
+    parser.add_argument(
+        "--skip-grading",
+        action="store_true",
+        help="Skip grading for completed tasks and record a default score of 0.",
     )
     parser.add_argument("--run-id", help="Run output directory name.")
     parser.add_argument(
@@ -742,6 +750,7 @@ def main() -> int:
                 args.environment_image,
                 args.proxy_image,
                 args.keep_environments,
+                args.skip_grading,
                 runtime_networks[slot.number][0],
                 stop_requested,
                 active_processes,
@@ -859,6 +868,7 @@ def main() -> int:
         "worker_count": worker_count,
         "environment_image": args.environment_image,
         "proxy_image": args.proxy_image,
+        "skip_grading": args.skip_grading,
         "interrupted": interrupted,
         "requested_task_count": len(selectors),
         "finished_task_count": len(results),
