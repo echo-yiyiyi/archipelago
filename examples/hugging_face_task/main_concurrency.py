@@ -40,6 +40,7 @@ AGENTS_DIR = Path(os.environ.get("AGENTS_DIR", ARCHIPELAGO_DIR / "agents")).reso
 DEFAULT_IMAGE = "archipelago-hf-environment:concurrency"
 DEFAULT_PROXY_IMAGE = "archipelago-hf-runtime-proxy:concurrency"
 RUNTIME_PROXY_URL = "http://squid:3128"
+AGENT_HELP_DOMAIN = "agent-help.com"
 DEFAULT_RUNTIME_NETWORK_CIDR = "10.253.0.0/16"
 RUNTIME_NETWORK_PREFIX = 28
 SCORE_SUMMARY_FILENAME = os.environ.get(
@@ -356,7 +357,11 @@ def cleanup_shared_proxy(proxy_dir: Path, environment: dict[str, str]) -> None:
 
 
 def write_worker_environment(
-    worker_dir: Path, port: int, image: str, runtime_network: str
+    worker_dir: Path,
+    port: int,
+    image: str,
+    proxy_image: str,
+    runtime_network: str,
 ) -> None:
     """Create one worker attached only to the run-scoped internal network."""
     worker_dir.mkdir(parents=True, exist_ok=True)
@@ -370,16 +375,23 @@ def write_worker_environment(
     else:
         (worker_dir / ".env").touch()
 
-    no_proxy = os.environ.get("SQUID_NO_PROXY", "localhost,127.0.0.1,environment")
+    no_proxy = os.environ.get(
+        "SQUID_NO_PROXY",
+        f"localhost,127.0.0.1,environment,{AGENT_HELP_DOMAIN}",
+    )
 
     # There is deliberately no container_name. COMPOSE_PROJECT_NAME supplies a
     # unique name, and each service maps a different host port to container 8080.
+    # The per-worker named volume makes the environment and its local agent-help
+    # collector see the same /.apps_data contents.
     compose = f'''services:
   environment:
     image: {json.dumps(image)}
     pull_policy: never
     ports:
       - "127.0.0.1:{port}:8080"
+    volumes:
+      - apps_data:/.apps_data
     networks:
       - runtime
     environment:
@@ -398,10 +410,26 @@ def write_worker_environment(
       retries: 3
       start_period: 10s
 
+  agent_help:
+    image: {json.dumps(proxy_image)}
+    pull_policy: never
+    command: ["python3", "/opt/archipelago/collector.py"]
+    environment:
+      AGENT_HELP_CAPTURE_FILE: /capture/agent_help/requests.jsonl
+    volumes:
+      - apps_data:/capture
+    networks:
+      runtime:
+        aliases:
+          - {AGENT_HELP_DOMAIN}
+
 networks:
   runtime:
     external: true
     name: {json.dumps(runtime_network)}
+
+volumes:
+  apps_data:
 '''
     (worker_dir / "docker-compose.yml").write_text(compose)
 
@@ -510,6 +538,7 @@ def run_task(
     slot: WorkerSlot,
     run_dir: Path,
     image: str,
+    proxy_image: str,
     keep_environments: bool,
     runtime_network: str,
     stop_requested: threading.Event,
@@ -521,7 +550,9 @@ def run_task(
     log_file = run_dir / "logs" / (
         f"worker-{slot.number:02d}_{safe_log_name(selector)}.log"
     )
-    write_worker_environment(worker_dir, slot.port, image, runtime_network)
+    write_worker_environment(
+        worker_dir, slot.port, image, proxy_image, runtime_network
+    )
 
     environment = os.environ.copy()
     environment.update(
@@ -709,6 +740,7 @@ def main() -> int:
                 slot,
                 run_dir,
                 args.environment_image,
+                args.proxy_image,
                 args.keep_environments,
                 runtime_networks[slot.number][0],
                 stop_requested,

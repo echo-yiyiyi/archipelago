@@ -7,6 +7,11 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/* \
  && update-ca-certificates
 
+# Trust the runtime-only HTTPS endpoint exposed by the benchmark sidecar.
+# The matching private key stays in the sidecar image and is never copied here.
+COPY examples/hugging_face_task/proxy/certs/archipelago-test-ca.crt /usr/local/share/ca-certificates/archipelago-test-ca.crt
+RUN update-ca-certificates
+
 # Make python3 point to 3.13
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.13 1 \
  && python3 --version

@@ -8,7 +8,7 @@ client = genai.Client(
 )
 
 response = client.models.generate_content(
-    model="gemini-3.5-flash",
+    model="gemini-2.5-flash",
     contents="Solve this task: What is 17 * 24?",
     config=types.GenerateContentConfig(
         temperature=0,       # Useful for repeatable benchmarks
