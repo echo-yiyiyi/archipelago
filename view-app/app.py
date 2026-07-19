@@ -120,6 +120,21 @@ def task_status(path: Path) -> str:
     return "pending"
 
 
+def task_score(path: Path) -> float | None:
+    """Return a task's final score without failing the whole task listing."""
+    grades_path = path / "grades.json"
+    if not grades_path.is_file():
+        return None
+    try:
+        grades = json.loads(grades_path.read_text(encoding="utf-8", errors="replace"))
+        score = grades.get("scoring_results", {}).get("final_score")
+    except (AttributeError, OSError, json.JSONDecodeError):
+        return None
+    if isinstance(score, bool) or not isinstance(score, (int, float)):
+        return None
+    return float(score)
+
+
 @app.get("/")
 def index():
     return render_template("index.html", runs_dir=str(RUNS_DIR))
@@ -147,6 +162,7 @@ def tasks(run_id: str):
             items.append({
                 "id": path.name,
                 "status": task_status(path),
+                "score": task_score(path),
             })
     summary_path = selected / "score_summary.json"
     score_summary = None
@@ -269,4 +285,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

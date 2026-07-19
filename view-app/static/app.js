@@ -150,7 +150,10 @@ function renderTasks() {
   const query = $('task-search').value.toLowerCase();
   const tasks = state.tasks.filter(t => t.id.toLowerCase().includes(query));
   $('task-count').textContent = `${tasks.length}/${state.tasks.length}`;
-  $('task-list').innerHTML = tasks.length ? tasks.map(t => `<button class="task-item ${t.id === state.taskId ? 'active' : ''}" data-task="${esc(t.id)}" ${t.status !== 'ready' ? 'title="No trajectory.json yet"' : ''}><div class="item-title">${esc(t.id.replace('task_', ''))}</div><div class="item-meta"><span><i class="dot ${t.status}"></i>${t.status === 'ready' ? 'Ready' : 'No trajectory'}</span></div></button>`).join('') : '<div class="loading">No matching tasks</div>';
+  $('task-list').innerHTML = tasks.length ? tasks.map(t => {
+    const score = t.score == null ? '—' : Number(t.score).toFixed(4);
+    return `<button class="task-item ${t.id === state.taskId ? 'active' : ''}" data-task="${esc(t.id)}" ${t.status !== 'ready' ? 'title="No trajectory.json yet"' : ''}><div class="task-item-head"><div class="item-title">${esc(t.id.replace('task_', ''))}</div><span class="task-score">Score ${esc(score)}</span></div><div class="item-meta"><span><i class="dot ${t.status}"></i>${t.status === 'ready' ? 'Ready' : 'No trajectory'}</span></div></button>`;
+  }).join('') : '<div class="loading">No matching tasks</div>';
   document.querySelectorAll('[data-task]').forEach(el => el.onclick = () => selectTask(el.dataset.task));
 }
 async function selectTask(taskId) {
