@@ -38,7 +38,7 @@ def safe_child(parent: Path, name: str, prefix: str) -> Path:
 
 
 def run_dir(run_id: str) -> Path:
-    if not run_id.startswith(("run_", "merged-")):
+    if not run_id.startswith(("run_", "merged-")) and run_id != "sampled_tasks":
         abort(400, description="Invalid run directory name")
     return safe_child(RUNS_DIR, run_id, "")
 
@@ -129,7 +129,8 @@ def index():
 def runs():
     items = []
     if RUNS_DIR.is_dir():
-        for path in sorted(RUNS_DIR.glob("run_*"), reverse=True):
+        candidates = list(RUNS_DIR.glob("run_*")) + list(RUNS_DIR.glob("merged-*")) + [RUNS_DIR / "sampled_tasks"]
+        for path in sorted(candidates, reverse=True):
             if not path.is_dir():
                 continue
             items.append({"id": path.name})
@@ -146,6 +147,7 @@ def tasks(run_id: str):
             items.append({
                 "id": path.name,
                 "status": task_status(path),
+                "score": task_score(path),
             })
     summary_path = selected / "score_summary.json"
     score_summary = None
@@ -269,3 +271,16 @@ def main() -> None:
 if __name__ == "__main__":
     main()
 
+def task_score(path: Path) -> float | None:
+    """Return a task's final score without failing the whole task listing."""
+    grades_path = path / "grades.json"
+    if not grades_path.is_file():
+        return None
+    try:
+        grades = json.loads(grades_path.read_text(encoding="utf-8", errors="replace"))
+        score = grades.get("scoring_results", {}).get("final_score")
+    except (AttributeError, OSError, json.JSONDecodeError):
+        return None
+    if isinstance(score, bool) or not isinstance(score, (int, float)):
+        return None
+    return float(score)
