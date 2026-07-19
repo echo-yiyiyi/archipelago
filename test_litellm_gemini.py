@@ -1,4 +1,4 @@
-"""Send one request to LiteLLM using a Hugging Face task model config."""
+"""Send one tool-calling request through a LiteLLM model config."""
 
 import argparse
 import asyncio
@@ -11,6 +11,27 @@ from litellm import acompletion
 CONFIG_DIR = Path(__file__).parent / "examples" / "hugging_face_task"
 ORCHESTRATOR_CONFIG_PATH = CONFIG_DIR / "orchestrator_config.json"
 JUDGE_CONFIG_PATH = CONFIG_DIR / "grading_settings.json"
+
+TOOLS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "get_weather",
+            "description": "Get the current weather for a city.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "city": {
+                        "type": "string",
+                        "description": "The city whose weather should be queried.",
+                    }
+                },
+                "required": ["city"],
+                "additionalProperties": False,
+            },
+        },
+    }
+]
 
 
 def parse_args() -> argparse.Namespace:
@@ -49,14 +70,37 @@ async def main() -> None:
 
     response = await acompletion(
         model=model,
-        messages=[{"role": "user", "content": "What is 17 * 24?"}],
+        messages=[
+            {
+                "role": "user",
+                "content": "What is the current weather in Riyadh? explain the reason of tool calls before call it.",
+            }
+        ],
+        tools=TOOLS,
         vertex_project="apex-safety",
         vertex_location="global",
         **extra_args,
     )
 
-    print(f"response: {response.choices[0].message.content}")
+    message = response.choices[0].message
+    tool_calls = message.tool_calls or []
+    print(f"message: {message}\n")
+    print(f"explanation: {message.content}")
+    print(
+        "tool_calls: "
+        + json.dumps(
+            [call.model_dump() for call in tool_calls],
+            ensure_ascii=False,
+            indent=2,
+        )
+    )
     print(f"usage: {response.usage}")
+
+    # assert message.content and message.content.strip(), (
+    #     "Model did not explain before calling the tool"
+    # )
+    assert tool_calls, "Model did not call a tool"
+    assert tool_calls[0].function.name == "get_weather"
 
 
 if __name__ == "__main__":
