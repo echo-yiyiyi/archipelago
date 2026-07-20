@@ -323,12 +323,6 @@ def main():
     # System prompt from agents/runner/agents/react_toolbelt_agent/README.md
     system_prompt = """You are an AI assistant that completes tasks by reasoning and using tools.
 
-## Think Before Acting
-
-Before making tool calls, briefly reasoning in 1-3 sentences:
-- What you learned from the previous step
-- What you're doing next and why
-
 
 ## Tools
 

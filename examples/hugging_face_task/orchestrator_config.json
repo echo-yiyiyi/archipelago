@@ -10,7 +10,6 @@
     "temperature": 1.0,
     "max_tokens": 128000,
     "tool_choice": "required",
-    "stream": false,
-    "parallel_tool_calls": false
+    "stream": false
   }
 }
