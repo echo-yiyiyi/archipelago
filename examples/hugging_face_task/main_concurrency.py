@@ -17,8 +17,8 @@ import math
 import os
 import queue
 import re
-import signal
 import shutil
+import signal
 import socket
 import subprocess
 import sys
@@ -213,6 +213,52 @@ def selectors_from_dataset() -> list[str]:
     )
     with open(path) as handle:
         return [task["task_id"] for task in json.load(handle)]
+
+
+def selectors_from_local_dataset(dataset_dir: Path) -> list[str]:
+    with open(dataset_dir / "tasks_and_rubrics.json") as handle:
+        return [task["task_id"] for task in json.load(handle)]
+
+
+def resolve_local_selectors(selectors: list[str], dataset_dir: Path) -> list[str]:
+    all_task_ids = selectors_from_local_dataset(dataset_dir)
+    resolved: list[str] = []
+    for selector in selectors:
+        if selector.isdigit():
+            index = int(selector)
+            if index >= len(all_task_ids):
+                raise ValueError(f"task index out of range: {selector}")
+            resolved.append(all_task_ids[index])
+        else:
+            resolved.append(selector)
+    return resolved
+
+
+def load_injections(path: Path | None, dataset_dir: Path | None) -> dict[str, dict[str, object]]:
+    if path is None:
+        return {}
+    tasks: list[dict[str, object]] = []
+    if dataset_dir:
+        with open(dataset_dir / "tasks_and_rubrics.json") as handle:
+            tasks = json.load(handle)
+    result: dict[str, dict[str, object]] = {}
+    with open(path) as handle:
+        for line_number, line in enumerate(handle, 1):
+            if not line.strip():
+                continue
+            item = json.loads(line)
+            selector = str(item.get("task", ""))
+            if selector.isdigit() and tasks:
+                index = int(selector)
+                if index >= len(tasks):
+                    raise ValueError(f"injection line {line_number}: task index out of range")
+                selector = str(tasks[index]["task_id"])
+            if not selector:
+                raise ValueError(f"injection line {line_number}: missing task")
+            if selector in result:
+                raise ValueError(f"duplicate injection task: {selector}")
+            result[selector] = item
+    return result
 
 
 def validate_ports(base_port: int, count: int) -> None:
@@ -544,6 +590,11 @@ def run_task(
     runtime_network: str,
     stop_requested: threading.Event,
     active_processes: ActiveProcesses,
+    dataset_dir: Path | None,
+    orchestrator_config: Path | None,
+    injection: dict[str, object] | None,
+    injection_goals: Path | None,
+    skip_grading: bool,
 ) -> TaskResult:
     """Invoke the unchanged single-task main.py in one isolated environment."""
     started = time.monotonic()
@@ -596,6 +647,14 @@ def run_task(
             str(EXAMPLE_DIR / "main.py"),
             selector,
         ]
+        if dataset_dir:
+            command.extend(["--dataset-dir", str(dataset_dir)])
+        if orchestrator_config:
+            command.extend(["--orchestrator-config", str(orchestrator_config)])
+        if injection:
+            command.extend(["--injection-json", json.dumps(injection)])
+            command.extend(["--injection-goals", str(injection_goals)])
+
         if skip_grading:
             command.append("--skip-grading")
         with open(log_file, "w") as output:
@@ -659,12 +718,17 @@ def main() -> int:
         action="store_true",
         help="Skip grading for completed tasks and record a default score of 0.",
     )
+
     parser.add_argument("--run-id", help="Run output directory name.")
     parser.add_argument(
         "--keep-environments",
         action="store_true",
         help="Keep the last container in each worker slot for debugging.",
     )
+    parser.add_argument("--dataset-dir", type=Path, help="Read tasks/worlds/files locally.")
+    parser.add_argument("--orchestrator-config", type=Path, help="Config JSON used by every task.")
+    parser.add_argument("--injections-jsonl", type=Path, help="Per-task runtime file injections.")
+    parser.add_argument("--injection-goals", type=Path, help="Python injection-goal mapping.")
     args = parser.parse_args()
 
     if args.concurrency < 1:
@@ -675,11 +739,23 @@ def main() -> int:
         parser.error("use either selectors or --all, not both")
 
     try:
-        selectors = selectors_from_dataset() if args.all else parse_selectors(args.selectors)
+        selectors = (
+            selectors_from_local_dataset(args.dataset_dir.resolve())
+            if args.all and args.dataset_dir
+            else selectors_from_dataset() if args.all else parse_selectors(args.selectors)
+        )
+        if args.dataset_dir and not args.all:
+            selectors = resolve_local_selectors(selectors, args.dataset_dir.resolve())
+        injections = load_injections(
+            args.injections_jsonl.resolve() if args.injections_jsonl else None,
+            args.dataset_dir.resolve() if args.dataset_dir else None,
+        )
     except ValueError as error:
         parser.error(str(error))
     if not selectors:
         parser.error("provide selectors (for example 0-31) or use --all")
+    if injections and not args.injection_goals:
+        parser.error("--injections-jsonl requires --injection-goals")
 
     worker_count = min(args.concurrency, len(selectors))
     try:
@@ -699,6 +775,10 @@ def main() -> int:
     global _run_logger
     _run_logger = RunLogger(run_dir)
     update_score_summary(run_dir)
+    if args.orchestrator_config:
+        shutil.copy2(args.orchestrator_config.resolve(), run_dir / "orchestrator_config.json")
+    if args.injections_jsonl:
+        shutil.copy2(args.injections_jsonl.resolve(), run_dir / "injections.jsonl")
 
     if not args.skip_build:
         try:
@@ -754,6 +834,11 @@ def main() -> int:
                 runtime_networks[slot.number][0],
                 stop_requested,
                 active_processes,
+                args.dataset_dir.resolve() if args.dataset_dir else None,
+                args.orchestrator_config.resolve() if args.orchestrator_config else None,
+                injections.get(selector),
+                args.injection_goals.resolve() if args.injection_goals else None,
+                args.skip_grading,
             )
         finally:
             available_slots.put(slot)
@@ -869,6 +954,12 @@ def main() -> int:
         "environment_image": args.environment_image,
         "proxy_image": args.proxy_image,
         "skip_grading": args.skip_grading,
+        "orchestrator_config": (
+            json.loads((run_dir / "orchestrator_config.json").read_text())
+            if (run_dir / "orchestrator_config.json").exists()
+            else None
+        ),
+
         "interrupted": interrupted,
         "requested_task_count": len(selectors),
         "finished_task_count": len(results),

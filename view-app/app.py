@@ -38,7 +38,7 @@ def safe_child(parent: Path, name: str, prefix: str) -> Path:
 
 
 def run_dir(run_id: str) -> Path:
-    if not run_id.startswith(("run_", "merged-")) and run_id != "sampled_tasks":
+    if not run_id.startswith(("run_", "inject_", "merged-")) and run_id != "sampled_tasks":
         abort(400, description="Invalid run directory name")
     return safe_child(RUNS_DIR, run_id, "")
 
@@ -144,7 +144,12 @@ def index():
 def runs():
     items = []
     if RUNS_DIR.is_dir():
-        candidates = list(RUNS_DIR.glob("run_*")) + list(RUNS_DIR.glob("merged-*")) + [RUNS_DIR / "sampled_tasks"]
+        candidates = (
+            list(RUNS_DIR.glob("run_*"))
+            + list(RUNS_DIR.glob("inject_*"))
+            + list(RUNS_DIR.glob("merged-*"))
+            + [RUNS_DIR / "sampled_tasks"]
+        )
         for path in sorted(candidates, reverse=True):
             if not path.is_dir():
                 continue

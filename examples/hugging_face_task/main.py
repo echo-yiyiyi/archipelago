@@ -9,6 +9,7 @@ Usage:
 """
 
 import argparse
+import importlib.util
 import json
 import os
 import shutil
@@ -43,6 +44,142 @@ SUBSYSTEMS = ["filesystem", ".apps_data"]
 
 # Default task: Investment Banking World 221 - BBDC/TVPG accretion/dilution sensitivity analysis
 DEFAULT_TASK = "task_9ba58a6197114140877a1df1754d2993"
+
+
+def load_injection_prompt(goals_file: Path, goal: str) -> str:
+    spec = importlib.util.spec_from_file_location("inject_goal", goals_file)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Cannot load injection goals from {goals_file}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    goals = getattr(module, "top_3_injection_goals", {})
+    if goal not in goals:
+        raise ValueError(f"Unknown inject_goal {goal!r}; available: {', '.join(goals)}")
+    return goals[goal]
+
+
+def inject_document(
+    path: Path, prompt: str, position: str, page_number: int | None = None
+) -> None:
+    """Inject into a temporary PDF/DOCX copy without touching its source."""
+    if path.suffix.lower() == ".docx":
+        if position != "head":
+            raise ValueError("DOCX currently supports only inject_position='head'")
+        from docx import Document
+
+        document = Document(path)
+        paragraph = document.add_paragraph(prompt)
+        body = document._element.body
+        body.remove(paragraph._p)
+        body.insert(0, paragraph._p)
+        document.save(path)
+        return
+    if path.suffix.lower() == ".pdf":
+        if position not in {"head", "header", "footer", "page"}:
+            raise ValueError(
+                "PDF supports inject_position='head', 'header', 'footer', or 'page'"
+            )
+        import fitz
+
+        source = fitz.open(path)
+        output = fitz.open()
+        target_index = 0
+        if position == "page":
+            if not isinstance(page_number, int) or isinstance(page_number, bool):
+                raise ValueError("inject_position='page' requires integer inject_page")
+            if not 1 <= page_number <= source.page_count:
+                raise ValueError(
+                    f"inject_page {page_number} is outside PDF page range 1-{source.page_count}"
+                )
+            target_index = page_number - 1
+
+        if position == "head":
+            page = output.new_page(width=612, height=792)
+            text_rect = fitz.Rect(54, 54, 558, 738)
+        else:
+            target = source[target_index]
+            original_rect = target.rect
+            banner_height = 96
+            if target_index:
+                output.insert_pdf(source, from_page=0, to_page=target_index - 1)
+            page = output.new_page(
+                width=original_rect.width,
+                height=original_rect.height + banner_height,
+            )
+            content_top = banner_height if position in {"header", "page"} else 0
+            page.show_pdf_page(
+                fitz.Rect(
+                    0,
+                    content_top,
+                    original_rect.width,
+                    content_top + original_rect.height,
+                ),
+                source,
+                target_index,
+            )
+            text_top = (
+                14 if position in {"header", "page"} else original_rect.height + 14
+            )
+            text_rect = fitz.Rect(36, text_top, original_rect.width - 36, text_top + 70)
+        font_file = Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")
+        font_name = "helv"
+        if font_file.is_file():
+            font_name = "injectfont"
+            page.insert_font(fontname=font_name, fontfile=str(font_file))
+        if page.insert_textbox(
+            text_rect, prompt, fontname=font_name,
+            fontsize=11.5 if position in {"header", "footer", "page"} else 12,
+            color=(0.25, 0.25, 0.25), lineheight=1.2,
+        ) < 0:
+            source.close()
+            output.close()
+            raise ValueError(f"Injection text does not fit in {path}")
+        if position == "head":
+            output.insert_pdf(source)
+        elif target_index + 1 < source.page_count:
+            output.insert_pdf(source, from_page=target_index + 1)
+        temporary = path.with_name(path.name + ".inject.pdf")
+        output.save(temporary, garbage=4, deflate=True)
+        source.close()
+        output.close()
+        temporary.replace(path)
+        return
+    raise ValueError(f"Only PDF and DOCX injection is supported: {path}")
+
+
+def inject_tree(root: Path, injection: dict[str, object], prompt: str) -> list[str]:
+    """Inject requested documents in a tree that is already temporary."""
+    position = str(injection.get("inject_position", "head"))
+    names = injection.get("inject_files")
+    if not isinstance(names, list) or not names or not all(isinstance(x, str) for x in names):
+        raise ValueError("inject_files must be a non-empty string list")
+    changed: list[str] = []
+    for name in names:
+        requested_path = Path(name)
+        if requested_path.is_absolute() or ".." in requested_path.parts:
+            raise ValueError(f"inject_files entries must stay inside the populate tree: {name!r}")
+        direct = root / requested_path
+        matches = [direct] if direct.is_file() else list(root.rglob(requested_path.name))
+        for path in matches:
+            if path.is_file():
+                inject_document(
+                    path,
+                    prompt,
+                    position,
+                    injection.get("inject_page"),
+                )
+                changed.append(str(path.relative_to(root)))
+    return changed
+
+
+def prepare_injected_copy(
+    source_root: Path, injection: dict[str, object], prompt: str, temporary_root: Path
+) -> tuple[Path, list[str]]:
+    """Copy a non-temporary populate tree and inject only its copy."""
+    copied_root = temporary_root / "populate_copy"
+    shutil.copytree(source_root, copied_root, symlinks=False)
+    changed = inject_tree(copied_root, injection, prompt)
+    return copied_root, changed
 
 
 def log(msg: str):
@@ -221,12 +358,11 @@ def tar_gz_to_zip(tar_gz_path: Path) -> Path:
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "task_selector",
-        nargs="?",
-        default=DEFAULT_TASK,
-        help="Task index or task ID (defaults to the built-in task).",
-    )
+    parser.add_argument("task_selector", nargs="?", default=DEFAULT_TASK)
+    parser.add_argument("--dataset-dir", type=Path)
+    parser.add_argument("--orchestrator-config", type=Path)
+    parser.add_argument("--injection-json")
+    parser.add_argument("--injection-goals", type=Path)
     parser.add_argument(
         "--skip-grading",
         action="store_true",
@@ -235,14 +371,19 @@ def main():
     args = parser.parse_args()
     task_selector = args.task_selector
 
-    # Load task and world data from HuggingFace
-    log("Downloading task data from HuggingFace...")
-    tasks_path = hf_hub_download(
-        HF_DATASET, "tasks_and_rubrics.json", repo_type="dataset"
-    )
-    worlds_path = hf_hub_download(
-        HF_DATASET, "world_descriptions.json", repo_type="dataset"
-    )
+    dataset_dir = args.dataset_dir.resolve() if args.dataset_dir else None
+    if dataset_dir:
+        log(f"Loading local task data: {dataset_dir}")
+        tasks_path = dataset_dir / "tasks_and_rubrics.json"
+        worlds_path = dataset_dir / "world_descriptions.json"
+    else:
+        log("Downloading task data from HuggingFace...")
+        tasks_path = hf_hub_download(
+            HF_DATASET, "tasks_and_rubrics.json", repo_type="dataset"
+        )
+        worlds_path = hf_hub_download(
+            HF_DATASET, "world_descriptions.json", repo_type="dataset"
+        )
 
     with open(tasks_path) as f:
         tasks = json.load(f)
@@ -268,6 +409,16 @@ def main():
         log(f"ERROR: World not found: {world_id}")
         sys.exit(1)
 
+    injection = json.loads(args.injection_json) if args.injection_json else None
+    injection_prompt = None
+    injected_files: list[str] = []
+    if injection:
+        if not isinstance(injection, dict) or not args.injection_goals:
+            parser.error("injection requires an object and --injection-goals")
+        injection_prompt = load_injection_prompt(
+            args.injection_goals.resolve(), str(injection.get("inject_goal", ""))
+        )
+
     trajectory_id = f"hf_{task['task_id']}_{uuid.uuid4().hex[:8]}"
     grading_run_id = f"gr_{uuid.uuid4().hex[:8]}"
     output_dir = TASK_OUTPUT_ROOT / task["task_id"]
@@ -283,9 +434,11 @@ def main():
     start_environment()
 
     # Download and extract world snapshot
-    log(f"Downloading world snapshot: {world_id}")
-    zip_path = hf_hub_download(
-        HF_DATASET, f"world_files_zipped/{world_id}.zip", repo_type="dataset"
+    log(f"Loading world snapshot: {world_id}")
+    zip_path = (
+        dataset_dir / "world_files_zipped" / f"{world_id}.zip"
+        if dataset_dir
+        else Path(hf_hub_download(HF_DATASET, f"world_files_zipped/{world_id}.zip", repo_type="dataset"))
     )
     world_zip = output_dir / f"{world_id}.zip"
     shutil.copy(zip_path, world_zip)
@@ -295,19 +448,45 @@ def main():
     with tempfile.TemporaryDirectory() as tmp:
         with zipfile.ZipFile(world_zip, "r") as zf:
             zf.extractall(tmp)
-        populate_subsystems(Path(tmp), output_dir, "world")
+        populate_root = Path(tmp)
+        if injection and injection_prompt:
+            changed = inject_tree(populate_root, injection, injection_prompt)
+            log(f"  Runtime-injected world files: {changed}")
+            injected_files.extend(changed)
+            populate_subsystems(populate_root, output_dir, "world")
+        else:
+            populate_subsystems(populate_root, output_dir, "world")
 
     if task.get("task_input_files"):
         task_prefix = f"task_files/{task['task_id']}"
-        log(f"Downloading task input files: {task['task_id']}")
-        snapshot_dir = snapshot_download(
-            HF_DATASET, repo_type="dataset", allow_patterns=[f"{task_prefix}/**"]
-        )
-        task_dir = Path(snapshot_dir) / task_prefix
+        log(f"Loading task input files: {task['task_id']}")
+        if dataset_dir:
+            task_dir = dataset_dir / task_prefix
+        else:
+            snapshot_dir = snapshot_download(
+                HF_DATASET, repo_type="dataset", allow_patterns=[f"{task_prefix}/**"]
+            )
+            task_dir = Path(snapshot_dir) / task_prefix
         if task_dir.exists():
-            populate_subsystems(task_dir, output_dir, "task")
+            if injection and injection_prompt:
+                with tempfile.TemporaryDirectory() as injected_tmp:
+                    populate_root, changed = prepare_injected_copy(
+                        task_dir, injection, injection_prompt, Path(injected_tmp)
+                    )
+                    log(f"  Runtime-injected task files: {changed}")
+                    injected_files.extend(changed)
+                    populate_subsystems(populate_root, output_dir, "task")
+            else:
+                populate_subsystems(task_dir, output_dir, "task")
         else:
             log(f"  No task files found at {task_prefix}")
+
+    if injection:
+        requested_names = {Path(str(name)).name for name in injection["inject_files"]}
+        injected_names = {Path(name).name for name in injected_files}
+        missing = sorted(requested_names - injected_names)
+        if missing:
+            raise FileNotFoundError(f"Injection files not found in world/task data: {missing}")
 
     # Configure MCP servers using the all-servers config
     log("Configuring MCP servers...")
@@ -321,7 +500,7 @@ def main():
 
     # Load the model before generating the initial messages because the system
     # prompt depends on the orchestrator model.
-    with open(EXAMPLE_DIR / "orchestrator_config.json") as f:
+    with open(args.orchestrator_config or EXAMPLE_DIR / "orchestrator_config.json") as f:
         orchestrator_config = json.load(f)
 
     # Generate initial messages from HuggingFace task prompt
@@ -441,6 +620,7 @@ def main():
         }
         with open(output_dir / "grades.json", "w") as f:
             json.dump(grades, f, indent=2)
+
     else:
         log("Running grading...")
 
