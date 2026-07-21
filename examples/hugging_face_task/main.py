@@ -319,9 +319,14 @@ def main():
     resp.raise_for_status()
     log("MCP servers configured")
 
+    # Load the model before generating the initial messages because the system
+    # prompt depends on the orchestrator model.
+    with open(EXAMPLE_DIR / "orchestrator_config.json") as f:
+        orchestrator_config = json.load(f)
+
     # Generate initial messages from HuggingFace task prompt
     # System prompt from agents/runner/agents/react_toolbelt_agent/README.md
-    system_prompt = """You are an AI assistant that completes tasks by reasoning and using tools.
+    original_system_prompt = """You are an AI assistant that completes tasks by reasoning and using tools.
 
 
 ## Tools
@@ -346,6 +351,13 @@ def main():
 - Show your work for calculations
 - `final_answer` is rejected if todos are incomplete
 """
+    system_prompt = original_system_prompt
+    if orchestrator_config["model"] == "openai/gpt-5.4":
+        _, tools_section = original_system_prompt.split("## Tools", maxsplit=1)
+        system_prompt = (
+            "You are an AI assistant that completes tasks by reasoning and using tools.\n\n\n"
+            f"## Tools{tools_section}"
+        )
     initial_messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": task["prompt"]},
@@ -356,10 +368,6 @@ def main():
     ]
     with open(output_dir / "initial_messages.json", "w") as f:
         json.dump(initial_messages, f, indent=2)
-
-    # Load orchestrator config
-    with open(EXAMPLE_DIR / "orchestrator_config.json") as f:
-        orchestrator_config = json.load(f)
 
     trajectory_file = output_dir / "trajectory.json"
 
