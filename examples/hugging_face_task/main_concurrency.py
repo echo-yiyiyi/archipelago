@@ -594,7 +594,6 @@ def run_task(
     orchestrator_config: Path | None,
     injection: dict[str, object] | None,
     injection_goals: Path | None,
-    skip_grading: bool,
 ) -> TaskResult:
     """Invoke the unchanged single-task main.py in one isolated environment."""
     started = time.monotonic()
@@ -838,7 +837,6 @@ def main() -> int:
                 args.orchestrator_config.resolve() if args.orchestrator_config else None,
                 injections.get(selector),
                 args.injection_goals.resolve() if args.injection_goals else None,
-                args.skip_grading,
             )
         finally:
             available_slots.put(slot)

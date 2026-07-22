@@ -29,6 +29,26 @@ def read_jsonl(path: Path) -> list[dict[str, object]]:
     return rows
 
 
+def read_injection_selectors(path: Path) -> list[str]:
+    """Read unique task selectors from an injection JSONL in file order."""
+    selectors: list[str] = []
+    seen: set[str] = set()
+    with open(path) as handle:
+        for number, line in enumerate(handle, 1):
+            if not line.strip():
+                continue
+            value = json.loads(line)
+            if not isinstance(value, dict) or not str(value.get("task", "")).strip():
+                raise ValueError(f"{path}:{number}: expected an injection object with task")
+            selector = str(value["task"]).strip()
+            if selector not in seen:
+                selectors.append(selector)
+                seen.add(selector)
+    if not selectors:
+        raise ValueError(f"{path}: no task selectors")
+    return selectors
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("config_jsonl", type=Path)
@@ -46,8 +66,13 @@ def main() -> int:
     args = parser.parse_args()
     if args.concurrency < 1:
         parser.error("--concurrency must be at least 1")
-    if args.all == bool(args.selectors):
-        parser.error("provide selectors or --all")
+    if args.all and args.selectors:
+        parser.error("selectors and --all cannot be used together")
+    if not args.all and not args.selectors:
+        try:
+            args.selectors = read_injection_selectors(args.injections_jsonl.resolve())
+        except (OSError, ValueError, json.JSONDecodeError) as error:
+            parser.error(str(error))
 
     configs = read_jsonl(args.config_jsonl.resolve())
     if len(configs) > 16:

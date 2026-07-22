@@ -1,6 +1,7 @@
 #!/bin/bash
 # Run local sampled tasks across orchestrator configs with runtime-only file injection.
 # Usage: ./run_inject.sh configs.jsonl injections.jsonl [task IDs/indices or --all] [options]
+# With no task selectors, task IDs are read from injections.jsonl.
 
 set -e
 
@@ -18,8 +19,8 @@ export PYTHONUNBUFFERED=1
 unset HTTP_PROXY HTTPS_PROXY ALL_PROXY NO_PROXY
 unset http_proxy https_proxy all_proxy no_proxy
 
-if [[ $# -lt 3 ]]; then
-  echo "Usage: $0 CONFIGS.jsonl INJECTIONS.jsonl TASK... [options]" >&2
+if [[ $# -lt 2 ]]; then
+  echo "Usage: $0 CONFIGS.jsonl INJECTIONS.jsonl [TASK...] [options]" >&2
   echo "       $0 CONFIGS.jsonl INJECTIONS.jsonl --all [options]" >&2
   exit 2
 fi
