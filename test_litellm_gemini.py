@@ -77,8 +77,6 @@ async def main() -> None:
             }
         ],
         tools=TOOLS,
-        vertex_project="apex-safety",
-        vertex_location="global",
         **extra_args,
     )
 

@@ -173,6 +173,89 @@ extracted into a temporary directory, and task files are copied into a
 temporary directory before editing. Files under `sampled_tasks/dataset` are
 never modified.
 
+### Resume an incomplete trajectory in isolation
+
+Use `run_isolated.sh` when a previous `trajectory.json` stopped immediately
+after a tool result and did not reach `final_answer`. It starts a fresh,
+single-task Docker environment, replays every historical tool call in order to
+restore environment side effects and agent state, and then runs a fixed number
+of additional agent turns.
+
+```bash
+cd /home/ziyi/projects/archipelago/examples/hugging_face_task
+
+./run_isolated.sh \
+  output/concurrent/<old-run-id>/tasks/task_<task-id>/trajectory.json \
+  5
+```
+
+The first argument is the old trajectory path. The second argument is the
+positive number of new agent turns to allow. Additional
+`main_concurrency.py` options can follow:
+
+```bash
+./run_isolated.sh /absolute/path/to/trajectory.json 10 \
+  --orchestrator-config orchestrator_config.json \
+  --skip-build
+```
+
+Replay results are not appended to the model context. The original messages
+and tool results remain the visible history, while replay restores MCP side
+effects, the toolbelt, and todo state in the fresh environment. A trajectory
+that already contains a `final_answer` call is rejected.
+
+The combined old and new history is saved even if the additional-turn limit is
+reached before `final_answer`. Output uses the normal visualization-compatible
+concurrent layout:
+
+```text
+output/concurrent/isolated_<timestamp>_<task-id>/
+  tasks/task_<task-id>/trajectory.json
+```
+
+Runs that reach `final_answer` are graded normally. If the additional-turn
+limit is reached first, the non-completed trajectory is saved without grading.
+The task ID is inferred from the trajectory's parent directory, so the expected
+input layout is `.../tasks/task_<task-id>/trajectory.json`.
+
+#### Run last-tool text variants in parallel
+
+Batch mode replaces the `text` field in the last `role=tool` message with each
+value from a JSON file and resumes every variant in an independent isolated
+run. For example, `variants.json` can be a simple string list:
+
+```json
+[
+  "First replacement tool result",
+  "Second replacement tool result"
+]
+```
+
+Named variants are also supported:
+
+```json
+{
+  "variants": [
+    {"name": "control", "text": "Control tool result"},
+    {"name": "treatment", "text": "Treatment tool result"}
+  ]
+}
+```
+
+Run up to four variants simultaneously:
+
+```bash
+./run_isolated.sh input/task_<task-id>/trajectory.json 5 \
+  --text-variants variants.json \
+  --parallel 4
+```
+
+Each variant gets a unique port, run ID, and prepared trajectory under
+`input/.isolated_batches/`. Sibling `sumerize_*.json` artifacts are copied
+automatically. Launcher output for each variant is saved beside the batch
+manifest as `<index>_<variant>.launcher.log`. Use `--prepare-only` to validate
+and materialize the variants without starting Docker or the model.
+
 ### Changing the Model
 
 Edit `orchestrator_config.json`:

@@ -594,6 +594,8 @@ def run_task(
     orchestrator_config: Path | None,
     injection: dict[str, object] | None,
     injection_goals: Path | None,
+    resume_trajectory: Path | None = None,
+    additional_turns: int | None = None,
 ) -> TaskResult:
     """Invoke the unchanged single-task main.py in one isolated environment."""
     started = time.monotonic()
@@ -656,6 +658,9 @@ def run_task(
 
         if skip_grading:
             command.append("--skip-grading")
+        if resume_trajectory:
+            command.extend(["--resume-trajectory", str(resume_trajectory)])
+            command.extend(["--additional-turns", str(additional_turns)])
         with open(log_file, "w") as output:
             process = subprocess.Popen(
                 command,
@@ -728,7 +733,14 @@ def main() -> int:
     parser.add_argument("--orchestrator-config", type=Path, help="Config JSON used by every task.")
     parser.add_argument("--injections-jsonl", type=Path, help="Per-task runtime file injections.")
     parser.add_argument("--injection-goals", type=Path, help="Python injection-goal mapping.")
+    parser.add_argument("--resume-trajectory", type=Path)
+    parser.add_argument("--additional-turns", type=int)
     args = parser.parse_args()
+
+    if bool(args.resume_trajectory) != (args.additional_turns is not None):
+        parser.error("--resume-trajectory and --additional-turns must be used together")
+    if args.additional_turns is not None and args.additional_turns < 1:
+        parser.error("--additional-turns must be at least 1")
 
     if args.concurrency < 1:
         parser.error("--concurrency must be at least 1")
@@ -837,6 +849,8 @@ def main() -> int:
                 args.orchestrator_config.resolve() if args.orchestrator_config else None,
                 injections.get(selector),
                 args.injection_goals.resolve() if args.injection_goals else None,
+                args.resume_trajectory.resolve() if args.resume_trajectory else None,
+                args.additional_turns,
             )
         finally:
             available_slots.put(slot)

@@ -13,6 +13,9 @@ from litellm.experimental_mcp_client import call_openai_tool, load_mcp_tools
 from litellm.files.main import ModelResponse
 from loguru import logger
 from openai.types.chat.chat_completion_tool_param import ChatCompletionToolParam
+from openai.types.chat.chat_completion_message_tool_call import (
+    ChatCompletionMessageToolCall,
+)
 
 from runner.agents.models import (
     AgentRunInput,
@@ -67,6 +70,12 @@ class ReActAgent:
         config = run_input.agent_config_values
         self.timeout: int = config.get("timeout", 10800)
         self.max_steps: int = config.get("max_steps", 250)
+        self.replay_history: bool = bool(
+            (run_input.custom_args or {}).get("replay_tool_calls")
+        )
+        self.resume_summarization_record: dict[str, Any] | None = (
+            (run_input.custom_args or {}).get("resume_summarization_record")
+        )
         self.tool_call_timeout: int = 60
         self.llm_response_timeout: int = config.get("llm_response_timeout", 600)
         self.max_toolbelt_size: int = 80
@@ -476,6 +485,9 @@ class ReActAgent:
                     logger.info(f"Starting ReAct Toolbelt agent with {self.model}")
                     await self._initialize_tools(client)
 
+                    if self.replay_history:
+                        await self._replay_tool_calls(client)
+
                     self.start_time = time.time()
                     self.status = AgentStatus.RUNNING
 
@@ -512,6 +524,78 @@ class ReActAgent:
                 AgentStatus.ERROR if is_system_error(e) else AgentStatus.FAILED
             )
             return self._build_output()
+
+    async def _replay_tool_calls(self, client: Any) -> None:
+        """Rebuild environment and local state from a saved trajectory."""
+        historical_messages = list(self.messages)
+        calls = []
+        for message in historical_messages:
+            calls.extend(
+                ChatCompletionMessageToolCall.model_validate(call)
+                for call in (get_msg_attr(message, "tool_calls") or [])
+            )
+        logger.info(f"Replaying {len(calls)} historical tool call(s)")
+        for index, tool_call in enumerate(calls, start=1):
+            if tool_call.function.name == "final_answer":
+                raise ValueError("Cannot resume a trajectory containing final_answer")
+            logger.info(
+                f"Replaying historical tool call {index}/{len(calls)}: "
+                f"{tool_call.function.name}"
+            )
+            await self._handle_tool_calls(client, [tool_call])
+        # Replay output only restores MCP side effects and local toolbelt/todo
+        # state. Restore the exact live context at the last ReSum boundary when
+        # one exists; otherwise the original history remains model-visible.
+        if self.resume_summarization_record:
+            self.messages = self._restore_summarized_context(
+                historical_messages, self.resume_summarization_record
+            )
+        else:
+            self.messages = historical_messages
+
+    def _restore_summarized_context(
+        self,
+        historical_messages: list[LitellmAnyMessage],
+        record: dict[str, Any],
+    ) -> list[LitellmAnyMessage]:
+        """Recreate the live context produced by the last ReSum operation."""
+        trigger_index = record.get("trigger_after_trajectory_message_index")
+        summarized_range = record.get("runtime_summarized_message_range") or {}
+        recent_start = summarized_range.get("end_exclusive")
+        summary = (record.get("output") or {}).get("summary")
+        if not isinstance(trigger_index, int) or not isinstance(recent_start, int):
+            raise ValueError("Invalid summarization record boundary metadata")
+        if not isinstance(summary, str) or not summary:
+            raise ValueError("Summarization record has no output summary")
+        if not 0 <= trigger_index < len(historical_messages):
+            raise ValueError("Summarization trigger index is outside the trajectory")
+
+        through_trigger = historical_messages[: trigger_index + 1]
+        system_messages = [
+            message
+            for message in through_trigger
+            if get_msg_attr(message, "role") == "system"
+        ]
+        non_system = [
+            message
+            for message in through_trigger
+            if get_msg_attr(message, "role") != "system"
+        ]
+        if not 0 <= recent_start <= len(non_system):
+            raise ValueError("Summarization recent-window boundary is invalid")
+
+        self.resum.running_summary = summary
+        # Preserve the full old trajectory in output while using only the
+        # summarized state as the model's live context.
+        self.resum._pre_summarization_history = [
+            message
+            for message in through_trigger
+            if get_msg_attr(message, "role") != "system"
+        ]
+        summarized_context = self.resum._build_output(
+            system_messages, non_system[recent_start:]
+        )
+        return summarized_context + historical_messages[trigger_index + 1 :]
 
 
 async def run(run_input: AgentRunInput) -> AgentTrajectoryOutput:

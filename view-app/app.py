@@ -28,8 +28,9 @@ def json_file(path: Path):
         abort(500, description=f"Could not read {path.name}: {exc}")
 
 
-def safe_child(parent: Path, name: str, prefix: str) -> Path:
-    if not name.startswith(prefix) or Path(name).name != name:
+def safe_child(parent: Path, name: str) -> Path:
+    """Resolve one existing direct child directory without restricting its name."""
+    if not name or Path(name).name != name:
         abort(400, description="Invalid directory name")
     path = (parent / name).resolve()
     if path.parent != parent.resolve() or not path.is_dir():
@@ -38,13 +39,11 @@ def safe_child(parent: Path, name: str, prefix: str) -> Path:
 
 
 def run_dir(run_id: str) -> Path:
-    if not run_id.startswith(("run_", "inject_", "merged-")) and run_id != "sampled_tasks":
-        abort(400, description="Invalid run directory name")
-    return safe_child(RUNS_DIR, run_id, "")
+    return safe_child(RUNS_DIR, run_id)
 
 
 def task_dir(run_id: str, task_id: str) -> Path:
-    return safe_child(run_dir(run_id) / "tasks", task_id, "task_")
+    return safe_child(run_dir(run_id) / "tasks", task_id)
 
 
 def run_model_info(selected: Path) -> dict[str, str | None]:
@@ -70,7 +69,7 @@ def run_model_info(selected: Path) -> dict[str, str | None]:
     reasoning_effort = None
     tasks_dir = selected / "tasks"
     if tasks_dir.is_dir():
-        extra_path = next(tasks_dir.glob("task_*/orchestrator_extra_args.json"), None)
+        extra_path = next(tasks_dir.glob("*/orchestrator_extra_args.json"), None)
         if extra_path is not None:
             try:
                 extra = json.loads(extra_path.read_text(encoding="utf-8", errors="replace"))
@@ -144,13 +143,7 @@ def index():
 def runs():
     items = []
     if RUNS_DIR.is_dir():
-        candidates = (
-            list(RUNS_DIR.glob("run_*"))
-            + list(RUNS_DIR.glob("inject_*"))
-            + list(RUNS_DIR.glob("merged-*"))
-            + [RUNS_DIR / "sampled_tasks"]
-        )
-        for path in sorted(candidates, reverse=True):
+        for path in sorted(RUNS_DIR.iterdir(), reverse=True):
             if not path.is_dir():
                 continue
             items.append({"id": path.name})
@@ -163,7 +156,9 @@ def tasks(run_id: str):
     base = selected / "tasks"
     items = []
     if base.is_dir():
-        for path in sorted(base.glob("task_*")):
+        for path in sorted(base.iterdir()):
+            if not path.is_dir():
+                continue
             items.append({
                 "id": path.name,
                 "status": task_status(path),
