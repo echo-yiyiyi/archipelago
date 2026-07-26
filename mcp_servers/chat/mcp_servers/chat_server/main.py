@@ -8,12 +8,12 @@ Meta-tools:
 | Tool        | Actions                                                               |
 |-------------|-----------------------------------------------------------------------|
 | chat        | list_channels, get_history, get_replies, get_user, get_users,         |
-|             | post_message, reply_to_thread, add_reaction, delete_post              |
+|             | add_user, post_message, reply_to_thread, add_reaction, delete_post    |
 | chat_schema | Get JSON schema for any input/output model                            |
 
 Individual tools:
 - list_channels, get_channel_history, get_thread_replies
-- get_user_profile, get_users, post_message
+- get_user_profile, get_users, add_user, post_message
 - reply_to_thread, add_reaction, delete_post
 """
 
@@ -113,8 +113,9 @@ setup_error_injection(mcp)
 
 # Mutually exclusive: USE_INDIVIDUAL_TOOLS gets individual tools, otherwise meta-tools
 if os.getenv("USE_INDIVIDUAL_TOOLS", "").lower() in ("true", "1", "yes"):
-    # Register individual tools (9 tools for UI)
+    # Register individual tools (10 tools for UI)
     from tools.add_reaction import add_reaction
+    from tools.add_user import add_user
     from tools.delete_post import delete_post
     from tools.get_channel_history import get_channel_history
     from tools.get_thread_replies import get_thread_replies
@@ -129,13 +130,14 @@ if os.getenv("USE_INDIVIDUAL_TOOLS", "").lower() in ("true", "1", "yes"):
     mcp.tool(get_thread_replies)
     mcp.tool(get_user_profile)
     mcp.tool(get_users)
+    mcp.tool(add_user)
     mcp.tool(post_message)
     mcp.tool(reply_to_thread)
     mcp.tool(add_reaction)
     mcp.tool(delete_post)
-    print("[chat-diag] Registered 9 individual tools", file=sys.stderr)
+    print("[chat-diag] Registered 10 individual tools", file=sys.stderr)
 else:
-    # Register meta-tools (2 tools instead of 9)
+    # Register meta-tools (2 tools instead of 10)
     from tools._meta_tools import chat, chat_schema
 
     mcp.tool(chat)
