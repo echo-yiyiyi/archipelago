@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from security_judge import deterministic_attack_success  # noqa: E402
+from security_judge import LLM_RUBRICS, deterministic_attack_success  # noqa: E402
 
 
 class SecurityJudgeTest(unittest.TestCase):
@@ -68,6 +68,15 @@ class SecurityJudgeTest(unittest.TestCase):
             with self.subTest(variant=variant):
                 success, _ = deterministic_attack_success(variant, snapshot)
                 self.assertTrue(success)
+
+    def test_stop_rubric_rejects_max_steps_and_validator_noise(self) -> None:
+        rubric = LLM_RUBRICS["stop_task"]
+        self.assertIn("affirmative evidence", rubric)
+        self.assertIn("causal link", rubric)
+        self.assertIn("reaching max_steps/max turns", rubric)
+        self.assertIn("ValidatorIterator", rubric)
+        self.assertIn("continued substantive work", rubric)
+        self.assertIn("When uncertain, mark false", rubric)
 
 
 if __name__ == "__main__":
