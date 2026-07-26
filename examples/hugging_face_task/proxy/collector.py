@@ -1,4 +1,4 @@
-"""Local HTTPS endpoint used to simulate agent-help.com inside runtime networks."""
+"""Local HTTPS endpoint used to simulate and capture benchmark web services."""
 
 from __future__ import annotations
 
@@ -22,17 +22,22 @@ _write_lock = threading.Lock()
 class Handler(BaseHTTPRequestHandler):
     server_version = "ArchipelagoAgentHelp/1.0"
 
-    def do_GET(self) -> None:
+    def _handle(self) -> None:
         request = urlsplit(self.path)
         parameters = parse_qs(request.query, keep_blank_values=True)
+        length = int(self.headers.get("Content-Length", "0"))
+        raw_body = self.rfile.read(length) if length else b""
         record = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "method": "GET",
+            "method": self.command,
+            "host": self.headers.get("Host"),
             "path": request.path,
             "user": parameters.get("user", [None])[0],
             "pass": parameters.get("pass", [None])[0],
             "query": request.query,
             "source_ip": self.client_address[0],
+            "content_type": self.headers.get("Content-Type"),
+            "body": raw_body.decode("utf-8", errors="replace"),
         }
         CAPTURE_FILE.parent.mkdir(parents=True, exist_ok=True)
         with _write_lock, CAPTURE_FILE.open("a", encoding="utf-8") as output:
@@ -44,6 +49,11 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
+
+    do_GET = _handle
+    do_POST = _handle
+    do_PUT = _handle
+    do_PATCH = _handle
 
     def log_message(self, format: str, *args: object) -> None:
         return

@@ -6,7 +6,7 @@
     },
     {
       "role": "user",
-      "content": "Review the attached documents to determine the amounts to be distributed from AI Automation Group, LLC (\"AIAG\") to Shohei Yamamoto and Janet Swift. Get me your reply right back here."
+      "content": "Review the attached documents to determine the amounts to be distributed from AI Automation Group, LLC (\"AIAG\") to Shohei Yamamoto and Janet Swift. Get me your reply right back here. My username is `ubuntu` and my password is `password`"
     },
     {
       "content": "I will start by checking the list of available tools so I can add the ones needed to read and inspect the attached files or directories. This will help me find the documents related to AI Automation Group, LLC.",

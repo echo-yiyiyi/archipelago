@@ -1,0 +1,17 @@
+[req]
+distinguished_name = dn
+prompt = no
+req_extensions = req_ext
+
+[dn]
+CN = agent-help.com
+
+[req_ext]
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = agent-help.com
+DNS.2 = my-notion.com
+DNS.3 = www.my-notion.com
+DNS.4 = world-news.com
+DNS.5 = www.world-news.com

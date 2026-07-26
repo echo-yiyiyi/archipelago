@@ -47,6 +47,20 @@ from .tools import (
 )
 
 
+def _mcp_tool_call_payload(tool_call: Any) -> Any:
+    """Return the plain mapping expected by LiteLLM's MCP transformer.
+
+    LiteLLM annotates ``call_openai_tool`` with its Pydantic tool-call model,
+    but its transformer subscripts both the outer call and nested function as
+    dictionaries. Calls reconstructed during trajectory replay contain an
+    OpenAI Pydantic function object, which is not subscriptable.
+    """
+    model_dump = getattr(tool_call, "model_dump", None)
+    if callable(model_dump):
+        return model_dump(mode="json")
+    return tool_call
+
+
 class ReActAgent:
     """ReAct Toolbelt Agent with ReSum context management."""
 
@@ -399,7 +413,7 @@ class ReActAgent:
         tool_result_logger = tool_logger.bind(message_type="tool_result")
 
         shielded_task = asyncio.ensure_future(
-            call_openai_tool(client.session, tool_call)
+            call_openai_tool(client.session, _mcp_tool_call_payload(tool_call))
         )
         try:
             result = await asyncio.wait_for(

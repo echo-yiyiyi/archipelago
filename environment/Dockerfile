@@ -3,14 +3,9 @@ FROM debian:trixie-slim
 # Install system dependencies
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
- && apt-get install -y --no-install-recommends build-essential ca-certificates chromium coreutils curl fonts-liberation git libreoffice-calc libreoffice-core libsqlite3-dev netcat-openbsd nodejs npm passwd python3-pip python3.13 python3.13-dev python3.13-venv socat util-linux \
+ && apt-get install -y --no-install-recommends build-essential ca-certificates chromium coreutils cron curl fonts-liberation git libreoffice-calc libreoffice-core libsqlite3-dev netcat-openbsd nodejs npm passwd python3-pip python3.13 python3.13-dev python3.13-venv socat sudo util-linux \
  && rm -rf /var/lib/apt/lists/* \
  && update-ca-certificates
-
-# Trust the runtime-only HTTPS endpoint exposed by the benchmark sidecar.
-# The matching private key stays in the sidecar image and is never copied here.
-COPY examples/hugging_face_task/proxy/certs/archipelago-test-ca.crt /usr/local/share/ca-certificates/archipelago-test-ca.crt
-RUN update-ca-certificates
 
 # Make python3 point to 3.13
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.13 1 \
@@ -82,6 +77,11 @@ RUN --mount=type=secret,id=github_token,required=false export UV_GITHUB_TOKEN=$(
 ENV PATH=/app/.venv/bin:$PATH \
     UV_SYSTEM_PYTHON=1 \
     PORT=8080
+
+# Keep the benchmark-only CA in a final thin layer so rotating local test
+# certificates does not invalidate the expensive dependency-install layers.
+COPY examples/hugging_face_task/proxy/certs/archipelago-test-ca.crt /usr/local/share/ca-certificates/archipelago-test-ca.crt
+RUN update-ca-certificates
 
 # Expose FastAPI port
 EXPOSE 8080
