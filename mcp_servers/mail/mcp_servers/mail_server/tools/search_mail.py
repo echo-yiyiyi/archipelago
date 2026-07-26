@@ -6,7 +6,7 @@ from email.utils import parsedate_to_datetime
 from models.mail import MailData, MailListResponse, MailSummary, SearchMailInput
 from utils.config import DEFAULT_LIST_LIMIT, MAX_LIST_LIMIT
 from utils.decorators import make_async_background
-from utils.mbox_utils import UTF8Mbox, parse_message_to_dict
+from utils.mbox_utils import UTF8Mbox, is_message_deleted, parse_message_to_dict
 from utils.path import get_mbox_path
 
 logger = logging.getLogger(__name__)
@@ -70,6 +70,8 @@ def search_mail(input: SearchMailInput) -> str:
             matching_messages = []
             for message in mbox:
                 try:
+                    if is_message_deleted(message):
+                        continue
                     mail_data_dict = parse_message_to_dict(message)
                     mail = MailData.model_validate(mail_data_dict)
 

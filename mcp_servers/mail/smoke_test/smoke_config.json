@@ -13,7 +13,8 @@
     "send_mail",
     "reply_mail",
     "reply_all_mail",
-    "forward_mail"
+    "forward_mail",
+    "delete_mail"
   ],
   "required_tools": [
     "list_mails",

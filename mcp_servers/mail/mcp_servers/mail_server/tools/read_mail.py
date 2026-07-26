@@ -4,7 +4,7 @@ from typing import Annotated
 from models.mail import MailData
 from pydantic import Field, ValidationError
 from utils.decorators import make_async_background
-from utils.mbox_utils import UTF8Mbox, parse_message_to_dict
+from utils.mbox_utils import UTF8Mbox, is_message_deleted, parse_message_to_dict
 from utils.path import get_mbox_path
 
 
@@ -40,6 +40,8 @@ def read_mail(
             for message in mbox:
                 msg_id = message.get("Message-ID")
                 if msg_id == mail_id:
+                    if is_message_deleted(message):
+                        return f"Mail not found with ID: {mail_id}"
                     # Parse the message
                     mail_data_dict = parse_message_to_dict(message)
                     mail_data = MailData.model_validate(mail_data_dict)

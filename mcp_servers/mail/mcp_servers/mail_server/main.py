@@ -1,18 +1,18 @@
 """Mail MCP Server.
 
 Tool registration is controlled by the USE_INDIVIDUAL_TOOLS environment variable:
-- USE_INDIVIDUAL_TOOLS=true (default): 7 individual tools for UI display
+- USE_INDIVIDUAL_TOOLS=true: 8 individual tools for UI display
 - USE_INDIVIDUAL_TOOLS=false: 2 meta-tools for LLM agents
 
 Meta-tools:
 | Tool        | Actions                                                       |
 |-------------|---------------------------------------------------------------|
-| mail        | list, read, search, send, reply, reply_all, forward           |
+| mail        | list, read, search, send, reply, reply_all, forward, delete   |
 | mail_schema | Get JSON schema for any input/output model                    |
 
 Individual tools:
 - list_mails, read_mail, search_mail, send_mail
-- reply_mail, reply_all_mail, forward_mail
+- reply_mail, reply_all_mail, forward_mail, delete_mail
 """
 
 import asyncio
@@ -30,7 +30,7 @@ from middleware.validation_error_sanitizer import ValidationErrorSanitizerMiddle
 
 mcp = FastMCP(
     "mail-server",
-    instructions="Email stored in mbox format in a sandboxed directory. Send, read, list, search, reply, reply-all, and forward; threading via In-Reply-To/References. No external SMTP/IMAP. Use for email workflows and training agents on inbox management.",
+    instructions="Email stored in mbox format in a sandboxed directory. Send, read, list, search, reply, reply-all, forward, and soft-delete; threading via In-Reply-To/References. No external SMTP/IMAP. Use for email workflows and training agents on inbox management.",
 )
 mcp.add_middleware(ErrorHandlingMiddleware(include_traceback=True))
 mcp.add_middleware(RetryMiddleware())
@@ -39,7 +39,8 @@ mcp.add_middleware(ValidationErrorSanitizerMiddleware())
 
 # Mutually exclusive: USE_INDIVIDUAL_TOOLS gets individual tools, otherwise meta-tools
 if os.getenv("USE_INDIVIDUAL_TOOLS", "").lower() in ("true", "1", "yes"):
-    # Register individual tools (7 tools for UI)
+    # Register individual tools (8 tools for UI)
+    from tools.delete_mail import delete_mail
     from tools.forward_mail import forward_mail
     from tools.list_mails import list_mails
     from tools.read_mail import read_mail
@@ -55,8 +56,9 @@ if os.getenv("USE_INDIVIDUAL_TOOLS", "").lower() in ("true", "1", "yes"):
     mcp.tool(reply_mail)
     mcp.tool(reply_all_mail)
     mcp.tool(forward_mail)
+    mcp.tool(delete_mail)
 else:
-    # Register meta-tools (2 tools instead of 7)
+    # Register meta-tools (2 tools instead of 8)
     from tools._meta_tools import mail, mail_schema
 
     mcp.tool(mail)
