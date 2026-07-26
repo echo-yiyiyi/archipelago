@@ -73,3 +73,50 @@ async def test_add_user_rejects_unknown_channel(tmp_path, monkeypatch):
         )
 
     assert not (tmp_path / "Users").exists()
+
+
+@pytest.mark.asyncio
+async def test_add_user_rebuilds_missing_group_info(tmp_path, monkeypatch):
+    monkeypatch.setattr(path_utils, "CHAT_DATA_ROOT", str(tmp_path))
+    group_dir = tmp_path / "Groups" / "Space existing"
+    group_dir.mkdir(parents=True)
+    (group_dir / "messages.json").write_text(
+        json.dumps({"messages": []}), encoding="utf-8"
+    )
+    user_dir = tmp_path / "Users" / "User existing"
+    user_dir.mkdir(parents=True)
+    (user_dir / "user_info.json").write_text(
+        json.dumps(
+            {
+                "user": {
+                    "name": "Existing User",
+                    "email": "existing@example.com",
+                    "user_type": "Human",
+                },
+                "membership_info": [
+                    {
+                        "group_name": "Existing Channel",
+                        "group_id": "Space existing",
+                        "membership_state": "MEMBER_JOINED",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    result = await add_user(
+        AddUserRequest(
+            name="New User",
+            email="new@example.com",
+            channel_id="Space existing",
+        )
+    )
+
+    group = json.loads((group_dir / "group_info.json").read_text(encoding="utf-8"))
+    assert result.channel_id == "Space existing"
+    assert group["name"] == "Existing Channel"
+    assert [member["email"] for member in group["members"]] == [
+        "existing@example.com",
+        "new@example.com",
+    ]

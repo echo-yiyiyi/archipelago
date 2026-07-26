@@ -1,7 +1,7 @@
 """Chat MCP Server.
 
 Tool registration is controlled by the USE_INDIVIDUAL_TOOLS environment variable:
-- USE_INDIVIDUAL_TOOLS=true (default): 9 individual tools for UI display
+- USE_INDIVIDUAL_TOOLS=true: 10 individual tools for UI display
 - USE_INDIVIDUAL_TOOLS=false: 2 meta-tools for LLM agents
 
 Meta-tools:
@@ -95,8 +95,8 @@ mcp = FastMCP(
     "chat-server",
     instructions=(
         "Mattermost/Slack-like messaging: channels (groups/spaces), threaded replies, "
-        "emoji reactions. Post messages, reply in threads, browse channel history, add "
-        "reactions, soft-delete posts. Current user identity is set via environment "
+        "emoji reactions. Add users, post messages, reply in threads, browse channel "
+        "history, add reactions, and soft-delete posts. Current user identity is set via environment "
         "(e.g. CURRENT_USER_EMAIL). Data stored in JSON under a configurable root; no "
         "external chat APIs. Use for team chat simulation and training agents on "
         "channel-based communication."
