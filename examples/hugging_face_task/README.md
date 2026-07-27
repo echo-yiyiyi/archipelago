@@ -1,4 +1,4 @@
-# Hugging Face Task Example
+Hugging Face Task Example
 
 Run tasks from the [mercor/apex-agents](https://huggingface.co/datasets/mercor/apex-agents) benchmark dataset, which contains 480 professional services tasks across investment banking, tax accounting, management consulting, and more.
 
@@ -11,9 +11,6 @@ The default task is an Investment Banking challenge from World 221. The prompt i
 > Edit the existing merger model and add two sensitivity analyses: one showing BBDC accretion/dilution and one showing TVPG accretion/dilution, each sensitized to bid premium (10% and 20%) and cash consideration (10% and 15%).
 >
 > Assume an increase of EBIT Synergies by 480bps and a 210bps decrease in post-deal bidder share price downside. All output values should be in %, rounded to 2 decimal places.
-
-
-
 
 ## Quick Start
 
@@ -29,6 +26,7 @@ export OPENAI_API_KEY=...
 ```
 
 The script will:
+
 1. Download task data from HuggingFace
 2. Start the environment container
 3. Populate the environment with the world snapshot
@@ -101,14 +99,14 @@ kept so the retained workers remain usable.
 For a concurrent run, results are saved to
 `output/concurrent/<run-id>/tasks/<task_id>/`:
 
-| File | Description |
-|------|-------------|
-| `trajectory.json` | Agent's conversation history and tool calls |
-| `final_snapshot.zip` | Final state of the environment |
-| `grades.json` | Grading results with scores and rationale |
-| `initial_messages.json` | Task prompt (from HuggingFace) |
-| `agent_config.json` | Agent configuration used |
-| `verifiers.json` | Grading criteria (from HuggingFace rubric) |
+| File                      | Description                                 |
+| ------------------------- | ------------------------------------------- |
+| `trajectory.json`       | Agent's conversation history and tool calls |
+| `final_snapshot.zip`    | Final state of the environment              |
+| `grades.json`           | Grading results with scores and rationale   |
+| `initial_messages.json` | Task prompt (from HuggingFace)              |
+| `agent_config.json`     | Agent configuration used                    |
+| `verifiers.json`        | Grading criteria (from HuggingFace rubric)  |
 
 ## How It Works
 
@@ -250,6 +248,16 @@ Run up to four variants simultaneously:
   --parallel 4
 ```
 
+To model text extracted from a workspace document, inject each variant inside
+the last tool result's JSON `output` string instead of after the tool payload:
+
+```bash
+./run_isolated.sh input/task_<task-id>/trajectory.json 5 \
+  --text-variants variants.json \
+  --inside-last-tool-output \
+  --parallel 4
+```
+
 Each variant gets a unique port, run ID, and prepared trajectory under
 `input/.isolated_batches/`. Sibling `sumerize_*.json` artifacts are copied
 automatically. Launcher output for each variant is saved beside the batch
@@ -272,17 +280,17 @@ The default `mcp_config_all_oss_servers.json` starts all 9 servers. For faster s
 
 ## Available MCP Servers
 
-| Server | Description |
-|--------|-------------|
-| `calendar_server` | Calendar and scheduling |
-| `chat_server` | Chat/messaging |
-| `code_execution_server` | Python code execution |
-| `spreadsheets_server` | Spreadsheets/spreadsheet manipulation |
-| `filesystem_server` | File operations |
-| `mail_server` | Email |
-| `pdfs_server` | PDF reading and manipulation |
-| `presentations_server` | Presentations/slides |
-| `documents_server` | Documents/document editing |
+| Server                    | Description                           |
+| ------------------------- | ------------------------------------- |
+| `calendar_server`       | Calendar and scheduling               |
+| `chat_server`           | Chat/messaging                        |
+| `code_execution_server` | Python code execution                 |
+| `spreadsheets_server`   | Spreadsheets/spreadsheet manipulation |
+| `filesystem_server`     | File operations                       |
+| `mail_server`           | Email                                 |
+| `pdfs_server`           | PDF reading and manipulation          |
+| `presentations_server`  | Presentations/slides                  |
+| `documents_server`      | Documents/document editing            |
 
 ## Troubleshooting
 
@@ -293,6 +301,7 @@ The dataset contains 480 tasks indexed 0-479. Use `--task-index` for numeric ind
 ### Environment fails to start
 
 Check Docker is running and ports aren't in use:
+
 ```bash
 docker ps
 lsof -i :8080
@@ -301,6 +310,7 @@ lsof -i :8080
 ### Agent timeout
 
 For complex tasks, the agent may need more steps. Modify `max_steps` in `main.py`:
+
 ```python
 agent_config = {
     "agent_config_values": {"timeout": 3600, "max_steps": 100},  # Increase from 50

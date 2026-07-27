@@ -178,7 +178,9 @@ def load_variants(path: Path, repeats: int = 3) -> list[Variant]:
     return variants
 
 
-def append_last_tool_text(trajectory: dict[str, object], addition: str) -> int:
+def append_last_tool_text(
+    trajectory: dict[str, object], addition: str, *, inside_output: bool = False
+) -> int:
     messages = trajectory.get("messages")
     if not isinstance(messages, list):
         raise ValueError("trajectory must contain a messages list")
@@ -188,24 +190,45 @@ def append_last_tool_text(trajectory: dict[str, object], addition: str) -> int:
             continue
         content = message.get("content")
         if isinstance(content, str):
-            message["content"] = content + addition
+            message["content"] = inject_tool_text(content, addition, inside_output)
             return 1
         if isinstance(content, list):
             for block in reversed(content):
                 if isinstance(block, dict) and isinstance(block.get("text"), str):
-                    block["text"] += addition
+                    block["text"] = inject_tool_text(
+                        block["text"], addition, inside_output
+                    )
                     return 1
         raise ValueError("last tool message has no replaceable text field")
     raise ValueError("trajectory contains no tool message")
 
 
+def inject_tool_text(text: str, addition: str, inside_output: bool) -> str:
+    """Append normally or place text inside a JSON tool result's output field."""
+    if not inside_output:
+        return text + addition
+    try:
+        payload = json.loads(text)
+    except json.JSONDecodeError as error:
+        raise ValueError(
+            "--inside-last-tool-output requires the last tool text to be JSON"
+        ) from error
+    if not isinstance(payload, dict) or not isinstance(payload.get("output"), str):
+        raise ValueError(
+            "--inside-last-tool-output requires a string output field"
+        )
+    payload["output"] += addition
+    return json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+
+
 def prepare_variant(
-    source: Path, task_id: str, batch_dir: Path, variant: Variant
+    source: Path, task_id: str, batch_dir: Path, variant: Variant,
+    *, inside_output: bool = False,
 ) -> Path:
     target_dir = batch_dir / variant.name / task_id
     target_dir.mkdir(parents=True, exist_ok=False)
     trajectory = json.loads(source.read_text())
-    append_last_tool_text(trajectory, variant.text)
+    append_last_tool_text(trajectory, variant.text, inside_output=inside_output)
     target = target_dir / "trajectory.json"
     target.write_text(json.dumps(trajectory, indent=2, ensure_ascii=False) + "\n")
     for summary in source.parent.glob("sumerize_*.json"):
@@ -246,6 +269,11 @@ def main() -> int:
     parser.add_argument("--repeats", type=int, default=3)
     parser.add_argument("--base-port", type=int, default=18080)
     parser.add_argument("--prepare-only", action="store_true")
+    parser.add_argument(
+        "--inside-last-tool-output",
+        action="store_true",
+        help="append each variant inside the last JSON tool result's output string",
+    )
     args, main_options = parser.parse_known_args()
 
     source = args.trajectory.resolve()
@@ -277,7 +305,16 @@ def main() -> int:
     batch_dir = BATCH_INPUT_ROOT / batch_id
     batch_dir.mkdir(parents=True, exist_ok=False)
     prepared = [
-        (variant, prepare_variant(source, task_id, batch_dir, variant))
+        (
+            variant,
+            prepare_variant(
+                source,
+                task_id,
+                batch_dir,
+                variant,
+                inside_output=args.inside_last_tool_output,
+            ),
+        )
         for variant in variants
     ]
     manifest = {
@@ -285,6 +322,7 @@ def main() -> int:
         "source_trajectory": str(source),
         "additional_turns": args.additional_turns,
         "parallel": parallel,
+        "inside_last_tool_output": args.inside_last_tool_output,
         "variants": [
             {
                 "name": variant.name,
