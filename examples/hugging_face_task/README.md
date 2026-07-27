@@ -197,6 +197,14 @@ positive number of new agent turns to allow. Additional
   --skip-build
 ```
 
+To add or override files in the fresh isolated `/filesystem`, pass an overlay
+directory. Its contents are populated after the original world and task files:
+
+```bash
+./run_isolated.sh /absolute/path/to/trajectory.json 10 \
+  --world-overlay /absolute/path/to/world_overlay
+```
+
 Replay results are not appended to the model context. The original messages
 and tool results remain the visible history, while replay restores MCP side
 effects, the toolbelt, and todo state in the fresh environment. A trajectory

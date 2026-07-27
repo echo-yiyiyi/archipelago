@@ -1,6 +1,7 @@
 #!/bin/bash
 # Resume one incomplete trajectory in a fresh isolated environment.
 # Usage: ./run_isolated.sh TRAJECTORY.json ADDITIONAL_TURNS [main_concurrency options]
+# Filesystem overlay: add --world-overlay DIR; DIR contents are copied to /filesystem.
 # Batch: ./run_isolated.sh TRAJECTORY.json ADDITIONAL_TURNS \
 #          --text-variants variants.json [--parallel N] [main_concurrency options]
 

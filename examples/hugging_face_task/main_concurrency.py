@@ -628,6 +628,7 @@ def run_task(
     active_processes: ActiveProcesses,
     dataset_dir: Path | None,
     orchestrator_config: Path | None,
+    world_overlay: Path | None,
     injection: dict[str, object] | None,
     injection_goals: Path | None,
     resume_trajectory: Path | None = None,
@@ -688,6 +689,8 @@ def run_task(
             command.extend(["--dataset-dir", str(dataset_dir)])
         if orchestrator_config:
             command.extend(["--orchestrator-config", str(orchestrator_config)])
+        if world_overlay:
+            command.extend(["--world-overlay", str(world_overlay)])
         if injection:
             command.extend(["--injection-json", json.dumps(injection)])
             command.extend(["--injection-goals", str(injection_goals)])
@@ -767,6 +770,10 @@ def main() -> int:
     )
     parser.add_argument("--dataset-dir", type=Path, help="Read tasks/worlds/files locally.")
     parser.add_argument("--orchestrator-config", type=Path, help="Config JSON used by every task.")
+    parser.add_argument(
+        "--world-overlay", type=Path,
+        help="Overlay this directory onto /filesystem after world and task files.",
+    )
     parser.add_argument("--injections-jsonl", type=Path, help="Per-task runtime file injections.")
     parser.add_argument("--injection-goals", type=Path, help="Python injection-goal mapping.")
     parser.add_argument("--resume-trajectory", type=Path)
@@ -883,6 +890,7 @@ def main() -> int:
                 active_processes,
                 args.dataset_dir.resolve() if args.dataset_dir else None,
                 args.orchestrator_config.resolve() if args.orchestrator_config else None,
+                args.world_overlay.resolve() if args.world_overlay else None,
                 injections.get(selector),
                 args.injection_goals.resolve() if args.injection_goals else None,
                 args.resume_trajectory.resolve() if args.resume_trajectory else None,

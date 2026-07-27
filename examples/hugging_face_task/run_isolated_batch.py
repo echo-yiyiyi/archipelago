@@ -131,6 +131,13 @@ def safe_name(value: str, index: int) -> str:
 
 def load_variants(path: Path, repeats: int = 3) -> list[Variant]:
     data = json.loads(path.read_text())
+    default_experiment = (
+        data.get("experiment", "") if isinstance(data, dict) else ""
+    )
+    if not isinstance(default_experiment, str):
+        raise ValueError("top-level experiment must be a string")
+    if not default_experiment:
+        default_experiment = os.environ.get("HF_EXPERIMENT_NAME", "")
     raw: object
     if isinstance(data, list):
         raw = data
@@ -162,6 +169,16 @@ def load_variants(path: Path, repeats: int = 3) -> list[Variant]:
             raise ValueError(f"variant {index} must be a string or an object with text")
         if not text:
             raise ValueError(f"variant {index} has empty text")
+        requested_experiment = (
+            item.get("experiment", default_experiment)
+            if isinstance(item, dict)
+            else default_experiment
+        )
+        if not isinstance(requested_experiment, str):
+            raise ValueError(f"variant {index} experiment must be a string")
+        # Preserve the old behavior for callers that do not distinguish a
+        # position label from the security-judge experiment name.
+        experiment = requested_experiment or requested_name
         name = safe_name(requested_name, index)
         if name in used_names:
             name = f"{name}_{index:03d}"
@@ -171,7 +188,7 @@ def load_variants(path: Path, repeats: int = 3) -> list[Variant]:
                 Variant(
                     name=f"{name}_{repeat}",
                     text=text,
-                    experiment=requested_name,
+                    experiment=experiment,
                     repeat=repeat,
                 )
             )

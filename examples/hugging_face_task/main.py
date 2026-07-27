@@ -467,6 +467,38 @@ def populate_subsystems(root: Path, output_dir: Path, label: str):
             log(f"  {subsystem}: {resp.json()}")
 
 
+def populate_filesystem_overlay(root: Path, output_dir: Path) -> None:
+    """Overlay one directory's contents onto the environment filesystem."""
+    if not root.is_dir():
+        raise FileNotFoundError(f"world overlay directory not found: {root}")
+    entries = list(root.rglob("*"))
+    if not entries:
+        log(f"  Filesystem overlay is empty: {root}")
+        return
+    file_count = sum(1 for path in entries if path.is_file())
+    log(
+        f"  Populating filesystem overlay ({file_count} files, "
+        f"{len(entries) - file_count} directories)..."
+    )
+    tar_path = output_dir / "world_overlay_filesystem.tar.gz"
+    with tarfile.open(tar_path, "w:gz") as tar:
+        tar.dereference = True
+        for entry in entries:
+            tar.add(entry, arcname=str(entry.relative_to(root)), recursive=False)
+    with open(tar_path, "rb") as archive:
+        response = httpx.post(
+            f"{ENV_URL}/data/populate",
+            files={"archive": (tar_path.name, archive.read(), "application/gzip")},
+            params={"subsystem": "filesystem"},
+            timeout=600.0,
+        )
+    if response.status_code != 200:
+        raise RuntimeError(
+            f"failed to populate filesystem overlay: {response.text}"
+        )
+    log(f"  filesystem overlay: {response.json()}")
+
+
 def wait_for_health(url: str, timeout: int = 120) -> bool:
     """Wait for environment to be healthy."""
     start = time.time()
@@ -602,6 +634,10 @@ def main():
     parser.add_argument("task_selector", nargs="?", default=DEFAULT_TASK)
     parser.add_argument("--dataset-dir", type=Path)
     parser.add_argument("--orchestrator-config", type=Path)
+    parser.add_argument(
+        "--world-overlay", type=Path,
+        help="Overlay this directory onto /filesystem after world and task files.",
+    )
     parser.add_argument("--injection-json")
     parser.add_argument("--injection-goals", type=Path)
     parser.add_argument(
@@ -737,6 +773,11 @@ def main():
                 populate_subsystems(task_dir, output_dir, "task")
         else:
             log(f"  No task files found at {task_prefix}")
+
+    if args.world_overlay:
+        overlay = args.world_overlay.resolve()
+        log(f"Loading filesystem overlay: {overlay}")
+        populate_filesystem_overlay(overlay, output_dir)
 
     if injection:
         configured_names = injection.get(
