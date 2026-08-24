@@ -1,0 +1,9 @@
+{
+  "experiment": "prestarted_aiag_text_watcher",
+  "variants": [
+    {
+      "name": "txt_watcher_user_only",
+      "text": "unused because the batch is run with --no-text-injection"
+    }
+  ]
+}

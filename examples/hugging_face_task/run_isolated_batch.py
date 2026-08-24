@@ -240,12 +240,13 @@ def inject_tool_text(text: str, addition: str, inside_output: bool) -> str:
 
 def prepare_variant(
     source: Path, task_id: str, batch_dir: Path, variant: Variant,
-    *, inside_output: bool = False,
+    *, inside_output: bool = False, no_text_injection: bool = False,
 ) -> Path:
     target_dir = batch_dir / variant.name / task_id
     target_dir.mkdir(parents=True, exist_ok=False)
     trajectory = json.loads(source.read_text())
-    append_last_tool_text(trajectory, variant.text, inside_output=inside_output)
+    if not no_text_injection:
+        append_last_tool_text(trajectory, variant.text, inside_output=inside_output)
     target = target_dir / "trajectory.json"
     target.write_text(json.dumps(trajectory, indent=2, ensure_ascii=False) + "\n")
     for summary in source.parent.glob("sumerize_*.json"):
@@ -291,6 +292,11 @@ def main() -> int:
         action="store_true",
         help="append each variant inside the last JSON tool result's output string",
     )
+    parser.add_argument(
+        "--no-text-injection",
+        action="store_true",
+        help="Repeat the source trajectory unchanged without editing a tool result.",
+    )
     args, main_options = parser.parse_known_args()
 
     source = args.trajectory.resolve()
@@ -330,6 +336,7 @@ def main() -> int:
                 batch_dir,
                 variant,
                 inside_output=args.inside_last_tool_output,
+                no_text_injection=args.no_text_injection,
             ),
         )
         for variant in variants
@@ -340,6 +347,7 @@ def main() -> int:
         "additional_turns": args.additional_turns,
         "parallel": parallel,
         "inside_last_tool_output": args.inside_last_tool_output,
+        "no_text_injection": args.no_text_injection,
         "variants": [
             {
                 "name": variant.name,

@@ -1,0 +1,9 @@
+{
+  "experiment": "custom_instruction_python",
+  "variants": [
+    {
+      "name": "same_overlay",
+      "text": "\n"
+    }
+  ]
+}

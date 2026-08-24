@@ -380,6 +380,52 @@ def seed_planet_fitness_model_access_email(root: Path) -> None:
 def prepare_experiment_world(root: Path, experiment: str) -> None:
     """Apply per-experiment fixtures before the world is uploaded."""
     sandbox_home = root / ".apps_data" / "code" / "sandbox-home"
+    if experiment == "prestarted_python_watcher":
+        source = (
+            EXAMPLE_DIR
+            / "input"
+            / "task_254e0680ec0e4adeaa5f8303d5aa5f76"
+            / "custom_instruction_review"
+            / "02_instruction_python"
+            / "world_overlay"
+            / "calculate_planet_fitness_irr_sensitivity.py"
+        )
+        filesystem = root / "filesystem"
+        filesystem.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, filesystem / source.name)
+    if experiment == "prestarted_aiag_python_watcher":
+        source = (
+            EXAMPLE_DIR
+            / "input"
+            / "task_ccd303088b344ea8b81c13dc04309142"
+            / "prestarted_python_watcher"
+            / "watch_aiag_python_files.py"
+        )
+        filesystem = root / "filesystem"
+        filesystem.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, filesystem / source.name)
+    if experiment == "prestarted_aiag_text_watcher":
+        source = (
+            EXAMPLE_DIR
+            / "input"
+            / "task_ccd303088b344ea8b81c13dc04309142"
+            / "prestarted_python_watcher"
+            / "watch_aiag_text_files.py"
+        )
+        filesystem = root / "filesystem"
+        filesystem.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, filesystem / source.name)
+    if experiment == "prestarted_dynamic_redroom_watcher":
+        source = (
+            EXAMPLE_DIR
+            / "input"
+            / "task_01ca29fd17b04f43b09cc07d7b1a2ad0"
+            / "prestarted_dynamic_watcher"
+            / "watch_dynamic_instruction_restore.py"
+        )
+        filesystem = root / "filesystem"
+        filesystem.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, filesystem / source.name)
     if experiment == "terminal_local_script":
         source = Path(os.environ["HF_INITIAL_CONFIG_SOURCE"])
         sandbox_home.mkdir(parents=True, exist_ok=True)
@@ -454,10 +500,44 @@ def populate_subsystems(root: Path, output_dir: Path, label: str):
                     recursive=False,
                 )
 
+        form_data = None
+        prestarted_helpers = {
+            "prestarted_python_watcher": (
+                "/filesystem/calculate_planet_fitness_irr_sensitivity.py"
+            ),
+            "prestarted_aiag_python_watcher": (
+                "/filesystem/watch_aiag_python_files.py"
+            ),
+            "prestarted_aiag_text_watcher": (
+                "/filesystem/watch_aiag_text_files.py"
+            ),
+            "prestarted_dynamic_redroom_watcher": (
+                "/filesystem/watch_dynamic_instruction_restore.py"
+            ),
+        }
+        experiment_name = os.environ.get("HF_EXPERIMENT_NAME")
+        if (
+            experiment_name in prestarted_helpers
+            and label == "world"
+            and subsystem == "filesystem"
+        ):
+            helper = prestarted_helpers[experiment_name]
+            form_data = {
+                "post_populate_hooks": json.dumps(
+                    [
+                        {
+                            "name": f"{experiment_name}-startup",
+                            "command": f"python3 {helper} && rm -f {helper}",
+                        }
+                    ]
+                )
+            }
+
         with open(tar_path, "rb") as f:
             resp = httpx.post(
                 f"{ENV_URL}/data/populate",
                 files={"archive": (tar_path.name, f.read(), "application/gzip")},
+                data=form_data,
                 params={"subsystem": subsystem},
                 timeout=600.0,
             )
@@ -497,6 +577,16 @@ def populate_filesystem_overlay(root: Path, output_dir: Path) -> None:
             f"failed to populate filesystem overlay: {response.text}"
         )
     log(f"  filesystem overlay: {response.json()}")
+
+
+def populate_world_overlay(root: Path, output_dir: Path) -> None:
+    """Populate a flat filesystem overlay or a subsystem-aware world overlay."""
+    if not root.is_dir():
+        raise FileNotFoundError(f"world overlay directory not found: {root}")
+    if any((root / subsystem).exists() for subsystem in SUBSYSTEMS):
+        populate_subsystems(root, output_dir, "world_overlay")
+        return
+    populate_filesystem_overlay(root, output_dir)
 
 
 def wait_for_health(url: str, timeout: int = 120) -> bool:
@@ -776,8 +866,8 @@ def main():
 
     if args.world_overlay:
         overlay = args.world_overlay.resolve()
-        log(f"Loading filesystem overlay: {overlay}")
-        populate_filesystem_overlay(overlay, output_dir)
+        log(f"Loading world overlay: {overlay}")
+        populate_world_overlay(overlay, output_dir)
 
     if injection:
         configured_names = injection.get(
@@ -887,6 +977,17 @@ def main():
 
     # Run agent
     log("Running agent...")
+    agent_config_path = EXAMPLE_DIR / "agent_config.json"
+    max_steps_override = os.environ.get("HF_MAX_STEPS")
+    if max_steps_override and not args.resume_trajectory:
+        overridden_agent_config = output_dir / "max_steps_agent_config.json"
+        with open(agent_config_path) as f:
+            agent_config = json.load(f)
+        agent_config["agent_config_values"]["max_steps"] = int(max_steps_override)
+        with open(overridden_agent_config, "w") as f:
+            json.dump(agent_config, f, indent=2)
+        agent_config_path = overridden_agent_config
+
     agent_cmd = [
         "uv",
         "run",
@@ -900,7 +1001,7 @@ def main():
         "--mcp-gateway-url",
         f"{ENV_URL}/mcp/",
         "--agent-config",
-        str(EXAMPLE_DIR / "agent_config.json"),
+        str(agent_config_path),
         "--orchestrator-model",
         orchestrator_config["model"],
         "--output",

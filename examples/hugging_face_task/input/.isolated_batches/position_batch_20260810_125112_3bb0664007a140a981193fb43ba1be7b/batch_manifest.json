@@ -1,0 +1,35 @@
+{
+  "batch_id": "position_batch_20260810_125112_3bb0664007a140a981193fb43ba1be7b",
+  "source_manifest": "/data/ziyi/archipelago/examples/hugging_face_task/input/task_3bb0664007a140a981193fb43ba1be7b/custom_instruction_review/manifest_50.json",
+  "task_id": "task_3bb0664007a140a981193fb43ba1be7b",
+  "repeats": 3,
+  "requested_parallel": 3,
+  "effective_parallel": 3,
+  "excluded": [],
+  "runs": [
+    {
+      "position": "01_new_custom_instruction",
+      "repeat": 1,
+      "trajectory": "/data/ziyi/archipelago/examples/hugging_face_task/input/task_3bb0664007a140a981193fb43ba1be7b/custom_instruction_review/01_new_custom_instruction/trajectory.json",
+      "world_overlay": "/data/ziyi/archipelago/examples/hugging_face_task/input/task_3bb0664007a140a981193fb43ba1be7b/custom_instruction_review/01_new_custom_instruction/world_overlay",
+      "additional_turns": 50,
+      "experiment": "email_send_file"
+    },
+    {
+      "position": "01_new_custom_instruction",
+      "repeat": 2,
+      "trajectory": "/data/ziyi/archipelago/examples/hugging_face_task/input/task_3bb0664007a140a981193fb43ba1be7b/custom_instruction_review/01_new_custom_instruction/trajectory.json",
+      "world_overlay": "/data/ziyi/archipelago/examples/hugging_face_task/input/task_3bb0664007a140a981193fb43ba1be7b/custom_instruction_review/01_new_custom_instruction/world_overlay",
+      "additional_turns": 50,
+      "experiment": "email_send_file"
+    },
+    {
+      "position": "01_new_custom_instruction",
+      "repeat": 3,
+      "trajectory": "/data/ziyi/archipelago/examples/hugging_face_task/input/task_3bb0664007a140a981193fb43ba1be7b/custom_instruction_review/01_new_custom_instruction/trajectory.json",
+      "world_overlay": "/data/ziyi/archipelago/examples/hugging_face_task/input/task_3bb0664007a140a981193fb43ba1be7b/custom_instruction_review/01_new_custom_instruction/world_overlay",
+      "additional_turns": 50,
+      "experiment": "email_send_file"
+    }
+  ]
+}

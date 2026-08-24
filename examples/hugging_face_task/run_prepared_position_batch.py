@@ -49,7 +49,12 @@ def load_runs(manifest_path: Path, repeats: int, excluded: set[str]) -> tuple[st
         if name in excluded:
             continue
         case_dir = manifest_path.parent / name
-        trajectory = case_dir / "trajectory.json"
+        trajectory_value = case.get("trajectory")
+        trajectory = (
+            manifest_path.parent / trajectory_value
+            if isinstance(trajectory_value, str)
+            else case_dir / "trajectory.json"
+        )
         if not trajectory.is_file():
             raise ValueError(f"missing prepared trajectory: {trajectory}")
         overlay_value = case.get("world_overlay")
