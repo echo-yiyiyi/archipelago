@@ -376,6 +376,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--run-output", type=Path, default=DEFAULT_RUN_OUTPUT)
     parser.add_argument("--min-turns", type=int, default=30)
     parser.add_argument("--max-turns", type=int, default=100)
+    parser.add_argument(
+        "--model-max-turns",
+        type=int,
+        default=80,
+        help=(
+            "Do not run GPT/Opus for tasks above this turn count; record both "
+            "model scores as 0 (default: 80)."
+        ),
+    )
     parser.add_argument("--gpt-base-port", type=int, default=19080)
     parser.add_argument("--opus-base-port", type=int, default=19180)
     parser.add_argument(
@@ -409,6 +418,8 @@ def main() -> int:
     args = parse_args()
     if args.min_turns >= args.max_turns:
         raise ValueError("--min-turns must be smaller than --max-turns")
+    if args.model_max_turns < 0:
+        raise ValueError("--model-max-turns must be non-negative")
     if args.gpt_base_port == args.opus_base_port:
         raise ValueError("GPT and Opus must use different base ports")
     try:
@@ -500,40 +511,68 @@ def main() -> int:
                 f"turns={candidate.turns} gemini={candidate.gemini_score}",
                 flush=True,
             )
-            with ThreadPoolExecutor(max_workers=2) as executor:
-                futures = {
-                    name: executor.submit(
-                        run_model,
-                        name,
-                        config,
-                        candidate,
-                        args.run_output.resolve(),
-                        driver_logs,
-                        args.gpt_base_port if name == "gpt_5_6_sol" else args.opus_base_port,
-                        (
-                            str(gpt_network)
-                            if name == "gpt_5_6_sol"
-                            else str(opus_network)
-                        ),
-                        args.environment_image,
-                        args.proxy_image,
-                    )
-                    for name, config in MODEL_CONFIGS.items()
+            if candidate.turns > args.model_max_turns:
+                # Long trajectories are deliberately excluded from model reruns.
+                # Keep a complete numeric result so resume logic considers this
+                # candidate handled and does not repeatedly revisit it.
+                model_results = {
+                    name: {
+                        "model": name,
+                        "score": 0.0,
+                        "bucket": None,
+                        "matches_gemini_bucket": False,
+                        "returncode": None,
+                        "elapsed_seconds": 0.0,
+                        "run_id": None,
+                        "run_dir": None,
+                        "driver_log": None,
+                        "error": f"skipped: turns={candidate.turns} > {args.model_max_turns}",
+                    }
+                    for name in MODEL_CONFIGS
                 }
-                model_results = {name: future.result() for name, future in futures.items()}
+                retained = False
+                status = "skipped_turn_limit"
+                print(
+                    f"Skipping model runs: turns={candidate.turns} "
+                    f"> {args.model_max_turns}; both scores set to 0",
+                    flush=True,
+                )
+            else:
+                with ThreadPoolExecutor(max_workers=2) as executor:
+                    futures = {
+                        name: executor.submit(
+                            run_model,
+                            name,
+                            config,
+                            candidate,
+                            args.run_output.resolve(),
+                            driver_logs,
+                            args.gpt_base_port if name == "gpt_5_6_sol" else args.opus_base_port,
+                            (
+                                str(gpt_network)
+                                if name == "gpt_5_6_sol"
+                                else str(opus_network)
+                            ),
+                            args.environment_image,
+                            args.proxy_image,
+                        )
+                        for name, config in MODEL_CONFIGS.items()
+                    }
+                    model_results = {name: future.result() for name, future in futures.items()}
 
-            retained = all(
-                result["matches_gemini_bucket"] for result in model_results.values()
-            )
+                retained = all(
+                    result["matches_gemini_bucket"] for result in model_results.values()
+                )
+                status = (
+                    "completed"
+                    if all(result["score"] is not None for result in model_results.values())
+                    else "infrastructure_error"
+                )
             attempt = {
                 **asdict(candidate),
                 "attempted_at": utc_now(),
                 "models": model_results,
-                "status": (
-                    "completed"
-                    if all(result["score"] is not None for result in model_results.values())
-                    else "infrastructure_error"
-                ),
+                "status": status,
                 "retained": retained,
             }
             attempts.append(attempt)
