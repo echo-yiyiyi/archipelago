@@ -5,7 +5,9 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ARCHIPELAGO_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+# This copy lives in archipelago/benchmark, so the repository package root is
+# one level above it (unlike examples/hugging_face_task/run_concurrency.sh).
+ARCHIPELAGO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 export EXAMPLE_DIR="$SCRIPT_DIR"
 export ARCHIPELAGO_DIR
