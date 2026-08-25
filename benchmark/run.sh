@@ -3,7 +3,8 @@
 # Run a task from the mercor/apex-agents HuggingFace dataset.
 #
 # Usage:
-#   cd archipelago/examples/hugging_face_task
+#   cd archipelago
+#   ./benchmark/run.sh
 #   ./run.sh                    # Run default task (Investment Banking)
 #   ./run.sh 42                 # Run task at index 42
 #   ./run.sh task_abc123        # Run task by ID
@@ -16,7 +17,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ARCHIPELAGO_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+ARCHIPELAGO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 export EXAMPLE_DIR="$SCRIPT_DIR"
 export ENVIRONMENT_DIR="$ARCHIPELAGO_DIR/environment"

@@ -1,0 +1,7 @@
+{
+  "model": "anthropic/claude-opus-5",
+  "extra_args": {
+    "reasoning_effort": "max",
+    "max_tokens": 128000
+  }
+}

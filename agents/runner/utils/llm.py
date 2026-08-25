@@ -633,6 +633,8 @@ def _is_non_retriable_bad_request(e: Exception) -> bool:
         "unauthorized",
         "unsupported parameter",
         "unsupported value",
+        "is not supported for this model",
+        "responses api is enabled only for api-version",
         # OpenAI emits "Unknown parameter: 'foo'" for fields the model
         # endpoint doesn't accept (e.g. Responses-API `reasoning` sent to a
         # Chat-Completions-only model). These are config errors, not
