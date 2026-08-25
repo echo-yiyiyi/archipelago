@@ -219,7 +219,6 @@ def _write_json(path: Path, value: object) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(value, indent=2, ensure_ascii=False) + "\n")
 
-
 def seed_sara_chat(root: Path) -> None:
     """Create a deterministic Sara user and DM in the extracted world."""
     chat_root = root / ".apps_data" / "chat" / "Google Chat"
