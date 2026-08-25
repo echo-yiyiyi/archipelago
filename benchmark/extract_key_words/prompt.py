@@ -9,7 +9,7 @@ Selection rules:
 4. Preserve specific wording and capitalization from the input when useful.
 5. Do not select dates, numeric values, rounding instructions, generic action verbs, sensitivity parameter values, or output-format instructions unless they are essential to identifying the task.
 
-Return only a valid JSON array containing 3 or 4 strings. Do not add explanations, labels, or Markdown.
+Return only a valid JSON object with one field, `keywords`, whose value is an array containing 3 or 4 strings. Do not add explanations, labels, or Markdown.
 
 Example input:
 Conduct a 5-year IRR sensitivity analysis using Planet Fitness' financial model. Model the impact if, starting Q1 2026, Planet Fitness opens 10 additional Franchisee-owned stores each quarter, compared to the same quarter in the prior year, and continues this trend each quarter until Q4 2030.
@@ -20,7 +20,7 @@ Conduct a 5-year IRR sensitivity analysis using Planet Fitness' financial model.
 REQUEST: Put in a sensitivity table to a new Sheet with these values.
 
 Example output:
-["Planet Fitness", "IRR sensitivity", "Copy of LBO", "Franchisee-owned stores"]
+{"keywords": ["Planet Fitness", "IRR sensitivity", "Copy of LBO", "Franchisee-owned stores"]}
 
 Task prompt:
 {{TASK_PROMPT}}
