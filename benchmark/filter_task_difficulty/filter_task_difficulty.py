@@ -238,6 +238,7 @@ def run_model(
     runtime_cidr: str,
     environment_image: str,
     proxy_image: str,
+    model_max_turns: int,
 ) -> dict[str, Any]:
     stamp = time.strftime("%Y%m%d_%H%M%S")
     unique = str(time.time_ns())[-8:]
@@ -258,6 +259,8 @@ def run_model(
     environment["ORCHESTRATOR_CONFIG"] = str(config_path.resolve())
     environment["SCORE_SUMMARY_FILENAME"] = "score_summary.json"
     environment["RUNTIME_NETWORK_CIDR"] = runtime_cidr
+    # Allow exactly model_max_turns turns; the next step is the fuse point.
+    environment["AGENT_MAX_STEPS"] = str(model_max_turns + 1)
     log_path = driver_logs / f"{run_id}.log"
     started = time.monotonic()
     with log_path.open("w", encoding="utf-8") as log:
@@ -283,6 +286,19 @@ def run_model(
             error = f"could not read score: {exc}"
     else:
         error = f"runner exited {completed.returncode}"
+
+    # A turn-limited agent may exit without a grading summary. Treat a
+    # trajectory that crossed the limit as an intentional score of zero.
+    if score is None:
+        trajectory_path = run_dir / "tasks" / candidate.task_id / "trajectory.json"
+        try:
+            trajectory = read_json(trajectory_path)
+            turns = assistant_turns(trajectory_path)
+            if turns > model_max_turns:
+                score = 0.0
+                error = f"exceeded {model_max_turns} turns; treated as score 0"
+        except (OSError, json.JSONDecodeError, ValueError):
+            pass
 
     return {
         "model": model_name,
@@ -381,8 +397,8 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=80,
         help=(
-            "Do not run GPT/Opus for tasks above this turn count; record both "
-            "model scores as 0 (default: 80)."
+            "Fuse GPT/Opus when their runtime trajectory exceeds this turn "
+            "count and record that model score as 0 (default: 80)."
         ),
     )
     parser.add_argument("--gpt-base-port", type=int, default=19080)
@@ -511,63 +527,27 @@ def main() -> int:
                 f"turns={candidate.turns} gemini={candidate.gemini_score}",
                 flush=True,
             )
-            if candidate.turns > args.model_max_turns:
-                # Long trajectories are deliberately excluded from model reruns.
-                # Keep a complete numeric result so resume logic considers this
-                # candidate handled and does not repeatedly revisit it.
-                model_results = {
-                    name: {
-                        "model": name,
-                        "score": 0.0,
-                        "bucket": None,
-                        "matches_gemini_bucket": False,
-                        "returncode": None,
-                        "elapsed_seconds": 0.0,
-                        "run_id": None,
-                        "run_dir": None,
-                        "driver_log": None,
-                        "error": f"skipped: turns={candidate.turns} > {args.model_max_turns}",
-                    }
-                    for name in MODEL_CONFIGS
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                futures = {
+                    name: executor.submit(
+                        run_model, name, config, candidate,
+                        args.run_output.resolve(), driver_logs,
+                        args.gpt_base_port if name == "gpt_5_6_sol" else args.opus_base_port,
+                        str(gpt_network) if name == "gpt_5_6_sol" else str(opus_network),
+                        args.environment_image, args.proxy_image, args.model_max_turns,
+                    )
+                    for name, config in MODEL_CONFIGS.items()
                 }
-                retained = False
-                status = "skipped_turn_limit"
-                print(
-                    f"Skipping model runs: turns={candidate.turns} "
-                    f"> {args.model_max_turns}; both scores set to 0",
-                    flush=True,
-                )
-            else:
-                with ThreadPoolExecutor(max_workers=2) as executor:
-                    futures = {
-                        name: executor.submit(
-                            run_model,
-                            name,
-                            config,
-                            candidate,
-                            args.run_output.resolve(),
-                            driver_logs,
-                            args.gpt_base_port if name == "gpt_5_6_sol" else args.opus_base_port,
-                            (
-                                str(gpt_network)
-                                if name == "gpt_5_6_sol"
-                                else str(opus_network)
-                            ),
-                            args.environment_image,
-                            args.proxy_image,
-                        )
-                        for name, config in MODEL_CONFIGS.items()
-                    }
-                    model_results = {name: future.result() for name, future in futures.items()}
+                model_results = {name: future.result() for name, future in futures.items()}
 
-                retained = all(
-                    result["matches_gemini_bucket"] for result in model_results.values()
-                )
-                status = (
-                    "completed"
-                    if all(result["score"] is not None for result in model_results.values())
-                    else "infrastructure_error"
-                )
+            retained = all(
+                result["matches_gemini_bucket"] for result in model_results.values()
+            )
+            status = (
+                "completed"
+                if all(result["score"] is not None for result in model_results.values())
+                else "infrastructure_error"
+            )
             attempt = {
                 **asdict(candidate),
                 "attempted_at": utc_now(),

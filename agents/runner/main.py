@@ -5,6 +5,7 @@ Main orchestrator for running agents.
 import argparse
 import asyncio
 import json
+import os
 from pathlib import Path
 from typing import Any, cast
 
@@ -188,6 +189,9 @@ if __name__ == "__main__":
 
     with open(args.agent_config) as f:
         agent_config = AgentConfig.model_validate_json(f.read())
+    max_steps_override = os.environ.get("AGENT_MAX_STEPS")
+    if max_steps_override:
+        agent_config.agent_config_values["max_steps"] = int(max_steps_override)
 
     orchestrator_extra_args = None
     if args.orchestrator_extra_args:
