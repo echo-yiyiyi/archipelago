@@ -1,0 +1,15 @@
+{
+  "model": "vertex_ai/gemini-3.5-flash",
+  "extra_args": {
+    "reasoning_effort": "high",
+    "verbosity": "medium",
+    "allowed_openai_params": [
+      "reasoning_effort",
+      "verbosity"
+    ],
+    "temperature": 1.0,
+    "max_tokens": 65536,
+    "vertex_project": "apex-safety",
+    "vertex_location": "global"
+  }
+}
