@@ -6,7 +6,13 @@ import unittest
 from pathlib import Path
 from types import SimpleNamespace
 
-from extract_key_words import extract_one, validate_keywords
+from extract_key_words import (
+    KeywordRecord,
+    build_json_output,
+    extract_one,
+    load_completed_records,
+    validate_keywords,
+)
 from prompt import build_keyword_extraction_prompt
 
 
@@ -51,6 +57,34 @@ class ExtractKeywordsTests(unittest.TestCase):
         request = client.responses.calls[-1]
         self.assertEqual(request["text"]["format"]["schema"]["properties"]["keywords"]["minItems"], 3)
         self.assertEqual(request["model"], "test-model")
+
+    def test_json_output_preserves_every_task_field_and_adds_keywords(self):
+        tasks = [{
+            "task_id": "task_1",
+            "domain": "banking",
+            "turns": 12,
+            "difficulty": "hard",
+            "prompt": "Analyze ACME.",
+        }]
+        records = [KeywordRecord("task_1", "banking", None, ["ACME", "Revenue", "Workbook"], "completed")]
+
+        output = build_json_output(tasks, records)
+
+        self.assertEqual(output[0]["prompt"], "Analyze ACME.")
+        self.assertEqual(output[0]["turns"], 12)
+        self.assertEqual(output[0]["keywords"], ["ACME", "Revenue", "Workbook"])
+        self.assertEqual(set(output[0]), set(tasks[0]) | {"keywords"})
+
+    def test_completed_records_can_resume_from_array_output(self):
+        tasks = [{"task_id": "task_1", "domain": "banking", "prompt": "Analyze ACME."}]
+        with tempfile.TemporaryDirectory() as directory:
+            output_path = Path(directory) / "keywords.json"
+            output_path.write_text(json.dumps([{**tasks[0], "keywords": ["ACME", "Revenue", "Workbook"]}]))
+
+            records = load_completed_records(output_path, tasks)
+
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0].keywords, ["ACME", "Revenue", "Workbook"])
 
 
 if __name__ == "__main__":

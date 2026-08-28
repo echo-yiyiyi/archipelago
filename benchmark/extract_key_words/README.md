@@ -35,6 +35,8 @@ python3 archipelago/benchmark/extract_key_words/extract_key_words.py \
 ```
 
 Results are written to `output/keywords.json` and `output/keywords.csv`.
-Completed records are reused on restart; failed records are retried. The
+The JSON is an array in the same format as the input task file: every original
+task field (including `prompt`, `turns`, and `difficulty`) is preserved and a
+`keywords` field is added. Completed records are reused on restart; failed records are retried. The
 shared Azure client lives in `benchmark/utils/azure_openai.py` and is usable by
 other benchmark API scripts.

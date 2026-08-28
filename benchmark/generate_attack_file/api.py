@@ -10,10 +10,6 @@ from __future__ import annotations
 import os
 from typing import Any
 
-from azure.identity import DefaultAzureCredential
-from azure.keyvault.secrets import SecretClient
-from openai import OpenAI
-
 from .prompt import build_file_generation_prompt
 from .templates import parse_llm_json
 
@@ -118,6 +114,9 @@ def _setting(name: str, default: str) -> str:
 
 def get_azure_api_key() -> str:
     """Read the existing Azure OpenAI key from the configured Key Vault."""
+    from azure.identity import DefaultAzureCredential
+    from azure.keyvault.secrets import SecretClient
+
     credential = DefaultAzureCredential()
     client = SecretClient(
         vault_url=_setting("AZURE_KEY_VAULT_URL", DEFAULT_KEY_VAULT_URL),
@@ -131,8 +130,10 @@ def get_azure_api_key() -> str:
     return secret.value
 
 
-def build_client() -> OpenAI:
+def build_client() -> Any:
     """Build an Azure OpenAI client using the existing Key Vault credential."""
+    from openai import OpenAI
+
     endpoint = _setting("AZURE_OPENAI_ENDPOINT", DEFAULT_AZURE_ENDPOINT).rstrip("/")
     return OpenAI(
         api_key=get_azure_api_key(),
@@ -140,11 +141,56 @@ def build_client() -> OpenAI:
     )
 
 
+def generate_structured_payload(
+    prompt: str,
+    schema_name: str,
+    schema: dict[str, Any],
+    *,
+    client: Any | None = None,
+    reasoning_effort: str | None = None,
+    max_output_tokens: int = 8192,
+) -> dict[str, Any]:
+    """Call the configured model with any strict JSON schema.
+
+    This is the shared structured-output primitive used by fixture generation
+    and by other benchmark configuration generators.
+    """
+    if not prompt.strip():
+        raise ValueError("prompt must not be empty")
+    if not schema_name.strip():
+        raise ValueError("schema_name must not be empty")
+
+    active_client = client or build_client()
+    request: dict[str, Any] = {
+        "model": _setting("AZURE_OPENAI_MODEL", DEFAULT_MODEL),
+        "input": prompt,
+        "text": {
+            "format": {
+                "type": "json_schema",
+                "name": schema_name,
+                "strict": True,
+                "schema": schema,
+            }
+        },
+        "max_output_tokens": max_output_tokens,
+    }
+    if reasoning_effort and reasoning_effort.lower() != "auto":
+        request["reasoning"] = {"effort": reasoning_effort}
+
+    response = active_client.responses.create(**request)
+    if not response.output_text:
+        raise RuntimeError("model returned no structured output text")
+    payload = parse_llm_json(response.output_text)
+    if not isinstance(payload, dict):
+        raise ValueError("structured output must be a JSON object")
+    return payload
+
+
 def generate_payload(
     file_type: str,
     keywords: list[str],
     *,
-    client: OpenAI | None = None,
+    client: Any | None = None,
     reasoning_effort: str | None = None,
 ) -> dict[str, Any]:
     """Call GPT-5.4 with strict structured output and return a Python dict.
@@ -161,25 +207,10 @@ def generate_payload(
     if not keywords:
         raise ValueError("keywords must not be empty")
 
-    active_client = client or build_client()
-    model = _setting("AZURE_OPENAI_MODEL", DEFAULT_MODEL)
-    request: dict[str, Any] = {
-        "model": model,
-        "input": build_file_generation_prompt(normalized_type, keywords),
-        "text": {
-            "format": {
-                "type": "json_schema",
-                "name": f"{normalized_type}_fixture_payload",
-                "strict": True,
-                "schema": SCHEMAS[normalized_type],
-            }
-        },
-        "max_output_tokens": 8192,
-    }
-    if reasoning_effort and reasoning_effort.lower() != "auto":
-        request["reasoning"] = {"effort": reasoning_effort}
-
-    response = active_client.responses.create(**request)
-    if not response.output_text:
-        raise RuntimeError("GPT-5.4 returned no structured output text")
-    return parse_llm_json(response.output_text)
+    return generate_structured_payload(
+        build_file_generation_prompt(normalized_type, keywords),
+        f"{normalized_type}_fixture_payload",
+        SCHEMAS[normalized_type],
+        client=client,
+        reasoning_effort=reasoning_effort,
+    )

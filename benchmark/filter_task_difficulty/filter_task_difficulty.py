@@ -14,10 +14,12 @@ import ipaddress
 import json
 import os
 import re
+import signal
 import subprocess
 import sys
+import threading
 import time
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -48,7 +50,7 @@ DOMAIN_ALIASES = {
     "consulting": "consulting",
 }
 QUOTAS = {
-    "score_1": {"law": 2, "banking": 2, "consulting": 2},
+    "score_1": {"law": 3, "banking": 3, "consulting": 3},
     "score_075_1": {"law": 1, "banking": 1, "consulting": 1},
     "score_05_075": {"law": 1, "banking": 1, "consulting": 1},
 }
@@ -228,6 +230,50 @@ def safe_fragment(value: str) -> str:
     return re.sub(r"[^A-Za-z0-9_.-]", "_", value)[:80]
 
 
+class ModelRunController:
+    """Track model launchers so a completed mismatch can stop its peer."""
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._processes: dict[str, subprocess.Popen[str]] = {}
+        self._cancel_reasons: dict[str, str] = {}
+
+    def register(self, model_name: str, process: subprocess.Popen[str]) -> None:
+        with self._lock:
+            self._processes[model_name] = process
+            reason = self._cancel_reasons.get(model_name)
+        if reason is not None:
+            self._interrupt(process)
+
+    def unregister(self, model_name: str, process: subprocess.Popen[str]) -> None:
+        with self._lock:
+            if self._processes.get(model_name) is process:
+                self._processes.pop(model_name, None)
+
+    def cancel(self, model_name: str, reason: str) -> None:
+        with self._lock:
+            self._cancel_reasons.setdefault(model_name, reason)
+            process = self._processes.get(model_name)
+        if process is not None:
+            self._interrupt(process)
+
+    def cancel_reason(self, model_name: str) -> str | None:
+        with self._lock:
+            return self._cancel_reasons.get(model_name)
+
+    @staticmethod
+    def _interrupt(process: subprocess.Popen[str]) -> None:
+        if process.poll() is not None:
+            return
+        try:
+            # Signal only main_concurrency.py. It owns task termination and
+            # Compose cleanup; signalling its whole process group would also
+            # interrupt an in-flight `docker compose down` and strand networks.
+            process.send_signal(signal.SIGINT)
+        except ProcessLookupError:
+            pass
+
+
 def run_model(
     model_name: str,
     config_path: Path,
@@ -239,6 +285,7 @@ def run_model(
     environment_image: str,
     proxy_image: str,
     model_max_turns: int,
+    controller: ModelRunController,
 ) -> dict[str, Any]:
     stamp = time.strftime("%Y%m%d_%H%M%S")
     unique = str(time.time_ns())[-8:]
@@ -264,20 +311,26 @@ def run_model(
     log_path = driver_logs / f"{run_id}.log"
     started = time.monotonic()
     with log_path.open("w", encoding="utf-8") as log:
-        completed = subprocess.run(
+        process = subprocess.Popen(
             command,
             cwd=BENCHMARK_DIR,
             env=environment,
             stdout=log,
             stderr=subprocess.STDOUT,
-            check=False,
+            start_new_session=True,
+            text=True,
         )
+        controller.register(model_name, process)
+        try:
+            returncode = process.wait()
+        finally:
+            controller.unregister(model_name, process)
 
     run_dir = run_output / run_id
     score: float | None = None
     error: str | None = None
     summary_path = run_dir / "score_summary.json"
-    if completed.returncode == 0 and summary_path.is_file():
+    if returncode == 0 and summary_path.is_file():
         try:
             rows = read_json(summary_path).get("tasks", [])
             match = next(row for row in rows if row.get("task_id") == candidate.task_id)
@@ -285,11 +338,14 @@ def run_model(
         except (OSError, json.JSONDecodeError, KeyError, StopIteration, TypeError, ValueError) as exc:
             error = f"could not read score: {exc}"
     else:
-        error = f"runner exited {completed.returncode}"
+        error = f"runner exited {returncode}"
+
+    cancel_reason = controller.cancel_reason(model_name)
 
     # A turn-limited agent may exit without a grading summary. Treat a
-    # trajectory that crossed the limit as an intentional score of zero.
-    if score is None:
+    # trajectory that crossed the limit as an intentional score of zero,
+    # unless this run was deliberately interrupted after its peer mismatched.
+    if score is None and cancel_reason is None:
         trajectory_path = run_dir / "tasks" / candidate.task_id / "trajectory.json"
         try:
             trajectory = read_json(trajectory_path)
@@ -300,6 +356,10 @@ def run_model(
         except (OSError, json.JSONDecodeError, ValueError):
             pass
 
+    cancelled_by_peer = cancel_reason is not None and score is None
+    if cancelled_by_peer:
+        error = cancel_reason
+
     return {
         "model": model_name,
         "score": score,
@@ -307,7 +367,8 @@ def run_model(
         "matches_gemini_bucket": (
             score is not None and score_bucket(score) == candidate.score_bucket
         ),
-        "returncode": completed.returncode,
+        "returncode": returncode,
+        "cancelled_by_peer": cancelled_by_peer,
         "elapsed_seconds": round(time.monotonic() - started, 1),
         "run_id": run_id,
         "run_dir": str(run_dir),
@@ -354,12 +415,68 @@ def write_attempts_csv(path: Path, attempts: list[dict[str, Any]]) -> None:
 
 def quota_counts(attempts: list[dict[str, Any]]) -> dict[str, dict[str, int]]:
     counts = {bucket: {domain: 0 for domain in QUOTAS[bucket]} for bucket in BUCKETS}
+    retained_task_ids: set[str] = set()
     for attempt in attempts:
         bucket = attempt.get("score_bucket")
         domain = attempt.get("domain")
-        if attempt.get("retained") and bucket in counts and domain in counts[bucket]:
+        task_id = attempt.get("task_id")
+        if (
+            attempt.get("retained")
+            and isinstance(task_id, str)
+            and task_id not in retained_task_ids
+            and bucket in counts
+            and domain in counts[bucket]
+        ):
             counts[bucket][domain] += 1
+            retained_task_ids.add(task_id)
     return counts
+
+
+def accept_score_one_tasks(
+    attempts: list[dict[str, Any]],
+    candidates: list[Candidate],
+    task_ids: list[str],
+) -> int:
+    """Add explicit score=1 confirmations without discarding prior run history."""
+    candidate_by_id = {candidate.task_id: candidate for candidate in candidates}
+    already_retained = {
+        attempt.get("task_id") for attempt in attempts if attempt.get("retained")
+    }
+    added = 0
+    for task_id in dict.fromkeys(task_ids):
+        candidate = candidate_by_id.get(task_id)
+        if candidate is None:
+            raise ValueError(f"--accept-score-one-task is not a candidate: {task_id}")
+        if candidate.score_bucket != "score_1":
+            raise ValueError(
+                f"--accept-score-one-task requires Gemini score=1: {task_id}"
+            )
+        if task_id in already_retained:
+            print(f"Already retained by task override: {task_id}", flush=True)
+            continue
+        attempts.append(
+            {
+                **asdict(candidate),
+                "attempted_at": utc_now(),
+                "models": {
+                    model_name: {
+                        "model": model_name,
+                        "score": 1.0,
+                        "bucket": "score_1",
+                        "matches_gemini_bucket": True,
+                        "manual_override": True,
+                    }
+                    for model_name in MODEL_CONFIGS
+                },
+                "status": "accepted_manually",
+                "retained": True,
+                "manual_override": "explicitly confirmed as matching score=1",
+            }
+        )
+        already_retained.add(task_id)
+        added += 1
+        print(f"Accepted as matching score=1: {task_id}", flush=True)
+    return added
 
 
 def attempt_has_scores(attempt: dict[str, Any]) -> bool:
@@ -375,6 +492,24 @@ def attempt_has_scores(attempt: dict[str, Any]) -> bool:
         if isinstance(score, bool) or not isinstance(score, (int, float)):
             return False
     return True
+
+
+def attempt_is_terminal(attempt: dict[str, Any]) -> bool:
+    """Return true for a full comparison or any conclusive model mismatch."""
+    if attempt_has_scores(attempt):
+        return True
+    models = attempt.get("models")
+    if not isinstance(models, dict):
+        return False
+    results = [models.get(model_name) for model_name in MODEL_CONFIGS]
+    return any(
+        isinstance(result, dict)
+        and
+        isinstance(result.get("score"), (int, float))
+        and not isinstance(result.get("score"), bool)
+        and result.get("matches_gemini_bucket") is False
+        for result in results
+    )
 
 
 def save_report(report_path: Path, csv_path: Path, report: dict[str, Any]) -> None:
@@ -405,13 +540,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--opus-base-port", type=int, default=19180)
     parser.add_argument(
         "--gpt-runtime-cidr",
-        default="10.254.0.0/16",
-        help="Docker runtime network pool for GPT (default: 10.254.0.0/16).",
+        default="172.30.0.0/16",
+        help="Docker runtime network pool for GPT (default: 172.30.0.0/16).",
     )
     parser.add_argument(
         "--opus-runtime-cidr",
-        default="10.255.0.0/16",
-        help="Docker runtime network pool for Opus (default: 10.255.0.0/16).",
+        default="172.31.0.0/16",
+        help="Docker runtime network pool for Opus (default: 172.31.0.0/16).",
     )
     parser.add_argument("--environment-image", default="archipelago-hf-environment:concurrency")
     parser.add_argument("--proxy-image", default="archipelago-hf-runtime-proxy:concurrency")
@@ -426,6 +561,16 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--retry-attempted", action="store_true",
         help="Rerun tasks already present in attempts.json instead of resuming past them.",
+    )
+    parser.add_argument(
+        "--accept-score-one-task",
+        action="append",
+        default=[],
+        metavar="TASK_ID",
+        help=(
+            "Record a Gemini score=1 candidate as explicitly confirmed and retained. "
+            "May be supplied more than once."
+        ),
     )
     return parser.parse_args()
 
@@ -501,10 +646,13 @@ def main() -> int:
         "gpt_5_6_sol": str(gpt_network),
         "opus": str(opus_network),
     }
+    report["quotas"] = QUOTAS
+    if accept_score_one_tasks(attempts, candidates, args.accept_score_one_task):
+        save_report(report_path, csv_path, report)
     # Infrastructure failures (including the old score=None records) must be
     # retried on resume. Only completed two-model comparisons count as tried.
     attempted_ids = {
-        attempt.get("task_id") for attempt in attempts if attempt_has_scores(attempt)
+        attempt.get("task_id") for attempt in attempts if attempt_is_terminal(attempt)
     }
     counts = quota_counts(attempts)
     by_bucket = {
@@ -527,26 +675,51 @@ def main() -> int:
                 f"turns={candidate.turns} gemini={candidate.gemini_score}",
                 flush=True,
             )
+            controller = ModelRunController()
             with ThreadPoolExecutor(max_workers=2) as executor:
                 futures = {
-                    name: executor.submit(
+                    executor.submit(
                         run_model, name, config, candidate,
                         args.run_output.resolve(), driver_logs,
                         args.gpt_base_port if name == "gpt_5_6_sol" else args.opus_base_port,
                         str(gpt_network) if name == "gpt_5_6_sol" else str(opus_network),
                         args.environment_image, args.proxy_image, args.model_max_turns,
-                    )
+                        controller,
+                    ): name
                     for name, config in MODEL_CONFIGS.items()
                 }
-                model_results = {name: future.result() for name, future in futures.items()}
+                model_results = {}
+                for future in as_completed(futures):
+                    name = futures[future]
+                    result = future.result()
+                    model_results[name] = result
+                    if (
+                        result["score"] is not None
+                        and not result["matches_gemini_bucket"]
+                    ):
+                        for peer_name in MODEL_CONFIGS:
+                            if peer_name not in model_results:
+                                reason = (
+                                    f"cancelled because {name} scored {result['score']} "
+                                    f"outside Gemini bucket {candidate.score_bucket}"
+                                )
+                                print(f"Interrupting {peer_name}: {reason}", flush=True)
+                                controller.cancel(peer_name, reason)
 
             retained = all(
                 result["matches_gemini_bucket"] for result in model_results.values()
             )
+            all_scored = all(
+                result["score"] is not None for result in model_results.values()
+            )
+            early_rejected = any(
+                result.get("cancelled_by_peer") is True
+                for result in model_results.values()
+            )
             status = (
                 "completed"
-                if all(result["score"] is not None for result in model_results.values())
-                else "infrastructure_error"
+                if all_scored
+                else "rejected_early" if early_rejected else "infrastructure_error"
             )
             attempt = {
                 **asdict(candidate),
@@ -556,7 +729,7 @@ def main() -> int:
                 "retained": retained,
             }
             attempts.append(attempt)
-            if attempt_has_scores(attempt):
+            if attempt_is_terminal(attempt):
                 attempted_ids.add(candidate.task_id)
             if retained:
                 counts[bucket][candidate.domain] += 1
@@ -566,7 +739,7 @@ def main() -> int:
                 for name, result in model_results.items()
             )
             print(f"Result retained={retained}: {scores}", flush=True)
-            if not attempt_has_scores(attempt):
+            if not attempt_is_terminal(attempt):
                 failures = "; ".join(
                     f"{name}: {result.get('error') or 'score missing'} "
                     f"(log: {result['driver_log']})"

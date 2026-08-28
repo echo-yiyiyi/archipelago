@@ -155,6 +155,58 @@ def atomic_write(path: Path, payload: Any) -> None:
     temporary.replace(path)
 
 
+def build_json_output(
+    tasks: list[dict[str, Any]], records: list[KeywordRecord]
+) -> list[dict[str, Any]]:
+    """Return the original task objects with only ``keywords`` added/updated."""
+    keywords_by_task_id = {record.task_id: record.keywords for record in records}
+    return [
+        {**task, "keywords": keywords_by_task_id.get(task["task_id"])}
+        for task in tasks
+    ]
+
+
+def load_completed_records(path: Path, tasks: list[dict[str, Any]]) -> list[KeywordRecord]:
+    """Load completed keywords from both the current and legacy output formats."""
+    if not path.is_file():
+        return []
+
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if isinstance(data, list):
+        rows = data
+    elif isinstance(data, dict):
+        rows = data.get("records", [])
+    else:
+        return []
+
+    rows_by_task_id = {
+        row["task_id"]: row
+        for row in rows
+        if isinstance(row, dict) and isinstance(row.get("task_id"), str)
+    }
+    completed = []
+    for task in tasks:
+        row = rows_by_task_id.get(task["task_id"])
+        if not row:
+            continue
+        try:
+            keywords = validate_keywords(row.get("keywords"))
+        except ValueError:
+            continue
+        completed.append(
+            KeywordRecord(
+                task_id=task["task_id"],
+                domain=task.get("domain"),
+                task_name=task.get("task_name"),
+                keywords=keywords,
+                status="completed",
+                attempts=row.get("attempts", 0),
+                updated_at=row.get("updated_at"),
+            )
+        )
+    return completed
+
+
 def write_csv(path: Path, records: list[KeywordRecord]) -> None:
     temporary = path.with_suffix(path.suffix + ".tmp")
     with temporary.open("w", newline="", encoding="utf-8") as handle:
@@ -209,11 +261,7 @@ def main() -> int:
 
     report_path = args.output.resolve()
     csv_path = report_path.with_suffix(".csv")
-    existing: dict[str, dict[str, Any]] = {}
-    if report_path.is_file() and not args.fresh:
-        data = json.loads(report_path.read_text(encoding="utf-8"))
-        existing = {row["task_id"]: row for row in data.get("records", []) if isinstance(row, dict) and row.get("task_id")}
-    records = [KeywordRecord(**existing[task["task_id"]]) for task in tasks if task["task_id"] in existing and existing[task["task_id"]].get("status") == "completed"]
+    records = [] if args.fresh else load_completed_records(report_path, tasks)
     done = {record.task_id for record in records}
     pending = [task for task in tasks if task["task_id"] not in done]
     if args.dry_run:
@@ -227,16 +275,12 @@ def main() -> int:
                 result = future.result()
                 records.append(result)
                 ordered = sorted(records, key=lambda record: next((i for i, task in enumerate(tasks) if task["task_id"] == record.task_id), len(tasks)))
-                payload = {
-                    "generated_at": now(),
-                    "tasks_json": str(tasks_path) if tasks_path else None,
-                    "records": [asdict(record) for record in ordered],
-                }
+                payload = build_json_output(tasks, ordered)
                 with lock:
                     atomic_write(report_path, payload)
                     write_csv(csv_path, ordered)
     records.sort(key=lambda record: next((i for i, task in enumerate(tasks) if task["task_id"] == record.task_id), len(tasks)))
-    payload = {"generated_at": now(), "tasks_json": str(tasks_path) if tasks_path else None, "records": [asdict(record) for record in records]}
+    payload = build_json_output(tasks, records)
     atomic_write(report_path, payload)
     write_csv(csv_path, records)
     completed = sum(record.status == "completed" for record in records)

@@ -19,10 +19,16 @@ in parallel with `--skip-build` and separate ports/run IDs:
 python3 archipelago/benchmark/filter_task_difficulty/filter_task_difficulty.py
 ```
 
+If either model finishes with a score outside the Gemini bucket, the other
+model run is interrupted and cleaned up immediately because the task can no
+longer be retained.
+
 The parallel launchers also use separate Docker address pools to prevent
-network overlap: GPT defaults to `10.254.0.0/16` and Opus defaults to
-`10.255.0.0/16`. Override them with `--gpt-runtime-cidr` and
-`--opus-runtime-cidr` when those ranges are already in use on the host.
+network overlap: GPT defaults to `172.30.0.0/16` and Opus defaults to
+`172.31.0.0/16`. These defaults avoid the `10.255.0.0/16` corporate/private
+endpoint range used by the Azure OpenAI resource. Override them with
+`--gpt-runtime-cidr` and `--opus-runtime-cidr` when those ranges are already
+in use on the host.
 
 If the images already exist, add `--skip-build`. A stopped run resumes from
 `output/attempts.json` by default. Add `--retry-attempted` to start a new report

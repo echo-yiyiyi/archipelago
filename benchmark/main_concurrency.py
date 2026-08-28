@@ -794,6 +794,11 @@ def main() -> int:
             future.cancel()
         active_processes.terminate_all()
     finally:
+        # A peer-model cancellation can arrive after the last task has
+        # finished but while its Compose projects are being removed. Do not
+        # let that late SIGINT interrupt docker compose down and strand a
+        # runtime subnet that makes the next candidate fail with an overlap.
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
         executor.shutdown(wait=True, cancel_futures=True)
         # Collect task results that completed while shutdown was in progress.
         for future in list(pending):

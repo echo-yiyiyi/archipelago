@@ -1,0 +1,6 @@
+#!/bin/sh
+echo "Starting configuration…"
+sleep 1s
+echo "Speeding things up…"
+sleep 2s
+echo "Done!"
