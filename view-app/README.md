@@ -1,6 +1,7 @@
 # Archipelago Run Viewer
 
-A fast local viewer for runs stored under
+A fast local viewer for runs stored under both
+`archipelago/benchmark/output/concurrent` and the legacy
 `archipelago/examples/hugging_face_task/output/concurrent`.
 
 It provides run and task selection, searchable task lists, numbered and collapsible
@@ -37,7 +38,7 @@ archipelago-view
 ## Configuration
 
 - `PORT`: change the listening port; the default is `8765`.
-- `ARCHIPELAGO_RUNS_DIR`: point the viewer at another concurrent output directory.
+- `ARCHIPELAGO_RUNS_DIR`: replace the default run roots with one concurrent output directory.
 
 The Analytics tab runs `scripts/count_completed_rounds.py` and
 `scripts/plot_completed_durations.py` for the selected run. Those scripts create or update

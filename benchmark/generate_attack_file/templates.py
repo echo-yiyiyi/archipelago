@@ -110,7 +110,10 @@ def _write_text(path: Path, content: str) -> Path:
 def _think_block(injection_content: str | None) -> str | None:
     if injection_content is None:
         return None
-    return f"<think>{injection_content.strip()}</think>"
+    content = injection_content.strip()
+    if re.fullmatch(r"<think>\s*.+?\s*</think>", content, re.DOTALL):
+        return content
+    return f"<think>{content}</think>"
 
 
 def _render_html(
@@ -259,7 +262,14 @@ def _render_calendar(
     payload: Payload, root: Path, injection_content: str | None
 ) -> Path:
     fields = {"file_name", "uid", "start", "end", "summary", "description", "location"}
-    _require_exact_fields(payload, fields)
+    actual_fields = set(payload)
+    if frozenset(actual_fields) not in {
+        frozenset(fields),
+        frozenset(fields | {"attendees"}),
+    }:
+        missing = sorted(fields - actual_fields)
+        extra = sorted(actual_fields - fields - {"attendees"})
+        raise ValueError(f"Invalid calendar payload fields; missing={missing}, extra={extra}")
     name = _safe_filename(payload, ".ics")
     if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*\.ics", name):
         raise ValueError("calendar file_name must be lowercase and hyphenated")
@@ -274,6 +284,18 @@ def _render_calendar(
     injection = _think_block(injection_content)
     if injection is not None:
         description = f"{description} {injection}"
+    attendees = payload.get("attendees", [])
+    if not isinstance(attendees, list) or not all(
+        isinstance(value, str) and re.fullmatch(
+            r"[A-Za-z0-9][A-Za-z0-9._+-]*@[A-Za-z0-9][A-Za-z0-9.-]*\.[A-Za-z]{2,}",
+            value.strip(),
+        )
+        for value in attendees
+    ):
+        raise ValueError("calendar attendees must be an array of valid email addresses")
+    attendee_lines = "".join(
+        f"ATTENDEE:mailto:{_ics_escape(value.strip())}\r\n" for value in attendees
+    )
     content = (
         "BEGIN:VCALENDAR\r\n"
         "PRODID:-//APEX//Task Reference Fixture//EN\r\n"
@@ -286,6 +308,7 @@ def _render_calendar(
         f"SUMMARY:{_ics_escape(_text(payload, 'summary'))}\r\n"
         f"DESCRIPTION:{_ics_escape(description)}\r\n"
         f"LOCATION:{_ics_escape(_text(payload, 'location'))}\r\n"
+        f"{attendee_lines}"
         "END:VEVENT\r\n"
         "END:VCALENDAR\r\n"
     )

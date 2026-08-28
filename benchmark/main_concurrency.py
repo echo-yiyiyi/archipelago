@@ -31,7 +31,7 @@ from pathlib import Path
 
 EXAMPLE_DIR = Path(os.environ.get("EXAMPLE_DIR", Path(__file__).parent)).resolve()
 ARCHIPELAGO_DIR = Path(
-    os.environ.get("ARCHIPELAGO_DIR", EXAMPLE_DIR.parent.parent)
+    os.environ.get("ARCHIPELAGO_DIR", EXAMPLE_DIR.parent)
 ).resolve()
 SOURCE_ENVIRONMENT_DIR = Path(
     os.environ.get("ENVIRONMENT_DIR", ARCHIPELAGO_DIR / "environment")
@@ -214,6 +214,30 @@ def selectors_from_dataset() -> list[str]:
         return [task["task_id"] for task in json.load(handle)]
 
 
+def selectors_from_attack_config(path: Path) -> list[str]:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, list):
+        raise ValueError("task JSON must contain an array of complete task records")
+    return list(dict.fromkeys(
+        record["task_id"] for record in data
+        if isinstance(record, dict) and isinstance(record.get("task_id"), str)
+    ))
+
+
+def inject_goals_from_attack_config(path: Path) -> dict[str, str]:
+    """Map task selectors to their configured goal for worker-specific services."""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, list):
+        raise ValueError("task JSON must contain an array of complete task records")
+    return {
+        record["task_id"]: record["inject_goal"]
+        for record in data
+        if isinstance(record, dict)
+        and isinstance(record.get("task_id"), str)
+        and isinstance(record.get("inject_goal"), str)
+    }
+
+
 def validate_ports(base_port: int, count: int) -> None:
     """Fail before starting work if one of the requested ports is occupied."""
     sockets: list[socket.socket] = []
@@ -356,7 +380,12 @@ def cleanup_shared_proxy(proxy_dir: Path, environment: dict[str, str]) -> None:
 
 
 def write_worker_environment(
-    worker_dir: Path, port: int, image: str, runtime_network: str
+    worker_dir: Path,
+    port: int,
+    image: str,
+    proxy_image: str,
+    runtime_network: str,
+    enable_link_collector: bool,
 ) -> None:
     """Create one worker attached only to the run-scoped internal network."""
     worker_dir.mkdir(parents=True, exist_ok=True)
@@ -370,16 +399,37 @@ def write_worker_environment(
     else:
         (worker_dir / ".env").touch()
 
-    no_proxy = os.environ.get("SQUID_NO_PROXY", "localhost,127.0.0.1,environment")
+    no_proxy = os.environ.get(
+        "SQUID_NO_PROXY", "localhost,127.0.0.1,environment,agent-help.com"
+    )
 
     # There is deliberately no container_name. COMPOSE_PROJECT_NAME supplies a
     # unique name, and each service maps a different host port to container 8080.
+    collector_service = ""
+    if enable_link_collector:
+        collector_service = f'''
+  link_collector:
+    image: {json.dumps(proxy_image)}
+    pull_policy: never
+    command: ["python3", "/opt/archipelago/collector.py"]
+    environment:
+      LINK_CAPTURE_FILE: /capture/http_capture/requests.jsonl
+    volumes:
+      - apps_data:/capture
+    networks:
+      runtime:
+        aliases:
+          - agent-help.com
+'''
+
     compose = f'''services:
   environment:
     image: {json.dumps(image)}
     pull_policy: never
     ports:
       - "127.0.0.1:{port}:8080"
+    volumes:
+      - apps_data:/.apps_data
     networks:
       - runtime
     environment:
@@ -397,11 +447,15 @@ def write_worker_environment(
       timeout: 10s
       retries: 3
       start_period: 10s
+{collector_service}
 
 networks:
   runtime:
     external: true
     name: {json.dumps(runtime_network)}
+
+volumes:
+  apps_data:
 '''
     (worker_dir / "docker-compose.yml").write_text(compose)
 
@@ -455,13 +509,26 @@ def safe_log_name(selector: str) -> str:
 def update_score_summary(run_dir: Path) -> dict[str, object]:
     """Atomically refresh run-level scores from every available grades.json."""
     task_scores: list[dict[str, object]] = []
+    attack_values: list[float] = []
+    rule_values: dict[str, list[float]] = {}
     for grades_file in sorted((run_dir / "tasks").glob("*/grades.json")):
         try:
             grades = json.loads(grades_file.read_text())
-            final_score = grades["scoring_results"]["final_score"]
         except (OSError, json.JSONDecodeError, KeyError, TypeError):
             # Another task may still be writing its file. Its own completion
             # event will trigger another full scan after the file is complete.
+            continue
+
+        attack_success = grades.get("attack_success")
+        if isinstance(attack_success, (int, float)) and not isinstance(attack_success, bool):
+            attack_values.append(float(attack_success))
+        for rule_name, rule in (grades.get("attack_rules") or {}).items():
+            if isinstance(rule, dict) and isinstance(rule.get("passed"), (int, float)):
+                rule_values.setdefault(rule_name, []).append(float(rule["passed"]))
+
+        try:
+            final_score = grades["scoring_results"]["final_score"]
+        except (KeyError, TypeError):
             continue
 
         if (
@@ -495,6 +562,10 @@ def update_score_summary(run_dir: Path) -> dict[str, object]:
         ),
         "average_pass_at_1_percent": pass_at_1_count / task_count if task_count else 0.0,
         "pass_at_1_count": pass_at_1_count,
+        "average_attack_success": sum(attack_values) / len(attack_values) if attack_values else 0.0,
+        "average_attack_rule_pass": {
+            name: sum(values) / len(values) for name, values in sorted(rule_values.items())
+        },
         "tasks": task_scores,
     }
 
@@ -510,10 +581,12 @@ def run_task(
     slot: WorkerSlot,
     run_dir: Path,
     image: str,
+    proxy_image: str,
     keep_environments: bool,
     runtime_network: str,
     stop_requested: threading.Event,
     active_processes: ActiveProcesses,
+    enable_link_collector: bool,
 ) -> TaskResult:
     """Invoke the unchanged single-task main.py in one isolated environment."""
     started = time.monotonic()
@@ -521,7 +594,14 @@ def run_task(
     log_file = run_dir / "logs" / (
         f"worker-{slot.number:02d}_{safe_log_name(selector)}.log"
     )
-    write_worker_environment(worker_dir, slot.port, image, runtime_network)
+    write_worker_environment(
+        worker_dir,
+        slot.port,
+        image,
+        proxy_image,
+        runtime_network,
+        enable_link_collector,
+    )
 
     environment = os.environ.copy()
     environment.update(
@@ -604,6 +684,10 @@ def main() -> int:
     )
     parser.add_argument("--all", action="store_true", help="Queue every dataset task.")
     parser.add_argument(
+        "--task-json", "--attack-config-json", dest="attack_config_json", type=Path,
+        help="Complete task JSON array (including inject_goal, attack_config, and attack_file).",
+    )
+    parser.add_argument(
         "--concurrency", type=int, default=32, help="Maximum running tasks (default: 32)."
     )
     parser.add_argument(
@@ -632,11 +716,24 @@ def main() -> int:
         parser.error("--concurrency must be at least 1")
     if not 1 <= args.base_port <= 65536 - args.concurrency:
         parser.error("--base-port leaves insufficient valid ports")
-    if args.all and args.selectors:
-        parser.error("use either selectors or --all, not both")
+    if args.all and (args.selectors or args.attack_config_json):
+        parser.error("use either selectors/task JSON or --all, not both")
+    if args.attack_config_json and args.selectors:
+        parser.error("use either selectors or --task-json, not both")
 
+    task_inject_goals: dict[str, str] = {}
     try:
-        selectors = selectors_from_dataset() if args.all else parse_selectors(args.selectors)
+        if args.all:
+            selectors = selectors_from_dataset()
+        elif args.attack_config_json:
+            if not args.attack_config_json.is_file():
+                parser.error(f"task JSON does not exist: {args.attack_config_json}")
+            selectors = selectors_from_attack_config(args.attack_config_json)
+            task_inject_goals = inject_goals_from_attack_config(
+                args.attack_config_json
+            )
+        else:
+            selectors = parse_selectors(args.selectors)
     except ValueError as error:
         parser.error(str(error))
     if not selectors:
@@ -659,6 +756,8 @@ def main() -> int:
     (run_dir / "logs").mkdir(parents=True, exist_ok=False)
     global _run_logger
     _run_logger = RunLogger(run_dir)
+    if args.attack_config_json:
+        os.environ["ATTACK_CONFIG_FILE"] = str(args.attack_config_json.resolve())
     update_score_summary(run_dir)
 
     if not args.skip_build:
@@ -709,10 +808,12 @@ def main() -> int:
                 slot,
                 run_dir,
                 args.environment_image,
+                args.proxy_image,
                 args.keep_environments,
                 runtime_networks[slot.number][0],
                 stop_requested,
                 active_processes,
+                task_inject_goals.get(selector) == "4_email_broadcast_link",
             )
         finally:
             available_slots.put(slot)

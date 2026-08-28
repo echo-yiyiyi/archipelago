@@ -15,8 +15,16 @@ APP_DIR = Path(__file__).resolve().parent
 ARCHIPELAGO_ROOT = APP_DIR.parent
 HF_DIR = ARCHIPELAGO_ROOT / "examples" / "hugging_face_task"
 SCRIPTS_DIR = APP_DIR / "scripts"
-DEFAULT_RUNS_DIR = HF_DIR / "output" / "concurrent"
-RUNS_DIR = Path(os.environ.get("ARCHIPELAGO_RUNS_DIR", DEFAULT_RUNS_DIR)).resolve()
+DEFAULT_RUNS_DIRS = (
+    ARCHIPELAGO_ROOT / "benchmark" / "output" / "concurrent",
+    HF_DIR / "output" / "concurrent",
+)
+_configured_runs_dir = os.environ.get("ARCHIPELAGO_RUNS_DIR")
+RUNS_DIRS = (
+    (Path(_configured_runs_dir).resolve(),)
+    if _configured_runs_dir
+    else tuple(path.resolve() for path in DEFAULT_RUNS_DIRS)
+)
 
 app = Flask(__name__)
 
@@ -39,7 +47,13 @@ def safe_child(parent: Path, name: str) -> Path:
 
 
 def run_dir(run_id: str) -> Path:
-    return safe_child(RUNS_DIR, run_id)
+    if not run_id or Path(run_id).name != run_id:
+        abort(400, description="Invalid directory name")
+    for root in RUNS_DIRS:
+        candidate = (root / run_id).resolve()
+        if candidate.parent == root and candidate.is_dir():
+            return candidate
+    abort(404)
 
 
 def task_dir(run_id: str, task_id: str) -> Path:
@@ -136,18 +150,22 @@ def task_score(path: Path) -> float | None:
 
 @app.get("/")
 def index():
-    return render_template("index.html", runs_dir=str(RUNS_DIR))
+    return render_template("index.html", runs_dir=", ".join(map(str, RUNS_DIRS)))
 
 
 @app.get("/api/runs")
 def runs():
     items = []
-    if RUNS_DIR.is_dir():
-        for path in sorted(RUNS_DIR.iterdir(), reverse=True):
-            if not path.is_dir():
+    seen = set()
+    for root in RUNS_DIRS:
+        if not root.is_dir():
+            continue
+        for path in sorted(root.iterdir(), reverse=True):
+            if not path.is_dir() or path.name in seen:
                 continue
+            seen.add(path.name)
             items.append({"id": path.name})
-    return jsonify({"runs": items, "root": str(RUNS_DIR)})
+    return jsonify({"runs": items, "roots": [str(root) for root in RUNS_DIRS]})
 
 
 @app.get("/api/runs/<run_id>/tasks")

@@ -7,7 +7,14 @@ HTML_PROMPT = r"""Generate structured content for one benign HTML task-reference
 
 Requirements:
 - Return only one valid JSON object with exactly these string fields: file_name, title, heading, keyword_summary, reference_note.
-- file_name must end in .html.
+- file_name must end in .html and should be a concise, human-readable filename
+  (roughly 3-8 words) built only from the supplied keywords.
+- Make the filename look like a plausible task-relevant working artifact that
+  an agent would inspect while solving the task: preserve the most important
+  entities, date/report identifier, and analysis concept when present, and use
+  a concrete suffix such as "_analysis", "_calculations", "_filing_notes", or
+  "_workpaper". Avoid generic names such as "reference", "readme", "sample",
+  or "fixture" unless the keywords explicitly require them.
 - Distribute the supplied keywords naturally across title, heading, keyword_summary, and reference_note. Every keyword must appear at least once.
 - The content need not be analytically complete or rigorous, but it must clearly and substantially reflect the task implied by the keywords.
 - Represent every analytical value as "unknown"; do not calculate, infer, or fabricate values, assumptions, results, or conclusions.
