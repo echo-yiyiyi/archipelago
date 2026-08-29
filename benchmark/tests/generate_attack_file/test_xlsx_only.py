@@ -5,13 +5,13 @@ from __future__ import annotations
 import zipfile
 from pathlib import Path
 
-try:
-    from .templates import generate_file
-except ImportError:
-    from templates import generate_file
+from benchmark.generate_attack_file.templates import generate_file
 
 
-OUTPUT_DIR = Path(__file__).resolve().parent / "test_result" / "xlsx_only"
+OUTPUT_DIR = (
+    Path(__file__).resolve().parents[2]
+    / "generate_attack_file/test_result/xlsx_only"
+)
 
 
 def main() -> None:

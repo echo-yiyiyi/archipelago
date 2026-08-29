@@ -3,11 +3,11 @@ from __future__ import annotations
 import unittest
 from collections import Counter
 
-from assign_balanced_file_types import (
+from benchmark.sample_inject_vector.assign_balanced_file_types import (
     assign_balanced_file_types,
     build_output,
 )
-from rank_file_types import ALLOWED_FILE_TYPES
+from benchmark.sample_inject_vector.rank_file_types import ALLOWED_FILE_TYPES
 
 
 class AssignBalancedFileTypesTests(unittest.TestCase):

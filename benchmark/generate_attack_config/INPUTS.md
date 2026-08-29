@@ -6,7 +6,8 @@ JSON-array entry point is `generate.py`.
 Running `generate.py INPUT.json` keeps the attack-config JSON at
 `generate_attack_config/output/<input>_with_attack_config.json`. For each record
 it creates `output/<harmful_task_id>/`, generates the fixture through
-`generate_attack_file`, and stores its portable relative path in `attack_file`.
+`generate_attack_file`, stores the primary injected artifact in `attack_file`,
+and stores every file needed at runtime in `populate_files`.
 
 | Output | Input |
 |---|---|

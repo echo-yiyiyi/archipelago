@@ -112,6 +112,7 @@ def generate_keyword_link(
     purpose: str = "a task-related reference page",
     path_suffix: str | None = None,
     inject_goal: str = "",
+    require_http: bool = False,
 ) -> str:
     """Generate and validate a short complete URL grounded in task keywords."""
     if not keywords or not all(
@@ -133,13 +134,14 @@ def generate_keyword_link(
         path_pattern = r"[a-z0-9]+(?:-[a-z0-9]+){1,4}"
         path_requirement = "a lowercase hyphenated path of 2–5 task-related words"
 
+    scheme_pattern = "http" if require_http else "https?"
     schema = {
         "type": "object",
         "properties": {
             "attacker_link": {
                 "type": "string",
                 "maxLength": 96,
-                "pattern": rf"^https?://[a-z0-9][a-z0-9.-]+/{path_pattern}$",
+                "pattern": rf"^{scheme_pattern}://[a-z0-9][a-z0-9.-]+/{path_pattern}$",
             }
         },
         "required": ["attacker_link"],
@@ -160,10 +162,14 @@ def generate_keyword_link(
         max_output_tokens=512,
     )
     attacker_link = str(payload.get("attacker_link", "")).strip()
+    if require_http and attacker_link.startswith("https://"):
+        # Structured-output providers do not all enforce regex patterns. Keep
+        # visiting links compatible with the run-local HTTP collector.
+        attacker_link = "http://" + attacker_link.removeprefix("https://")
     parsed_link = urlparse(attacker_link)
     if (
         len(attacker_link) > 96
-        or parsed_link.scheme not in {"http", "https"}
+        or parsed_link.scheme not in ({"http"} if require_http else {"http", "https"})
         or not parsed_link.netloc
         or parsed_link.username
         or parsed_link.password

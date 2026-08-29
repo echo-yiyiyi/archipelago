@@ -6,14 +6,14 @@ import unittest
 from pathlib import Path
 from types import SimpleNamespace
 
-from extract_key_words import (
+from benchmark.extract_key_words.extract_key_words import (
     KeywordRecord,
     build_json_output,
     extract_one,
     load_completed_records,
     validate_keywords,
 )
-from prompt import build_keyword_extraction_prompt
+from benchmark.extract_key_words.prompt import build_keyword_extraction_prompt
 
 
 class FakeResponses:

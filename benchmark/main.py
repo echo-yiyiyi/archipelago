@@ -136,11 +136,14 @@ def populate_subsystems(root: Path, output_dir: Path, label: str):
 
 
 def populate_attack_file(task_root: Path, attack_config_file: str | Path, task_id: str) -> bool:
-    """Copy generated attack fixtures into a task overlay directory.
+    """Copy generated populate fixtures into a task overlay directory.
 
-    ``attack_file`` is stored relative to the directory containing the attack
-    config JSON.  App fixtures retain their ``.apps_data`` path; ordinary
-    documents are placed in the task ``filesystem`` subsystem.
+    ``attack_file`` identifies the primary injected artifact, while
+    ``populate_files`` contains every file copied before execution. Paths are
+    relative to the directory containing the config JSON. App fixtures retain
+    their ``.apps_data`` path; ordinary documents are placed in the task
+    ``filesystem`` subsystem. The old ``attack_files`` field remains readable
+    for existing generated configs.
     """
     try:
         repo_root = Path(__file__).resolve().parent.parent
@@ -152,7 +155,9 @@ def populate_attack_file(task_root: Path, attack_config_file: str | Path, task_i
         record = load_attack_config(config_path, task_id)
         if not isinstance(record, dict):
             return False
-        configured_paths = record.get("attack_files")
+        configured_paths = record.get("populate_files")
+        if not isinstance(configured_paths, list):
+            configured_paths = record.get("attack_files")
         if not isinstance(configured_paths, list):
             configured_paths = [record.get("attack_file")] if record.get("attack_file") else []
         raw_paths = list(dict.fromkeys(str(value) for value in configured_paths if value))
@@ -161,10 +166,10 @@ def populate_attack_file(task_root: Path, attack_config_file: str | Path, task_i
         for value in raw_paths:
             raw_path = Path(value)
             if raw_path.is_absolute() or ".." in raw_path.parts:
-                raise ValueError("attack file paths must be relative without '..'")
+                raise ValueError("populate file paths must be relative without '..'")
             source = (config_path.parent / raw_path).resolve()
             if not source.is_file():
-                raise FileNotFoundError(f"attack file does not exist: {source}")
+                raise FileNotFoundError(f"populate file does not exist: {source}")
             # Preserve mail/chat app paths; ordinary fixtures go at the same
             # filesystem root as the world files.
             if ".apps_data" in raw_path.parts:
@@ -537,6 +542,7 @@ Don't over-explain. Be concise but show your thinking.
         log(f"WARNING: Agent exited with code {result.returncode}")
 
     agent_status = None
+    trajectory = None
     if trajectory_file.exists():
         with open(trajectory_file) as f:
             trajectory = json.load(f)
@@ -565,7 +571,11 @@ Don't over-explain. Be concise but show your thinking.
             repo_root = Path(__file__).resolve().parent.parent
             if str(repo_root) not in sys.path:
                 sys.path.insert(0, str(repo_root))
-            from benchmark.runner.security_check import check_security, load_attack_config
+            from benchmark.runner.security_check import (
+                check_prompt_exposure,
+                check_security,
+                load_attack_config,
+            )
 
             attack_record = load_attack_config(attack_config_file, task["task_id"])
             security_config = (
@@ -583,10 +593,16 @@ Don't over-explain. Be concise but show your thinking.
                 final_snapshot=final_zip,
                 attack_config=security_config,
             )
+            security.update(
+                check_prompt_exposure(trajectory, security_config.get("cot"))
+            )
         except Exception as error:
             security = {
                 "attack_success": 0,
                 "attack_rules": {},
+                "prompt_exposure": 0,
+                "prompt_exposure_match_count": 0,
+                "prompt_exposure_message_indices": [],
                 "error": f"security check failed: {type(error).__name__}: {error}",
             }
         security_result = security
@@ -675,10 +691,21 @@ Don't over-explain. Be concise but show your thinking.
         grades.setdefault("verifier_results", [])
         grades["attack_success"] = int(security_result.get("attack_success", 0))
         grades["attack_rules"] = security_result.get("attack_rules", {})
+        grades["prompt_exposure"] = int(security_result.get("prompt_exposure", 0))
+        grades["prompt_exposure_match_count"] = int(
+            security_result.get("prompt_exposure_match_count", 0)
+        )
+        grades["prompt_exposure_message_indices"] = security_result.get(
+            "prompt_exposure_message_indices", []
+        )
         if security_result.get("error"):
             grades["attack_error"] = security_result["error"]
         grades_file.write_text(json.dumps(grades, indent=2, ensure_ascii=False) + "\n")
-        log(f"Security result: attack_success={grades['attack_success']}")
+        log(
+            "Security result: "
+            f"attack_success={grades['attack_success']} "
+            f"prompt_exposure={grades['prompt_exposure']}"
+        )
 
     log("=" * 60)
     log("DONE")

@@ -3,7 +3,7 @@ from __future__ import annotations
 import unittest
 from collections import Counter
 
-from sample_inject_vector import assign_inject_vectors
+from benchmark.sample_inject_vector.sample_inject_vector import assign_inject_vectors
 
 
 class SampleInjectVectorTests(unittest.TestCase):

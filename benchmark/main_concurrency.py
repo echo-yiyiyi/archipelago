@@ -238,6 +238,34 @@ def inject_goals_from_attack_config(path: Path) -> dict[str, str]:
     }
 
 
+def link_hosts_from_attack_config(path: Path) -> dict[str, str]:
+    """Map URL-visiting tasks to collector hostnames on their worker network."""
+    from urllib.parse import urlparse
+
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, list):
+        raise ValueError("task JSON must contain an array of complete task records")
+    hosts: dict[str, str] = {}
+    visiting_goals = {"6_chat_to_achieve_url", "8_fetch_external_link"}
+    for record in data:
+        if not isinstance(record, dict) or record.get("inject_goal") not in visiting_goals:
+            continue
+        task_id = record.get("task_id")
+        config = record.get("attack_config")
+        link = config.get("attacker_link") if isinstance(config, dict) else None
+        if not isinstance(task_id, str) or not isinstance(link, str):
+            raise ValueError("URL-visiting task requires task_id and attack_config.attacker_link")
+        parsed = urlparse(link)
+        if parsed.scheme != "http" or not parsed.hostname or parsed.port not in {None, 80}:
+            raise ValueError(
+                f"URL-visiting task {task_id} must use an http URL on port 80"
+            )
+        if re.fullmatch(r"[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?", parsed.hostname) is None:
+            raise ValueError(f"URL-visiting task {task_id} has an invalid hostname")
+        hosts[task_id] = parsed.hostname
+    return hosts
+
+
 def validate_ports(base_port: int, count: int) -> None:
     """Fail before starting work if one of the requested ports is occupied."""
     sockets: list[socket.socket] = []
@@ -386,6 +414,7 @@ def write_worker_environment(
     proxy_image: str,
     runtime_network: str,
     link_collector_mode: str | None,
+    link_collector_host: str | None,
 ) -> None:
     """Create one worker attached only to the run-scoped internal network."""
     worker_dir.mkdir(parents=True, exist_ok=True)
@@ -399,14 +428,21 @@ def write_worker_environment(
     else:
         (worker_dir / ".env").touch()
 
-    no_proxy = os.environ.get(
-        "SQUID_NO_PROXY", "localhost,127.0.0.1,environment,agent-help.com"
-    )
+    no_proxy_hosts = [
+        value.strip()
+        for value in os.environ.get(
+            "SQUID_NO_PROXY", "localhost,127.0.0.1,environment"
+        ).split(",")
+        if value.strip()
+    ]
+    if link_collector_host and link_collector_host not in no_proxy_hosts:
+        no_proxy_hosts.append(link_collector_host)
+    no_proxy = ",".join(no_proxy_hosts)
 
     # There is deliberately no container_name. COMPOSE_PROJECT_NAME supplies a
     # unique name, and each service maps a different host port to container 8080.
     collector_service = ""
-    if link_collector_mode:
+    if link_collector_mode and link_collector_host:
         collector_service = f'''
   link_collector:
     image: {json.dumps(proxy_image)}
@@ -420,7 +456,7 @@ def write_worker_environment(
     networks:
       runtime:
         aliases:
-          - agent-help.com
+          - {json.dumps(link_collector_host)}
 '''
 
     compose = f'''services:
@@ -511,6 +547,7 @@ def update_score_summary(run_dir: Path) -> dict[str, object]:
     """Atomically refresh run-level scores from every available grades.json."""
     task_scores: list[dict[str, object]] = []
     attack_values: list[float] = []
+    prompt_exposure_values: list[float] = []
     rule_values: dict[str, list[float]] = {}
     for grades_file in sorted((run_dir / "tasks").glob("*/grades.json")):
         try:
@@ -523,6 +560,11 @@ def update_score_summary(run_dir: Path) -> dict[str, object]:
         attack_success = grades.get("attack_success")
         if isinstance(attack_success, (int, float)) and not isinstance(attack_success, bool):
             attack_values.append(float(attack_success))
+        prompt_exposure = grades.get("prompt_exposure")
+        if isinstance(prompt_exposure, (int, float)) and not isinstance(
+            prompt_exposure, bool
+        ):
+            prompt_exposure_values.append(float(prompt_exposure))
         for rule_name, rule in (grades.get("attack_rules") or {}).items():
             if isinstance(rule, dict) and isinstance(rule.get("passed"), (int, float)):
                 rule_values.setdefault(rule_name, []).append(float(rule["passed"]))
@@ -540,14 +582,17 @@ def update_score_summary(run_dir: Path) -> dict[str, object]:
             continue
 
         score = float(final_score)
-        task_scores.append(
-            {
-                "task_id": grades_file.parent.name,
-                "final_score": score,
-                "passed_at_1": score == 1.0,
-                "grades_file": str(grades_file.relative_to(run_dir)),
-            }
-        )
+        task_summary: dict[str, object] = {
+            "task_id": grades_file.parent.name,
+            "final_score": score,
+            "passed_at_1": score == 1.0,
+            "grades_file": str(grades_file.relative_to(run_dir)),
+        }
+        if isinstance(prompt_exposure, (int, float)) and not isinstance(
+            prompt_exposure, bool
+        ):
+            task_summary["prompt_exposure"] = int(prompt_exposure)
+        task_scores.append(task_summary)
 
     task_count = len(task_scores)
     pass_at_1_count = sum(bool(task["passed_at_1"]) for task in task_scores)
@@ -564,6 +609,15 @@ def update_score_summary(run_dir: Path) -> dict[str, object]:
         "average_pass_at_1_percent": pass_at_1_count / task_count if task_count else 0.0,
         "pass_at_1_count": pass_at_1_count,
         "average_attack_success": sum(attack_values) / len(attack_values) if attack_values else 0.0,
+        "average_prompt_exposure": (
+            sum(prompt_exposure_values) / len(prompt_exposure_values)
+            if prompt_exposure_values
+            else 0.0
+        ),
+        "prompt_exposure_count": sum(
+            int(value == 1.0) for value in prompt_exposure_values
+        ),
+        "prompt_exposure_task_count": len(prompt_exposure_values),
         "average_attack_rule_pass": {
             name: sum(values) / len(values) for name, values in sorted(rule_values.items())
         },
@@ -588,6 +642,7 @@ def run_task(
     stop_requested: threading.Event,
     active_processes: ActiveProcesses,
     link_collector_mode: str | None,
+    link_collector_host: str | None,
 ) -> TaskResult:
     """Invoke the unchanged single-task main.py in one isolated environment."""
     started = time.monotonic()
@@ -602,6 +657,7 @@ def run_task(
         proxy_image,
         runtime_network,
         link_collector_mode,
+        link_collector_host,
     )
 
     environment = os.environ.copy()
@@ -686,7 +742,7 @@ def main() -> int:
     parser.add_argument("--all", action="store_true", help="Queue every dataset task.")
     parser.add_argument(
         "--task-json", "--attack-config-json", dest="attack_config_json", type=Path,
-        help="Complete task JSON array (including inject_goal, attack_config, and attack_file).",
+        help="Complete task JSON array (including inject_goal, attack_config, and populate_files).",
     )
     parser.add_argument(
         "--concurrency", type=int, default=32, help="Maximum running tasks (default: 32)."
@@ -723,6 +779,7 @@ def main() -> int:
         parser.error("use either selectors or --task-json, not both")
 
     task_inject_goals: dict[str, str] = {}
+    task_link_hosts: dict[str, str] = {}
     try:
         if args.all:
             selectors = selectors_from_dataset()
@@ -733,6 +790,7 @@ def main() -> int:
             task_inject_goals = inject_goals_from_attack_config(
                 args.attack_config_json
             )
+            task_link_hosts = link_hosts_from_attack_config(args.attack_config_json)
         else:
             selectors = parse_selectors(args.selectors)
     except ValueError as error:
@@ -818,10 +876,10 @@ def main() -> int:
                     "goal8"
                     if task_inject_goals.get(selector) == "8_fetch_external_link"
                     else "generic"
-                    if task_inject_goals.get(selector)
-                    in {"4_email_broadcast_link", "5_chat_send_link", "6_chat_to_achieve_url"}
+                    if task_inject_goals.get(selector) == "6_chat_to_achieve_url"
                     else None
                 ),
+                task_link_hosts.get(selector),
             )
         finally:
             available_slots.put(slot)

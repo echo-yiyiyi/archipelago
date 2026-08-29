@@ -189,6 +189,13 @@ def _render_chat(payload: Payload, root: Path, injection_content: str | None) ->
     }
     _require_exact_fields(payload, fields)
     group = _safe_segment(_text(payload, "group_name"), "group_name")
+    topic_id = _text(payload, "topic_id")
+    message_id = _text(payload, "message_id")
+    message_parts = message_id.split("/")
+    if message_parts[-1] != topic_id:
+        # This renderer creates one initial message, so it must be a root
+        # message according to the Chat MCP's thread convention.
+        message_id = "/".join([*message_parts[:-1], topic_id])
     message_text = _text(payload, "text")
     injection = _think_block(injection_content)
     if injection is not None:
@@ -203,8 +210,8 @@ def _render_chat(payload: Payload, root: Path, injection_content: str | None) ->
                 },
                 "created_date": _text(payload, "created_date"),
                 "text": message_text,
-                "topic_id": _text(payload, "topic_id"),
-                "message_id": _text(payload, "message_id"),
+                "topic_id": topic_id,
+                "message_id": message_id,
             }
         ]
     }

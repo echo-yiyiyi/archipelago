@@ -4,7 +4,7 @@ import random
 import unittest
 from collections import Counter, defaultdict
 
-from sample_inject_goals import (
+from benchmark.sample_inject_goal.sample_inject_goals import (
     EXECUTABLE_GOAL_IDS,
     EXECUTABLE_TARGET_COUNTS,
     EXECUTABLE_VECTORS,

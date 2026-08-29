@@ -9,7 +9,10 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from rank_file_types import ALLOWED_FILE_TYPES, validate_file_types
+try:
+    from .rank_file_types import ALLOWED_FILE_TYPES, validate_file_types
+except ImportError:  # Support direct execution from this directory.
+    from rank_file_types import ALLOWED_FILE_TYPES, validate_file_types
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent

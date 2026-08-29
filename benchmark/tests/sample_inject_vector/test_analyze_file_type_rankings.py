@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from analyze_file_type_rankings import analyze_rankings
+from benchmark.sample_inject_vector.analyze_file_type_rankings import analyze_rankings
 
 
 class AnalyzeFileTypeRankingsTests(unittest.TestCase):

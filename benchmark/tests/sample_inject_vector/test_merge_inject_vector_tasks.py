@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from merge_inject_vector_tasks import merge_tasks
+from benchmark.sample_inject_vector.merge_inject_vector_tasks import merge_tasks
 
 
 def task(task_id: str, difficulty: str, vector: str) -> dict[str, str]:

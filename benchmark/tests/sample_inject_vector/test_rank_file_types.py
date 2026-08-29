@@ -4,7 +4,7 @@ import json
 import unittest
 from types import SimpleNamespace
 
-from rank_file_types import (
+from benchmark.sample_inject_vector.rank_file_types import (
     FILE_TYPE_SCHEMA,
     build_output,
     rank_one,

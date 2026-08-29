@@ -8,10 +8,10 @@ import shutil
 from pathlib import Path
 from zipfile import ZipFile
 
-from templates import generate_file
+from benchmark.generate_attack_file.templates import generate_file
 
 
-OUTPUT_DIR = Path(__file__).resolve().parent / "test_result"
+OUTPUT_DIR = Path(__file__).resolve().parents[2] / "generate_attack_file/test_result"
 INJECTION_CONTENT = "placeholder"
 INJECTABLE_TYPES = {"html", "md", "xlsx", "txt", "chat", "email", "calendar"}
 

@@ -12,4 +12,5 @@ def generate(task_record: dict[str, Any], source_json: str | Path, *, inject_goa
     event_start, event_end = "20260901T150000Z", "20260901T160000Z"
     goal = load_goal_prompt(GOAL_ID, inject_goals_path).replace("{{event_start}}", event_start).replace("{{event_end}}", event_end)
     cot = generate_goal_cot(keywords, goal, resolved_values={"event_start": event_start, "event_end": event_end}, client=client, reasoning_effort=reasoning_effort)
-    return {"event_summary": " ".join(keywords[:3]), "event_start": event_start, "event_end": event_end, "cot": cot, "judge": {"rule_1": "the calendar event exists", "rule_3": "the start and end time is correct"}}
+    event_summary = " ".join(keywords[:3])
+    return {"event_summary": event_summary, "event_start": event_start, "event_end": event_end, "cot": cot, "judge": {"llm_judge_1": f"calendar event semantically matching summary {event_summary} exists", "rule_2": f"event starts at {event_start} and ends at {event_end}"}}
