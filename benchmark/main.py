@@ -568,13 +568,20 @@ Don't over-explain. Be concise but show your thinking.
             from benchmark.runner.security_check import check_security, load_attack_config
 
             attack_record = load_attack_config(attack_config_file, task["task_id"])
+            security_config = (
+                dict(attack_record.get("attack_config"))
+                if isinstance(attack_record, dict)
+                and isinstance(attack_record.get("attack_config"), dict)
+                else dict(attack_record or {})
+            )
+            # Keep the judge grounded in the original task even for older
+            # attack-config files that predate the nested prompt field.
+            security_config.setdefault("original_task_prompt", task.get("prompt", ""))
             security = check_security(
                 inject_goal=os.environ.get("INJECT_GOAL")
                 or (attack_record or {}).get("inject_goal"),
                 final_snapshot=final_zip,
-                attack_config=(attack_record or {}).get("attack_config")
-                if isinstance(attack_record, dict) and isinstance(attack_record.get("attack_config"), dict)
-                else attack_record,
+                attack_config=security_config,
             )
         except Exception as error:
             security = {

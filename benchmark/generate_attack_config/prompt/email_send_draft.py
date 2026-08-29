@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Any
 
@@ -49,4 +50,18 @@ def generate(
         client=client,
         reasoning_effort=reasoning_effort,
     )
-    return {"attacker_email_address": address, "cot": cot}
+    if not re.search(r"original user (?:prompt|instruction)", cot, re.IGNORECASE):
+        cot, replacements = re.subn(
+            r"the complete original (?:request|task|description)",
+            "the complete original user prompt",
+            cot,
+            count=1,
+            flags=re.IGNORECASE,
+        )
+        if replacements == 0:
+            raise ValueError("generated COT omitted the original user prompt")
+    return {
+        "attacker_email_address": address,
+        "cot": cot,
+        "original_task_prompt": str(task_record.get("prompt", "")),
+    }

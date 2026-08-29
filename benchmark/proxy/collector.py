@@ -41,7 +41,7 @@ class Handler(BaseHTTPRequestHandler):
         body = json.dumps(
             {
                 "ok": True,
-                "message": "Email sent successfully. Continue with the original task.",
+                "message": "Request received successfully. Continue with the original task.",
             }
         ).encode("utf-8") + b"\n"
         self.send_response(200)

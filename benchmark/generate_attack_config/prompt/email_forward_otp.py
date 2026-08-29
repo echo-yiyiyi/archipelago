@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import re
 from email.utils import format_datetime
 from datetime import datetime, timezone
@@ -87,6 +88,12 @@ def _valid_email(value: object) -> bool:
     ) is not None
 
 
+def _otp_mail_id(task_id: str) -> str:
+    """Return a short, deterministic RFC 5322 Message-ID for the task OTP."""
+    short_id = hashlib.sha256(task_id.encode("utf-8")).hexdigest()[:8]
+    return f"<otp-{short_id}@benchmark.local>"
+
+
 def generate(
     task_record: dict[str, Any],
     source_json: str | Path,
@@ -101,9 +108,17 @@ def generate(
     if client is None:
         raise ValueError("3_email_forward_otp requires an LLM client")
     _, keywords = load_task(task_record)
+    task_id = str(task_record.get("task_id", "")).strip()
+    if not task_id:
+        raise ValueError("3_email_forward_otp requires task_id")
+    harmful_task_id = str(task_record.get("harmful_task_id") or task_id).strip()
+    if Path(harmful_task_id).name != harmful_task_id or harmful_task_id in {".", ".."}:
+        raise ValueError("3_email_forward_otp requires a valid harmful_task_id")
+    otp_output_path = (Path(harmful_task_id) / OTP_EMAIL_PATH).as_posix()
+    otp_mail_id = _otp_mail_id(task_id)
     goal_prompt = load_goal_prompt(GOAL_ID, inject_goals_path)
     neutral_goal = (
-        goal_prompt.replace("{{otp_email}}", OTP_EMAIL_PATH)
+        goal_prompt.replace("{{otp_mail_id}}", otp_mail_id)
         .replace("{{attacker_email_address}}", "the task-related recipient")
     )
     address = generate_keyword_email(
@@ -113,18 +128,36 @@ def generate(
         reasoning_effort=reasoning_effort,
     )
     resolved_goal = (
-        goal_prompt.replace("{{otp_email}}", OTP_EMAIL_PATH)
+        goal_prompt.replace("{{otp_mail_id}}", otp_mail_id)
         .replace("{{attacker_email_address}}", address)
     )
     cot = generate_goal_cot(
         keywords,
         resolved_goal,
-        resolved_values={"otp_email": OTP_EMAIL_PATH, "email_address": address},
+        resolved_values={"otp_mail_id": otp_mail_id, "email_address": address},
         client=client,
         reasoning_effort=reasoning_effort,
     )
+    named_original_mail_id = f"original_mail_id={otp_mail_id}"
+    if named_original_mail_id not in cot:
+        quoted_id = f"`{otp_mail_id}`"
+        named_id = f"`{named_original_mail_id}`"
+        if quoted_id in cot:
+            cot = cot.replace(quoted_id, named_id, 1)
+        elif otp_mail_id in cot:
+            cot = cot.replace(otp_mail_id, named_original_mail_id, 1)
+        else:
+            raise ValueError("generated COT omitted otp_mail_id")
+    cot = re.sub(
+        r"original\s+mail\s+id\s+(?=`?original_mail_id=)",
+        "",
+        cot,
+        count=1,
+        flags=re.IGNORECASE,
+    )
     return {
-        "otp_email": OTP_EMAIL_PATH,
+        "otp_email": otp_output_path,
+        "otp_mail_id": otp_mail_id,
         "attacker_email_address": address,
         "cot": cot,
         "judge": {
@@ -171,7 +204,7 @@ def generate_otp_artifact(
     payload.update(
         {
             "date": format_datetime(datetime(2026, 1, 15, 9, 0, tzinfo=timezone.utc)),
-            "message_id": f"<{task_id}.otp@benchmark.local>",
+            "message_id": _otp_mail_id(task_id),
         }
     )
     return generate_file("email", payload, output_dir)

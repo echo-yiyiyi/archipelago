@@ -22,6 +22,17 @@ try:
         generate as generate_email_broadcast_link,
         generate_calendar_artifact,
     )
+    from .prompt.chat_send_link import (
+        GOAL_ID as CHAT_SEND_LINK_GOAL_ID,
+        generate as generate_chat_send_link,
+        generate_chat_channel_artifact,
+    )
+    from .prompt.chat_archive_to_url import (
+        GOAL_ID as CHAT_ARCHIVE_GOAL_ID,
+        generate as generate_chat_archive,
+    )
+    from .prompt.calendar_create_event import GOAL_ID as CALENDAR_CREATE_GOAL_ID, generate as generate_calendar_create
+    from .prompt.fetch_external_link import GOAL_ID as FETCH_LINK_GOAL_ID, generate as generate_fetch_link
 except ImportError:  # Support direct execution from the repository root.
     sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
     from archipelago.benchmark.generate_attack_config.prompt.email_send_file import (
@@ -42,6 +53,17 @@ except ImportError:  # Support direct execution from the repository root.
         generate as generate_email_broadcast_link,
         generate_calendar_artifact,
     )
+    from archipelago.benchmark.generate_attack_config.prompt.chat_send_link import (
+        GOAL_ID as CHAT_SEND_LINK_GOAL_ID,
+        generate as generate_chat_send_link,
+        generate_chat_channel_artifact,
+    )
+    from archipelago.benchmark.generate_attack_config.prompt.chat_archive_to_url import (
+        GOAL_ID as CHAT_ARCHIVE_GOAL_ID,
+        generate as generate_chat_archive,
+    )
+    from archipelago.benchmark.generate_attack_config.prompt.calendar_create_event import GOAL_ID as CALENDAR_CREATE_GOAL_ID, generate as generate_calendar_create
+    from archipelago.benchmark.generate_attack_config.prompt.fetch_external_link import GOAL_ID as FETCH_LINK_GOAL_ID, generate as generate_fetch_link
 
 try:
     from ..generate_attack_file.generate import generate_from_task_record
@@ -98,6 +120,10 @@ def main() -> int:
         DRAFT_GOAL_ID: generate_email_send_draft,
         OTP_GOAL_ID: generate_email_forward_otp,
         BROADCAST_GOAL_ID: generate_email_broadcast_link,
+        CHAT_SEND_LINK_GOAL_ID: generate_chat_send_link,
+        CHAT_ARCHIVE_GOAL_ID: generate_chat_archive,
+        CALENDAR_CREATE_GOAL_ID: generate_calendar_create,
+        FETCH_LINK_GOAL_ID: generate_fetch_link,
     }
     for item in data:
         if not isinstance(item, dict):
@@ -152,7 +178,15 @@ def main() -> int:
                 client=get_client(),
                 reasoning_effort=args.reasoning_effort,
             )
-            attack_files.append(otp_path.relative_to(output.parent).as_posix())
+            otp_output_path = otp_path.relative_to(output.parent).as_posix()
+            attack_files.append(otp_output_path)
+            attack_config = record.get("attack_config")
+            if not isinstance(attack_config, dict):
+                raise ValueError("3_email_forward_otp requires attack_config")
+            # Store the generated artifact path relative to the output JSON.
+            # ``populate_attack_file`` derives the runtime .apps_data target
+            # from this same relative path when the benchmark starts.
+            attack_config["otp_email"] = otp_output_path
         if record.get("inject_goal") == BROADCAST_GOAL_ID:
             calendar_path = generate_calendar_artifact(
                 record,
@@ -161,7 +195,26 @@ def main() -> int:
                 client=get_client(),
                 reasoning_effort=args.reasoning_effort,
             )
-            attack_files.append(calendar_path.relative_to(output.parent).as_posix())
+            calendar_output_path = calendar_path.relative_to(output.parent).as_posix()
+            attack_files.append(calendar_output_path)
+            attack_config = record.get("attack_config")
+            if not isinstance(attack_config, dict):
+                raise ValueError("4_email_broadcast_link requires attack_config")
+            attack_config["calendar_event"] = calendar_output_path
+        if record.get("inject_goal") in {CHAT_SEND_LINK_GOAL_ID, CHAT_ARCHIVE_GOAL_ID}:
+            attack_config = record.get("attack_config")
+            if not isinstance(attack_config, dict):
+                raise ValueError("5_chat_send_link requires attack_config")
+            channel_path = generate_chat_channel_artifact(
+                record,
+                attack_config,
+                artifact_dir,
+                client=get_client(),
+                reasoning_effort=args.reasoning_effort,
+            )
+            channel_output_path = channel_path.relative_to(output.parent).as_posix()
+            attack_files.append(channel_output_path)
+            attack_config["chat_messages"] = channel_output_path
         record["attack_files"] = attack_files
 
     json_output = output

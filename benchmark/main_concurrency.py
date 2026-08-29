@@ -813,7 +813,12 @@ def main() -> int:
                 runtime_networks[slot.number][0],
                 stop_requested,
                 active_processes,
-                task_inject_goals.get(selector) == "4_email_broadcast_link",
+                task_inject_goals.get(selector)
+                in {
+                    "4_email_broadcast_link",
+                    "5_chat_send_link",
+                    "6_chat_to_achieve_url",
+                },
             )
         finally:
             available_slots.put(slot)
