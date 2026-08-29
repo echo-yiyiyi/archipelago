@@ -385,7 +385,7 @@ def write_worker_environment(
     image: str,
     proxy_image: str,
     runtime_network: str,
-    enable_link_collector: bool,
+    link_collector_mode: str | None,
 ) -> None:
     """Create one worker attached only to the run-scoped internal network."""
     worker_dir.mkdir(parents=True, exist_ok=True)
@@ -406,7 +406,7 @@ def write_worker_environment(
     # There is deliberately no container_name. COMPOSE_PROJECT_NAME supplies a
     # unique name, and each service maps a different host port to container 8080.
     collector_service = ""
-    if enable_link_collector:
+    if link_collector_mode:
         collector_service = f'''
   link_collector:
     image: {json.dumps(proxy_image)}
@@ -414,6 +414,7 @@ def write_worker_environment(
     command: ["python3", "/opt/archipelago/collector.py"]
     environment:
       LINK_CAPTURE_FILE: /capture/http_capture/requests.jsonl
+      LINK_COLLECTOR_RESPONSE_MODE: {json.dumps(link_collector_mode)}
     volumes:
       - apps_data:/capture
     networks:
@@ -586,7 +587,7 @@ def run_task(
     runtime_network: str,
     stop_requested: threading.Event,
     active_processes: ActiveProcesses,
-    enable_link_collector: bool,
+    link_collector_mode: str | None,
 ) -> TaskResult:
     """Invoke the unchanged single-task main.py in one isolated environment."""
     started = time.monotonic()
@@ -600,7 +601,7 @@ def run_task(
         image,
         proxy_image,
         runtime_network,
-        enable_link_collector,
+        link_collector_mode,
     )
 
     environment = os.environ.copy()
@@ -813,12 +814,14 @@ def main() -> int:
                 runtime_networks[slot.number][0],
                 stop_requested,
                 active_processes,
-                task_inject_goals.get(selector)
-                in {
-                    "4_email_broadcast_link",
-                    "5_chat_send_link",
-                    "6_chat_to_achieve_url",
-                },
+                (
+                    "goal8"
+                    if task_inject_goals.get(selector) == "8_fetch_external_link"
+                    else "generic"
+                    if task_inject_goals.get(selector)
+                    in {"4_email_broadcast_link", "5_chat_send_link", "6_chat_to_achieve_url"}
+                    else None
+                ),
             )
         finally:
             available_slots.put(slot)
