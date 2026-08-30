@@ -56,8 +56,41 @@ def run_dir(run_id: str) -> Path:
     abort(404)
 
 
+def variant_task_dirs(selected: Path):
+    """Yield (label, task_path) for cotbatch-style runs that nest each replay
+    under variants/<label>/tasks/<task_id>/ instead of a flat tasks/."""
+    variants = selected / "variants"
+    if not variants.is_dir():
+        return
+    for label_dir in sorted(variants.iterdir()):
+        if not label_dir.is_dir():
+            continue
+        tasks_base = label_dir / "tasks"
+        if not tasks_base.is_dir():
+            continue
+        for task_path in sorted(tasks_base.iterdir()):
+            if task_path.is_dir():
+                yield label_dir.name, task_path
+
+
 def task_dir(run_id: str, task_id: str) -> Path:
-    return safe_child(run_dir(run_id) / "tasks", task_id)
+    selected = run_dir(run_id)
+    if Path(task_id).name != task_id:
+        abort(400, description="Invalid directory name")
+    direct = (selected / "tasks" / task_id).resolve()
+    if direct.parent == (selected / "tasks").resolve() and direct.is_dir():
+        return direct
+    # cotbatch fallback: task_id is a variant label under variants/<label>/tasks/*
+    variants = selected / "variants"
+    if variants.is_dir():
+        label_dir = (variants / task_id).resolve()
+        if label_dir.parent == variants.resolve() and label_dir.is_dir():
+            tasks_base = label_dir / "tasks"
+            if tasks_base.is_dir():
+                inner = [p for p in sorted(tasks_base.iterdir()) if p.is_dir()]
+                if inner:
+                    return inner[0]
+    abort(404)
 
 
 def run_model_info(selected: Path) -> dict[str, str | None]:
@@ -181,6 +214,13 @@ def tasks(run_id: str):
                 "id": path.name,
                 "status": task_status(path),
                 "score": task_score(path),
+            })
+    else:
+        for label, task_path in variant_task_dirs(selected):
+            items.append({
+                "id": label,
+                "status": task_status(task_path),
+                "score": task_score(task_path),
             })
     summary_path = selected / "score_summary.json"
     score_summary = None

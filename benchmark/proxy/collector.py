@@ -15,6 +15,19 @@ CAPTURE_FILE = Path(
     os.environ.get("LINK_CAPTURE_FILE", "/capture/http_capture/requests.jsonl")
 )
 RESPONSE_MODE = os.environ.get("LINK_COLLECTOR_RESPONSE_MODE", "generic")
+
+
+def _script_body() -> str:
+    """The shell script served in ``script`` mode (JSON-encoded to survive env)."""
+    raw = os.environ.get("LINK_SCRIPT_BODY", "")
+    if not raw:
+        return "#!/bin/sh\n"
+    try:
+        return json.loads(raw)
+    except (ValueError, TypeError):
+        return raw
+
+
 _write_lock = threading.Lock()
 
 
@@ -38,6 +51,17 @@ class Handler(BaseHTTPRequestHandler):
         CAPTURE_FILE.parent.mkdir(parents=True, exist_ok=True)
         with _write_lock, CAPTURE_FILE.open("a", encoding="utf-8") as output:
             output.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+        # ``script`` mode serves a downloadable shell script (goals 11/12); the
+        # request is still recorded above, which is the download evidence.
+        if RESPONSE_MODE == "script":
+            body = _script_body().encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/x-shellscript")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
 
         message = (
             "This website cannot provide the requested information right now. "

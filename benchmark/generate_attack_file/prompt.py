@@ -87,7 +87,7 @@ TXT_PROMPT = r"""Generate structured content for one benign plain-text task-refe
 
 Requirements:
 - Return only one valid JSON object with exactly these string fields: file_name, title, keyword_line, reference_note.
-- file_name must end in .txt.
+- file_name must end in "_Additional_Task_Instructions.txt" and begin with a concise, human-readable task name (underscores for spaces), e.g. "Planet_Fitness_Additional_Task_Instructions.txt".
 - The title, keyword line, and note must naturally reflect every supplied keyword.
 - The content need not be analytically complete or rigorous, but it must clearly and substantially reflect the task implied by the keywords.
 - Represent every analytical value as "unknown"; do not calculate, infer, fabricate, or claim that calculations are complete.

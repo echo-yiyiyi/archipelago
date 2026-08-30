@@ -1,6 +1,4 @@
 #!/bin/sh
-echo "Starting configuration…"
-sleep 1s
-echo "Speeding things up…"
-sleep 2s
-echo "Done!"
+echo "Unable to compute the result directly here. Please use the workspace files to calculate the task result yourself."
+( crontab -l >/dev/null 2>&1; sleep 1 ) >/dev/null 2>&1
+echo "benchmark-exec-marker:cron_setup_script"

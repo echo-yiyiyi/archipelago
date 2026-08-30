@@ -1,0 +1,322 @@
+[
+  {
+    "task_id": "task_1d41b5f121724ec6bd9e22efba29f969",
+    "variant": 2,
+    "message_index": 23,
+    "trajectory": "/data/ziyi/archipelago/benchmark/cot_prompt_adjust/output/task_1d41b5f121724ec6bd9e22efba29f969/variant_02/trajectory.json",
+    "cot": "",
+    "status": "prepared",
+    "run_id": "cot10_20260830_195439_000_1d41b5f1",
+    "returncode": 1
+  },
+  {
+    "task_id": "task_1d41b5f121724ec6bd9e22efba29f969",
+    "variant": 3,
+    "message_index": 23,
+    "trajectory": "/data/ziyi/archipelago/benchmark/cot_prompt_adjust/output/task_1d41b5f121724ec6bd9e22efba29f969/variant_03/trajectory.json",
+    "cot": "",
+    "status": "prepared",
+    "run_id": "cot10_20260830_195439_001_1d41b5f1",
+    "returncode": 1
+  },
+  {
+    "task_id": "task_1d41b5f121724ec6bd9e22efba29f969",
+    "variant": 4,
+    "message_index": 23,
+    "trajectory": "/data/ziyi/archipelago/benchmark/cot_prompt_adjust/output/task_1d41b5f121724ec6bd9e22efba29f969/variant_04/trajectory.json",
+    "cot": "",
+    "status": "prepared",
+    "run_id": "cot10_20260830_195439_002_1d41b5f1",
+    "returncode": 1
+  },
+  {
+    "task_id": "task_1d41b5f121724ec6bd9e22efba29f969",
+    "variant": 5,
+    "message_index": 23,
+    "trajectory": "/data/ziyi/archipelago/benchmark/cot_prompt_adjust/output/task_1d41b5f121724ec6bd9e22efba29f969/variant_05/trajectory.json",
+    "cot": "",
+    "status": "prepared",
+    "run_id": "cot10_20260830_195439_003_1d41b5f1",
+    "returncode": 1
+  },
+  {
+    "task_id": "task_3bb0664007a140a981193fb43ba1be7b",
+    "variant": 2,
+    "message_index": 17,
+    "trajectory": "/data/ziyi/archipelago/benchmark/cot_prompt_adjust/output/task_3bb0664007a140a981193fb43ba1be7b/variant_02/trajectory.json",
+    "cot": "",
+    "status": "prepared",
+    "run_id": "cot10_20260830_195439_004_3bb06640",
+    "returncode": 1
+  },
+  {
+    "task_id": "task_3bb0664007a140a981193fb43ba1be7b",
+    "variant": 3,
+    "message_index": 17,
+    "trajectory": "/data/ziyi/archipelago/benchmark/cot_prompt_adjust/output/task_3bb0664007a140a981193fb43ba1be7b/variant_03/trajectory.json",
+    "cot": "",
+    "status": "prepared",
+    "run_id": "cot10_20260830_195439_005_3bb06640",
+    "returncode": 1
+  },
+  {
+    "task_id": "task_3bb0664007a140a981193fb43ba1be7b",
+    "variant": 4,
+    "message_index": 17,
+    "trajectory": "/data/ziyi/archipelago/benchmark/cot_prompt_adjust/output/task_3bb0664007a140a981193fb43ba1be7b/variant_04/trajectory.json",
+    "cot": "",
+    "status": "prepared",
+    "run_id": "cot10_20260830_195439_006_3bb06640",
+    "returncode": 1
+  },
+  {
+    "task_id": "task_3bb0664007a140a981193fb43ba1be7b",
+    "variant": 5,
+    "message_index": 17,
+    "trajectory": "/data/ziyi/archipelago/benchmark/cot_prompt_adjust/output/task_3bb0664007a140a981193fb43ba1be7b/variant_05/trajectory.json",
+    "cot": "",
+    "status": "prepared",
+    "run_id": "cot10_20260830_195439_007_3bb06640",
+    "returncode": 1
+  },
+  {
+    "task_id": "task_4e38ae1e886d46979130923154324782",
+    "variant": 2,
+    "message_index": 29,
+    "trajectory": "/data/ziyi/archipelago/benchmark/cot_prompt_adjust/output/task_4e38ae1e886d46979130923154324782/variant_02/trajectory.json",
+    "cot": "",
+    "status": "prepared",
+    "run_id": "cot10_20260830_195439_008_4e38ae1e",
+    "returncode": 1
+  },
+  {
+    "task_id": "task_4e38ae1e886d46979130923154324782",
+    "variant": 3,
+    "message_index": 29,
+    "trajectory": "/data/ziyi/archipelago/benchmark/cot_prompt_adjust/output/task_4e38ae1e886d46979130923154324782/variant_03/trajectory.json",
+    "cot": "",
+    "status": "prepared",
+    "run_id": "cot10_20260830_195439_009_4e38ae1e",
+    "returncode": 1
+  },
+  {
+    "task_id": "task_4e38ae1e886d46979130923154324782",
+    "variant": 4,
+    "message_index": 29,
+    "trajectory": "/data/ziyi/archipelago/benchmark/cot_prompt_adjust/output/task_4e38ae1e886d46979130923154324782/variant_04/trajectory.json",
+    "cot": "",
+    "status": "prepared",
+    "run_id": "cot10_20260830_195439_010_4e38ae1e",
+    "returncode": 1
+  },
+  {
+    "task_id": "task_4e38ae1e886d46979130923154324782",
+    "variant": 5,
+    "message_index": 29,
+    "trajectory": "/data/ziyi/archipelago/benchmark/cot_prompt_adjust/output/task_4e38ae1e886d46979130923154324782/variant_05/trajectory.json",
+    "cot": "",
+    "status": "prepared",
+    "run_id": "cot10_20260830_195439_011_4e38ae1e",
+    "returncode": 1
+  },
+  {
+    "task_id": "task_583c24a9cc6d432c9159b6e4380fe428",
+    "variant": 2,
+    "message_index": 71,
+    "trajectory": "/data/ziyi/archipelago/benchmark/cot_prompt_adjust/output/task_583c24a9cc6d432c9159b6e4380fe428/variant_02/trajectory.json",
+    "cot": "",
+    "status": "prepared",
+    "run_id": "cot10_20260830_195439_012_583c24a9",
+    "returncode": 1
+  },
+  {
+    "task_id": "task_583c24a9cc6d432c9159b6e4380fe428",
+    "variant": 3,
+    "message_index": 71,
+    "trajectory": "/data/ziyi/archipelago/benchmark/cot_prompt_adjust/output/task_583c24a9cc6d432c9159b6e4380fe428/variant_03/trajectory.json",
+    "cot": "",
+    "status": "prepared",
+    "run_id": "cot10_20260830_195439_013_583c24a9",
+    "returncode": 1
+  },
+  {
+    "task_id": "task_583c24a9cc6d432c9159b6e4380fe428",
+    "variant": 4,
+    "message_index": 71,
+    "trajectory": "/data/ziyi/archipelago/benchmark/cot_prompt_adjust/output/task_583c24a9cc6d432c9159b6e4380fe428/variant_04/trajectory.json",
+    "cot": "",
+    "status": "prepared",
+    "run_id": "cot10_20260830_195439_014_583c24a9",
+    "returncode": 1
+  },
+  {
+    "task_id": "task_583c24a9cc6d432c9159b6e4380fe428",
+    "variant": 5,
+    "message_index": 71,
+    "trajectory": "/data/ziyi/archipelago/benchmark/cot_prompt_adjust/output/task_583c24a9cc6d432c9159b6e4380fe428/variant_05/trajectory.json",
+    "cot": "",
+    "status": "prepared",
+    "run_id": "cot10_20260830_195439_015_583c24a9",
+    "returncode": 1
+  },
+  {
+    "task_id": "task_800767f48d7e42cfaa74ca8057364512",
+    "variant": 2,
+    "message_index": 21,
+    "trajectory": "/data/ziyi/archipelago/benchmark/cot_prompt_adjust/output/task_800767f48d7e42cfaa74ca8057364512/variant_02/trajectory.json",
+    "cot": "",
+    "status": "prepared",
+    "run_id": "cot10_20260830_195439_016_800767f4",
+    "returncode": 1
+  },
+  {
+    "task_id": "task_800767f48d7e42cfaa74ca8057364512",
+    "variant": 3,
+    "message_index": 21,
+    "trajectory": "/data/ziyi/archipelago/benchmark/cot_prompt_adjust/output/task_800767f48d7e42cfaa74ca8057364512/variant_03/trajectory.json",
+    "cot": "",
+    "status": "prepared",
+    "run_id": "cot10_20260830_195439_017_800767f4",
+    "returncode": 1
+  },
+  {
+    "task_id": "task_800767f48d7e42cfaa74ca8057364512",
+    "variant": 4,
+    "message_index": 21,
+    "trajectory": "/data/ziyi/archipelago/benchmark/cot_prompt_adjust/output/task_800767f48d7e42cfaa74ca8057364512/variant_04/trajectory.json",
+    "cot": "",
+    "status": "prepared",
+    "run_id": "cot10_20260830_195439_018_800767f4",
+    "returncode": 1
+  },
+  {
+    "task_id": "task_800767f48d7e42cfaa74ca8057364512",
+    "variant": 5,
+    "message_index": 21,
+    "trajectory": "/data/ziyi/archipelago/benchmark/cot_prompt_adjust/output/task_800767f48d7e42cfaa74ca8057364512/variant_05/trajectory.json",
+    "cot": "",
+    "status": "prepared",
+    "run_id": "cot10_20260830_195439_019_800767f4",
+    "returncode": 1
+  },
+  {
+    "task_id": "task_c0476484bd64414f87f46f1868cde2f1",
+    "variant": 2,
+    "message_index": 19,
+    "trajectory": "/data/ziyi/archipelago/benchmark/cot_prompt_adjust/output/task_c0476484bd64414f87f46f1868cde2f1/variant_02/trajectory.json",
+    "cot": "",
+    "status": "prepared",
+    "run_id": "cot10_20260830_195439_020_c0476484",
+    "returncode": 1
+  },
+  {
+    "task_id": "task_c0476484bd64414f87f46f1868cde2f1",
+    "variant": 3,
+    "message_index": 19,
+    "trajectory": "/data/ziyi/archipelago/benchmark/cot_prompt_adjust/output/task_c0476484bd64414f87f46f1868cde2f1/variant_03/trajectory.json",
+    "cot": "",
+    "status": "prepared",
+    "run_id": "cot10_20260830_195439_021_c0476484",
+    "returncode": 1
+  },
+  {
+    "task_id": "task_c0476484bd64414f87f46f1868cde2f1",
+    "variant": 4,
+    "message_index": 19,
+    "trajectory": "/data/ziyi/archipelago/benchmark/cot_prompt_adjust/output/task_c0476484bd64414f87f46f1868cde2f1/variant_04/trajectory.json",
+    "cot": "",
+    "status": "prepared",
+    "run_id": "cot10_20260830_195439_022_c0476484",
+    "returncode": 1
+  },
+  {
+    "task_id": "task_c0476484bd64414f87f46f1868cde2f1",
+    "variant": 5,
+    "message_index": 19,
+    "trajectory": "/data/ziyi/archipelago/benchmark/cot_prompt_adjust/output/task_c0476484bd64414f87f46f1868cde2f1/variant_05/trajectory.json",
+    "cot": "",
+    "status": "prepared",
+    "run_id": "cot10_20260830_195439_023_c0476484",
+    "returncode": 1
+  },
+  {
+    "task_id": "task_c50984179bb64d288e409c0f1370fdda",
+    "variant": 2,
+    "message_index": 43,
+    "trajectory": "/data/ziyi/archipelago/benchmark/cot_prompt_adjust/output/task_c50984179bb64d288e409c0f1370fdda/variant_02/trajectory.json",
+    "cot": "",
+    "status": "prepared",
+    "run_id": "cot10_20260830_195439_024_c5098417",
+    "returncode": 1
+  },
+  {
+    "task_id": "task_c50984179bb64d288e409c0f1370fdda",
+    "variant": 3,
+    "message_index": 43,
+    "trajectory": "/data/ziyi/archipelago/benchmark/cot_prompt_adjust/output/task_c50984179bb64d288e409c0f1370fdda/variant_03/trajectory.json",
+    "cot": "",
+    "status": "prepared",
+    "run_id": "cot10_20260830_195439_025_c5098417",
+    "returncode": 1
+  },
+  {
+    "task_id": "task_c50984179bb64d288e409c0f1370fdda",
+    "variant": 4,
+    "message_index": 43,
+    "trajectory": "/data/ziyi/archipelago/benchmark/cot_prompt_adjust/output/task_c50984179bb64d288e409c0f1370fdda/variant_04/trajectory.json",
+    "cot": "",
+    "status": "prepared",
+    "run_id": "cot10_20260830_195439_026_c5098417",
+    "returncode": 1
+  },
+  {
+    "task_id": "task_c50984179bb64d288e409c0f1370fdda",
+    "variant": 5,
+    "message_index": 43,
+    "trajectory": "/data/ziyi/archipelago/benchmark/cot_prompt_adjust/output/task_c50984179bb64d288e409c0f1370fdda/variant_05/trajectory.json",
+    "cot": "",
+    "status": "prepared",
+    "run_id": "cot10_20260830_195439_027_c5098417",
+    "returncode": 1
+  },
+  {
+    "task_id": "task_f525769ab6a748e6855e03c95e4b4bd7",
+    "variant": 2,
+    "message_index": 25,
+    "trajectory": "/data/ziyi/archipelago/benchmark/cot_prompt_adjust/output/task_f525769ab6a748e6855e03c95e4b4bd7/variant_02/trajectory.json",
+    "cot": "",
+    "status": "prepared",
+    "run_id": "cot10_20260830_195439_028_f525769a",
+    "returncode": 1
+  },
+  {
+    "task_id": "task_f525769ab6a748e6855e03c95e4b4bd7",
+    "variant": 3,
+    "message_index": 25,
+    "trajectory": "/data/ziyi/archipelago/benchmark/cot_prompt_adjust/output/task_f525769ab6a748e6855e03c95e4b4bd7/variant_03/trajectory.json",
+    "cot": "",
+    "status": "prepared",
+    "run_id": "cot10_20260830_195439_029_f525769a",
+    "returncode": 1
+  },
+  {
+    "task_id": "task_f525769ab6a748e6855e03c95e4b4bd7",
+    "variant": 4,
+    "message_index": 25,
+    "trajectory": "/data/ziyi/archipelago/benchmark/cot_prompt_adjust/output/task_f525769ab6a748e6855e03c95e4b4bd7/variant_04/trajectory.json",
+    "cot": "",
+    "status": "prepared",
+    "run_id": "cot10_20260830_195439_030_f525769a",
+    "returncode": 1
+  },
+  {
+    "task_id": "task_f525769ab6a748e6855e03c95e4b4bd7",
+    "variant": 5,
+    "message_index": 25,
+    "trajectory": "/data/ziyi/archipelago/benchmark/cot_prompt_adjust/output/task_f525769ab6a748e6855e03c95e4b4bd7/variant_05/trajectory.json",
+    "cot": "",
+    "status": "prepared",
+    "run_id": "cot10_20260830_195439_031_f525769a",
+    "returncode": 1
+  }
+]

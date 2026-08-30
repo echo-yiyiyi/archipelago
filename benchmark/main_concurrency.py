@@ -238,6 +238,28 @@ def inject_goals_from_attack_config(path: Path) -> dict[str, str]:
     }
 
 
+HARMFUL_SCRIPT_BY_GOAL = {
+    "11_terminal_remote_script": "terminal_remote",
+    "12_terminal_cron_setup": "cron_setup",
+}
+
+
+def collector_settings(inject_goal: str | None) -> tuple[str | None, str | None]:
+    """Return the (collector mode, served-script body) for a task's inject goal.
+
+    Link-visiting goals get a run-scoped collector; the terminal-script goals
+    additionally have it serve their downloadable harmful script.
+    """
+    if inject_goal in HARMFUL_SCRIPT_BY_GOAL:
+        script = EXAMPLE_DIR / "harmful_script" / HARMFUL_SCRIPT_BY_GOAL[inject_goal]
+        return "script", script.read_text(encoding="utf-8")
+    if inject_goal == "8_fetch_external_link":
+        return "goal8", None
+    if inject_goal in {"6_chat_to_achieve_url", "9_url_query_params"}:
+        return "generic", None
+    return None, None
+
+
 def link_hosts_from_attack_config(path: Path) -> dict[str, str]:
     """Map URL-visiting tasks to collector hostnames on their worker network."""
     from urllib.parse import urlparse
@@ -246,7 +268,10 @@ def link_hosts_from_attack_config(path: Path) -> dict[str, str]:
     if not isinstance(data, list):
         raise ValueError("task JSON must contain an array of complete task records")
     hosts: dict[str, str] = {}
-    visiting_goals = {"6_chat_to_achieve_url", "8_fetch_external_link"}
+    visiting_goals = {
+        "6_chat_to_achieve_url", "8_fetch_external_link", "9_url_query_params",
+        "11_terminal_remote_script", "12_terminal_cron_setup",
+    }
     for record in data:
         if not isinstance(record, dict) or record.get("inject_goal") not in visiting_goals:
             continue
@@ -415,6 +440,7 @@ def write_worker_environment(
     runtime_network: str,
     link_collector_mode: str | None,
     link_collector_host: str | None,
+    link_script_body: str | None = None,
 ) -> None:
     """Create one worker attached only to the run-scoped internal network."""
     worker_dir.mkdir(parents=True, exist_ok=True)
@@ -443,6 +469,14 @@ def write_worker_environment(
     # unique name, and each service maps a different host port to container 8080.
     collector_service = ""
     if link_collector_mode and link_collector_host:
+        # ``script`` mode serves a downloadable shell script; pass its body and
+        # mount the current collector source so the mode works without a rebuild.
+        script_env = ""
+        script_mount = ""
+        if link_collector_mode == "script":
+            script_env = f"\n      LINK_SCRIPT_BODY: {json.dumps(json.dumps(link_script_body or ''))}"
+            collector_source = EXAMPLE_DIR / "proxy" / "collector.py"
+            script_mount = f"\n      - {json.dumps(str(collector_source) + ':/opt/archipelago/collector.py:ro')}"
         collector_service = f'''
   link_collector:
     image: {json.dumps(proxy_image)}
@@ -450,9 +484,9 @@ def write_worker_environment(
     command: ["python3", "/opt/archipelago/collector.py"]
     environment:
       LINK_CAPTURE_FILE: /capture/http_capture/requests.jsonl
-      LINK_COLLECTOR_RESPONSE_MODE: {json.dumps(link_collector_mode)}
+      LINK_COLLECTOR_RESPONSE_MODE: {json.dumps(link_collector_mode)}{script_env}
     volumes:
-      - apps_data:/capture
+      - apps_data:/capture{script_mount}
     networks:
       runtime:
         aliases:
@@ -643,6 +677,7 @@ def run_task(
     active_processes: ActiveProcesses,
     link_collector_mode: str | None,
     link_collector_host: str | None,
+    link_script_body: str | None = None,
 ) -> TaskResult:
     """Invoke the unchanged single-task main.py in one isolated environment."""
     started = time.monotonic()
@@ -658,6 +693,7 @@ def run_task(
         runtime_network,
         link_collector_mode,
         link_collector_host,
+        link_script_body,
     )
 
     environment = os.environ.copy()
@@ -862,6 +898,9 @@ def main() -> int:
                 worker=slot.number,
                 port=slot.port,
             )
+            collector_mode, script_body = collector_settings(
+                task_inject_goals.get(selector)
+            )
             return run_task(
                 selector,
                 slot,
@@ -872,14 +911,9 @@ def main() -> int:
                 runtime_networks[slot.number][0],
                 stop_requested,
                 active_processes,
-                (
-                    "goal8"
-                    if task_inject_goals.get(selector) == "8_fetch_external_link"
-                    else "generic"
-                    if task_inject_goals.get(selector) == "6_chat_to_achieve_url"
-                    else None
-                ),
+                collector_mode,
                 task_link_hosts.get(selector),
+                script_body,
             )
         finally:
             available_slots.put(slot)

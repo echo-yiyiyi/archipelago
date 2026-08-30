@@ -419,6 +419,7 @@ def write_worker_environment(
     image: str,
     proxy_image: str,
     runtime_network: str,
+    link_hosts: list[str] | None = None,
 ) -> None:
     """Create one worker attached only to the run-scoped internal network."""
     worker_dir.mkdir(parents=True, exist_ok=True)
@@ -433,9 +434,18 @@ def write_worker_environment(
         (worker_dir / ".env").touch()
 
     experiment = os.environ.get("HF_EXPERIMENT_NAME", "")
-    aliases = [AGENT_HELP_DOMAIN, *EXPERIMENT_DOMAIN_ALIASES.get(experiment, [])]
+    attack_hosts = [h for h in (link_hosts or []) if h]
+    aliases = [AGENT_HELP_DOMAIN, *EXPERIMENT_DOMAIN_ALIASES.get(experiment, []), *attack_hosts]
     default_no_proxy = ",".join(["localhost", "127.0.0.1", "environment", *aliases])
     no_proxy = os.environ.get("SQUID_NO_PROXY", default_no_proxy)
+    if attack_hosts:
+        # An explicit SQUID_NO_PROXY must still bypass the proxy for attacker
+        # link hosts, otherwise squid (not the collector) answers the request.
+        merged = [v.strip() for v in no_proxy.split(",") if v.strip()]
+        for h in attack_hosts:
+            if h not in merged:
+                merged.append(h)
+        no_proxy = ",".join(merged)
 
     # There is deliberately no container_name. COMPOSE_PROJECT_NAME supplies a
     # unique name, and each service maps a different host port to container 8080.
@@ -633,6 +643,7 @@ def run_task(
     injection_goals: Path | None,
     resume_trajectory: Path | None = None,
     additional_turns: int | None = None,
+    link_hosts: list[str] | None = None,
 ) -> TaskResult:
     """Invoke the unchanged single-task main.py in one isolated environment."""
     started = time.monotonic()
@@ -641,7 +652,7 @@ def run_task(
         f"worker-{slot.number:02d}_{safe_log_name(selector)}.log"
     )
     write_worker_environment(
-        worker_dir, slot.port, image, proxy_image, runtime_network
+        worker_dir, slot.port, image, proxy_image, runtime_network, link_hosts
     )
 
     environment = os.environ.copy()

@@ -578,6 +578,50 @@ def populate_filesystem_overlay(root: Path, output_dir: Path) -> None:
     log(f"  filesystem overlay: {response.json()}")
 
 
+def populate_attack_file(task_root: Path, attack_config_file: str | Path, task_id: str) -> bool:
+    """Copy attack populate fixtures (mail/chat/calendar seeds, injected docs)
+    into a task overlay directory. Ported from benchmark/main.py so replayed
+    attacks have their target artifacts (OTP mail, chat channel, etc.) present
+    in the running world instead of erroring with 'not found'."""
+    try:
+        repo_root = Path(__file__).resolve().parents[2]
+        if str(repo_root) not in sys.path:
+            sys.path.insert(0, str(repo_root))
+        from benchmark.runner.security_check import load_attack_config
+
+        config_path = Path(attack_config_file).expanduser().resolve()
+        record = load_attack_config(config_path, task_id)
+        if not isinstance(record, dict):
+            return False
+        configured_paths = record.get("populate_files")
+        if not isinstance(configured_paths, list):
+            configured_paths = record.get("attack_files")
+        if not isinstance(configured_paths, list):
+            configured_paths = [record.get("attack_file")] if record.get("attack_file") else []
+        raw_paths = list(dict.fromkeys(str(value) for value in configured_paths if value))
+        if not raw_paths:
+            return False
+        for value in raw_paths:
+            raw_path = Path(value)
+            if raw_path.is_absolute() or ".." in raw_path.parts:
+                raise ValueError("populate file paths must be relative without '..'")
+            source = (config_path.parent / raw_path).resolve()
+            if not source.is_file():
+                raise FileNotFoundError(f"populate file does not exist: {source}")
+            if ".apps_data" in raw_path.parts:
+                app_index = raw_path.parts.index(".apps_data")
+                destination = task_root.joinpath(*raw_path.parts[app_index:])
+            else:
+                destination = task_root / "filesystem" / source.name
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, destination)
+            log(f"  Populated attack file: {destination.relative_to(task_root)}")
+        return True
+    except Exception as error:
+        log(f"ERROR: Failed to populate attack file for {task_id}: {error}")
+        sys.exit(1)
+
+
 def populate_world_overlay(root: Path, output_dir: Path) -> None:
     """Populate a flat filesystem overlay or a subsystem-aware world overlay."""
     if not root.is_dir():
@@ -862,6 +906,17 @@ def main():
                 populate_subsystems(task_dir, output_dir, "task")
         else:
             log(f"  No task files found at {task_prefix}")
+
+    # Seed attack fixtures (mail/chat/calendar targets) so injected attacks can
+    # actually land during replay. Driven by ATTACK_CONFIG_FILE (set by the
+    # concurrent launcher); no-op when unset.
+    attack_config_file = os.environ.get("ATTACK_CONFIG_FILE")
+    if attack_config_file:
+        with tempfile.TemporaryDirectory() as attack_tmp:
+            attack_task_dir = Path(attack_tmp)
+            if populate_attack_file(attack_task_dir, attack_config_file, task["task_id"]):
+                populate_subsystems(attack_task_dir, output_dir, "task_attack")
+                log("  Seeded attack target fixtures into world")
 
     if args.world_overlay:
         overlay = args.world_overlay.resolve()
