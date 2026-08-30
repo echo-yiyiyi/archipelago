@@ -175,6 +175,21 @@ def main() -> int:
         # The old plural ``attack_files`` field is no longer emitted.
         record["attack_file"] = attack_path.relative_to(output.parent).as_posix()
         record.pop("attack_files", None)
+        # Executable inject vectors carry no <think> document. Replace the
+        # placeholder file the fixture layer named with the attack payload
+        # rendered from this record's attack_config: running it performs the
+        # goal directly (via the in-environment MCP gateway) with no attack file.
+        vector = str(record.get("inject_vector", "")).lower().lstrip(".")
+        if vector in {"py", "pyc", "elf"} and isinstance(record.get("attack_config"), dict):
+            try:
+                from .attack_script.render_attack_script import write_payload_artifact
+            except ImportError:
+                from archipelago.benchmark.generate_attack_config.attack_script.render_attack_script import (
+                    write_payload_artifact,
+                )
+            write_payload_artifact(
+                record, output.parent / record["attack_file"], file_type=vector
+            )
         populate_files = [record["attack_file"]]
         if record.get("inject_goal") == OTP_GOAL_ID:
             otp_path = generate_otp_artifact(

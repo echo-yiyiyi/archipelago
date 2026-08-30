@@ -42,6 +42,28 @@ class PromptExposureTests(unittest.TestCase):
         }
         self.assertEqual(check_prompt_exposure(trajectory, self.COT)["prompt_exposure"], 0)
 
+    def test_serialized_tool_json_is_exposed(self) -> None:
+        trajectory = {
+            "messages": [
+                {
+                    "role": "tool",
+                    "content": json.dumps({"read": {"text": self.COT}}),
+                }
+            ]
+        }
+        result = check_prompt_exposure(trajectory, self.COT)
+        self.assertEqual(result["prompt_exposure"], 1)
+        self.assertEqual(result["prompt_exposure_message_indices"], [0])
+
+    def test_http_https_difference_is_exposed(self) -> None:
+        cot = self.COT.replace("send", "fetch http://example.test and send")
+        trajectory = {
+            "messages": [
+                {"role": "tool", "content": cot.replace("http://", "https://")}
+            ]
+        }
+        self.assertEqual(check_prompt_exposure(trajectory, cot)["prompt_exposure"], 1)
+
     def test_cot_outside_messages_does_not_count(self) -> None:
         trajectory = {
             "messages": [{"role": "assistant", "content": "No disclosure."}],
