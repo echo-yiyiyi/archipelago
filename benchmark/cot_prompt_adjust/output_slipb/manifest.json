@@ -1,0 +1,10 @@
+[
+  {
+    "task_id": "task_3bb0664007a140a981193fb43ba1be7b",
+    "variant": 1,
+    "message_index": 11,
+    "trajectory": "/data/ziyi/archipelago/benchmark/cot_prompt_adjust/output_slipb/task_3bb0664007a140a981193fb43ba1be7b/variant_slipb/trajectory.json",
+    "cot": "",
+    "status": "prepared"
+  }
+]

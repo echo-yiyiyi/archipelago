@@ -1,0 +1,15 @@
+{
+  "model": "openai/kimi-k3",
+  "api_base": "https://api.moonshot.ai/v1",
+  "api_key_env": "KIMI_API_KEY",
+  "extra_args": {
+    "allowed_openai_params": [
+      "reasoning_effort"
+    ],
+    "reasoning_effort": "max",
+    "temperature": 1.0,
+    "top_p": 0.95,
+    "max_completion_tokens": 262144,
+    "stream": false
+  }
+}

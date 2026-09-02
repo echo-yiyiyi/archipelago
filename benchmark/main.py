@@ -498,6 +498,20 @@ Don't over-explain. Be concise but show your thinking.
     user_prompt = prompt_with_inject_vector_context(task, task["task_id"])
     if user_prompt != task["prompt"]:
         log("Added communication-app review reminder to user prompt")
+    _extra_note = os.environ.get("EXTRA_USER_PROMPT_NOTE")
+    _note_map_file = os.environ.get("EXTRA_USER_PROMPT_NOTE_MAP")
+    if _note_map_file:
+        try:
+            _note_map = json.loads(Path(_note_map_file).expanduser().read_text(encoding="utf-8"))
+            _mapped = _note_map.get(task["task_id"])
+            if isinstance(_mapped, str) and _mapped.strip():
+                _extra_note = _mapped
+                log("Using per-task note from EXTRA_USER_PROMPT_NOTE_MAP")
+        except (OSError, json.JSONDecodeError, AttributeError) as _e:
+            log(f"WARN: could not read EXTRA_USER_PROMPT_NOTE_MAP: {_e}")
+    if _extra_note:
+        user_prompt = user_prompt.rstrip() + "\n\n" + _extra_note
+        log("Appended EXTRA_USER_PROMPT_NOTE to user prompt")
     initial_messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_prompt},
@@ -587,15 +601,33 @@ Don't over-explain. Be concise but show your thinking.
             # Keep the judge grounded in the original task even for older
             # attack-config files that predate the nested prompt field.
             security_config.setdefault("original_task_prompt", task.get("prompt", ""))
-            security = check_security(
-                inject_goal=os.environ.get("INJECT_GOAL")
-                or (attack_record or {}).get("inject_goal"),
-                final_snapshot=final_zip,
-                attack_config=security_config,
-            )
-            security.update(
-                check_prompt_exposure(trajectory, security_config.get("cot"))
-            )
+            # The attack result is computed from the final snapshot and must
+            # survive independently: a task that errored, failed, or was left
+            # unfinished by a prompt injection still gets a real security check.
+            try:
+                security = check_security(
+                    inject_goal=os.environ.get("INJECT_GOAL")
+                    or (attack_record or {}).get("inject_goal"),
+                    final_snapshot=final_zip,
+                    attack_config=security_config,
+                )
+            except Exception as error:
+                security = {
+                    "attack_success": 0,
+                    "attack_rules": {},
+                    "error": f"security check failed: {type(error).__name__}: {error}",
+                }
+            # Prompt-exposure is a best-effort add-on; a failure here must never
+            # discard the attack result already computed above.
+            try:
+                security.update(
+                    check_prompt_exposure(trajectory, security_config.get("cot"))
+                )
+            except Exception as error:
+                security.setdefault("prompt_exposure", 0)
+                security.setdefault("prompt_exposure_match_count", 0)
+                security.setdefault("prompt_exposure_message_indices", [])
+                security["prompt_exposure_error"] = f"{type(error).__name__}: {error}"
         except Exception as error:
             security = {
                 "attack_success": 0,

@@ -111,9 +111,11 @@ def _think_block(injection_content: str | None) -> str | None:
     if injection_content is None:
         return None
     content = injection_content.strip()
-    if re.fullmatch(r"<think>\s*.+?\s*</think>", content, re.DOTALL):
-        return content
-    return f"<think>{content}</think>"
+    # Emit the injection as plain text (no <think> wrapper); strip one if present.
+    m = re.fullmatch(r"<think>\s*(.+?)\s*</think>", content, re.DOTALL)
+    if m:
+        return m.group(1).strip()
+    return content
 
 
 def _render_html(

@@ -1,5 +1,6 @@
 """LLM utilities for agents using LiteLLM."""
 
+import os
 import time
 from enum import StrEnum
 from typing import Any
@@ -663,6 +664,56 @@ def _should_skip_retry(e: Exception) -> bool:
     return _is_context_window_error(e) or _is_non_retriable_bad_request(e)
 
 
+# Substrings of model ids whose providers reject image parts outright. Override
+# via TEXT_ONLY_MODEL_SUBSTRINGS (comma-separated) to extend without a code edit.
+_TEXT_ONLY_MODEL_SUBSTRINGS = tuple(
+    s.strip().lower()
+    for s in os.environ.get("TEXT_ONLY_MODEL_SUBSTRINGS", "deepseek").split(",")
+    if s.strip()
+)
+
+_IMAGE_OMITTED_PLACEHOLDER = (
+    "[image omitted: the current model does not support image input]"
+)
+
+
+def _is_text_only_model(model: str) -> bool:
+    m = (model or "").lower()
+    return any(sub in m for sub in _TEXT_ONLY_MODEL_SUBSTRINGS)
+
+
+def _strip_images_for_text_only(
+    messages: list[LitellmAnyMessage],
+) -> list[LitellmAnyMessage]:
+    """Replace image_url content parts with a text placeholder.
+
+    Leaves text-only messages untouched. A message whose content is entirely
+    images collapses to a single placeholder text part so the turn is preserved
+    (dropping it could break user/assistant alternation).
+    """
+    out: list[LitellmAnyMessage] = []
+    for msg in messages:
+        content = msg.get("content") if isinstance(msg, dict) else None
+        if not isinstance(content, list):
+            out.append(msg)
+            continue
+        new_parts: list[Any] = []
+        changed = False
+        for part in content:
+            if isinstance(part, dict) and part.get("type") == "image_url":
+                new_parts.append({"type": "text", "text": _IMAGE_OMITTED_PLACEHOLDER})
+                changed = True
+            else:
+                new_parts.append(part)
+        if not changed:
+            out.append(msg)
+            continue
+        new_msg = dict(msg)
+        new_msg["content"] = new_parts
+        out.append(new_msg)
+    return out
+
+
 @with_retry(
     max_retries=10,
     base_backoff=5,
@@ -705,6 +756,13 @@ async def generate_response(
     top_level_extra, extra_body = _split_extra_args(
         responses_args_to_completions(extra_args)
     )
+    # Some OpenAI-compatible providers (e.g. deepseek-*) reject any image part
+    # with a non-retriable BadRequest ("This model does not support image").
+    # Because the image stays in history, every later call in the task also
+    # fails and the whole trajectory dies after exhausting retries. Replace
+    # image parts with a text placeholder so text-only models can proceed.
+    if _is_text_only_model(model):
+        messages = _strip_images_for_text_only(messages)
     if model.startswith("anthropic/"):
         messages = apply_anthropic_image_policy(messages, tools, model=model)
         # A trailing empty assistant "prefill" turn (authored content == "")

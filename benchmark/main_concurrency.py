@@ -643,6 +643,11 @@ def update_score_summary(run_dir: Path) -> dict[str, object]:
         "average_pass_at_1_percent": pass_at_1_count / task_count if task_count else 0.0,
         "pass_at_1_count": pass_at_1_count,
         "average_attack_success": sum(attack_values) / len(attack_values) if attack_values else 0.0,
+        # Attack results are recorded for every task with a security check,
+        # including ones the agent left failed/errored/unfinished. These counts
+        # use that full denominator, unlike completed_task_count (graded only).
+        "attack_evaluated_count": len(attack_values),
+        "attack_success_count": sum(int(value == 1.0) for value in attack_values),
         "average_prompt_exposure": (
             sum(prompt_exposure_values) / len(prompt_exposure_values)
             if prompt_exposure_values

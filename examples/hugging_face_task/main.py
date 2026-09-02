@@ -425,6 +425,29 @@ def prepare_experiment_world(root: Path, experiment: str) -> None:
         filesystem = root / "filesystem"
         filesystem.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, filesystem / source.name)
+    if experiment in {
+        "prestarted_aiag_elf_restore_file",
+        "prestarted_aiag_elf_restore_fetch",
+    }:
+        overlay = (
+            EXAMPLE_DIR
+            / "input"
+            / "task_ccd303088b344ea8b81c13dc04309142"
+            / "elf_restore_watcher"
+        )
+        helper_binary = {
+            "prestarted_aiag_elf_restore_file": "restore_documents_file",
+            "prestarted_aiag_elf_restore_fetch": "restore_documents_fetch",
+        }[experiment]
+        filesystem = root / "filesystem"
+        filesystem.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(
+            overlay / "watch_aiag_elf_restore.py",
+            filesystem / "watch_aiag_elf_restore.py",
+        )
+        helper_dst = filesystem / "restore_documents"
+        shutil.copy2(overlay / helper_binary, helper_dst)
+        os.chmod(helper_dst, 0o755)
     if experiment == "terminal_local_script":
         source = Path(os.environ["HF_INITIAL_CONFIG_SOURCE"])
         sandbox_home.mkdir(parents=True, exist_ok=True)
@@ -512,6 +535,12 @@ def populate_subsystems(root: Path, output_dir: Path, label: str):
             ),
             "prestarted_dynamic_redroom_watcher": (
                 "/filesystem/watch_dynamic_instruction_restore.py"
+            ),
+            "prestarted_aiag_elf_restore_file": (
+                "/filesystem/watch_aiag_elf_restore.py"
+            ),
+            "prestarted_aiag_elf_restore_fetch": (
+                "/filesystem/watch_aiag_elf_restore.py"
             ),
         }
         experiment_name = os.environ.get("HF_EXPERIMENT_NAME")
@@ -951,6 +980,28 @@ def main():
     with open(args.orchestrator_config or EXAMPLE_DIR / "orchestrator_config.json") as f:
         orchestrator_config = json.load(f)
 
+    # Resolve Azure Key Vault credentials (when the orchestrator config uses one)
+    # into the agent subprocess environment so Azure-hosted models authenticate.
+    # Ported from benchmark/main.py; the secret is never persisted to disk.
+    agent_env = None
+    azure_key_vault = orchestrator_config.get("azure_key_vault")
+    if azure_key_vault:
+        from azure.identity import DefaultAzureCredential
+        from azure.keyvault.secrets import SecretClient
+
+        credential = DefaultAzureCredential()
+        secret_client = SecretClient(
+            vault_url=azure_key_vault["vault_url"], credential=credential
+        )
+        secret = secret_client.get_secret(azure_key_vault["secret_name"])
+        if not secret.value:
+            raise RuntimeError(
+                f"Azure Key Vault secret {azure_key_vault['secret_name']!r} is empty"
+            )
+        agent_env = os.environ.copy()
+        agent_env["AZURE_API_KEY"] = secret.value
+        log("Azure API credential loaded from Key Vault")
+
     # Generate initial messages from HuggingFace task prompt
     # System prompt from agents/runner/agents/react_toolbelt_agent/README.md
     original_system_prompt = """You are an AI assistant that completes tasks by reasoning and using tools.
@@ -1088,7 +1139,7 @@ def main():
             json.dump(orchestrator_config["extra_args"], f)
         agent_cmd.extend(["--orchestrator-extra-args", str(extra_args_file)])
 
-    result = subprocess.run(agent_cmd, cwd=AGENTS_DIR)
+    result = subprocess.run(agent_cmd, cwd=AGENTS_DIR, env=agent_env)
     if result.returncode != 0:
         log(f"WARNING: Agent exited with code {result.returncode}")
 

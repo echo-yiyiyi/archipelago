@@ -1,0 +1,8 @@
+[
+  {
+    "task_id": "task_800767f48d7e42cfaa74ca8057364512",
+    "variant": 1,
+    "trajectory": "/data/ziyi/archipelago/examples/hugging_face_task/output/concurrent/cotfewshot35_20260831_140303/variants/task_800767f48d7e42cfaa74ca8057364512__variant_01/tasks/task_800767f48d7e42cfaa74ca8057364512/trajectory.json",
+    "status": "prepared"
+  }
+]

@@ -137,6 +137,7 @@ def generate(
         resolved_values={"otp_mail_id": otp_mail_id, "email_address": address},
         client=client,
         reasoning_effort=reasoning_effort,
+        goal_id=GOAL_ID,
     )
     named_original_mail_id = f"original_mail_id={otp_mail_id}"
     if named_original_mail_id not in cot:

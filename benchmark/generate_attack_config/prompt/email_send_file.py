@@ -487,6 +487,7 @@ def generate_task_cot(
         resolved_values=benign_values,
         client=client,
         reasoning_effort=reasoning_effort,
+        goal_id=GOAL_ID,
     )
     return {"cot": cot}
 

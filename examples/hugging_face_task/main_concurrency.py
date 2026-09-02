@@ -28,6 +28,7 @@ import uuid
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import urlparse
 
 EXAMPLE_DIR = Path(os.environ.get("EXAMPLE_DIR", Path(__file__).parent)).resolve()
 ARCHIPELAGO_DIR = Path(
@@ -787,6 +788,13 @@ def main() -> int:
     )
     parser.add_argument("--injections-jsonl", type=Path, help="Per-task runtime file injections.")
     parser.add_argument("--injection-goals", type=Path, help="Python injection-goal mapping.")
+    parser.add_argument(
+        "--attack-config", type=Path,
+        help="Attack config JSON. Seeds the injection fixture into each task world "
+             "via ATTACK_CONFIG_FILE (populate_attack_file) and wires the runtime "
+             "collector for URL-visiting goals so their attacker host resolves and is "
+             "captured. Works with a fresh run or with --resume-trajectory.",
+    )
     parser.add_argument("--resume-trajectory", type=Path)
     parser.add_argument("--additional-turns", type=int)
     args = parser.parse_args()
@@ -821,6 +829,29 @@ def main() -> int:
         parser.error("provide selectors (for example 0-31) or use --all")
     if injections and not args.injection_goals:
         parser.error("--injections-jsonl requires --injection-goals")
+
+    # Attack seeding: set ATTACK_CONFIG_FILE so each task's main.py seeds the
+    # injection fixture into its world, and map URL-visiting goals to their
+    # attacker hostname so the collector answers and captures the request.
+    task_link_hosts: dict[str, list[str]] = {}
+    if args.attack_config:
+        attack_config_path = args.attack_config.resolve()
+        if not attack_config_path.is_file():
+            parser.error(f"attack config not found: {attack_config_path}")
+        os.environ["ATTACK_CONFIG_FILE"] = str(attack_config_path)
+        try:
+            attack_records = json.loads(attack_config_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as error:
+            parser.error(f"could not read attack config: {error}")
+        attack_records = attack_records if isinstance(attack_records, list) else list(attack_records.values())
+        url_goals = {"6_chat_to_achieve_url", "8_fetch_external_link", "9_url_query_params"}
+        for record in attack_records:
+            if not isinstance(record, dict) or record.get("inject_goal") not in url_goals:
+                continue
+            link = (record.get("attack_config") or {}).get("attacker_link")
+            host = urlparse(link).hostname if link else None
+            if host and record.get("task_id"):
+                task_link_hosts[str(record["task_id"])] = [host]
 
     worker_count = min(args.concurrency, len(selectors))
     try:
@@ -906,6 +937,7 @@ def main() -> int:
                 args.injection_goals.resolve() if args.injection_goals else None,
                 args.resume_trajectory.resolve() if args.resume_trajectory else None,
                 args.additional_turns,
+                task_link_hosts.get(selector),
             )
         finally:
             available_slots.put(slot)

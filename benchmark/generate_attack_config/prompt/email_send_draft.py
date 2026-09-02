@@ -52,6 +52,7 @@ def generate(
         resolved_values={"email_address": address},
         client=client,
         reasoning_effort=reasoning_effort,
+        goal_id=GOAL_ID,
     )
     # Keep the user-facing wording aligned with the inject goal even when the
     # model paraphrases "original user prompt" as "original request".

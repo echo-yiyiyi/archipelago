@@ -105,6 +105,7 @@ def generate(
         },
         client=client,
         reasoning_effort=reasoning_effort,
+        goal_id=GOAL_ID,
     )
     cot = cot.replace("{{link}}", attacker_link)
     return {
