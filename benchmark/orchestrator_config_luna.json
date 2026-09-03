@@ -7,7 +7,7 @@
   "extra_args": {
     "api_base": "https://aoai-swedencentral-aii-02.openai.azure.com/",
     "reasoning": {
-      "effort": "max"
+      "effort": "low"
     }
   }
 }
