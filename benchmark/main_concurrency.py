@@ -278,7 +278,7 @@ def link_hosts_from_attack_config(path: Path) -> dict[str, str]:
     for record in data:
         if not isinstance(record, dict) or record.get("inject_goal") not in visiting_goals:
             continue
-        task_id = record.get("task_id")
+        task_id = record.get("harmful_task_id") or record.get("task_id")
         config = record.get("attack_config")
         link = config.get("attacker_link") if isinstance(config, dict) else None
         if not isinstance(task_id, str) or not isinstance(link, str):

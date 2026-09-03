@@ -85,6 +85,24 @@ class RuntimeServiceConfigurationTests(unittest.TestCase):
             )
             self.assertEqual(link_hosts_from_attack_config(config), {})
 
+    def test_harmful_selector_gets_its_own_collector_host(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            config = Path(temporary) / "tasks.json"
+            config.write_text(json.dumps([
+                {
+                    "task_id": "task_shared",
+                    "harmful_task_id": "task_shared_py_11_terminal_remote_script",
+                    "inject_goal": "11_terminal_remote_script",
+                    "attack_config": {
+                        "attacker_link": "http://shipcontract.example/setup"
+                    },
+                }
+            ]))
+            self.assertEqual(
+                link_hosts_from_attack_config(config),
+                {"task_shared_py_11_terminal_remote_script": "shipcontract.example"},
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
