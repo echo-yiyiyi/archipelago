@@ -26,7 +26,7 @@ def _curl(body, session_id=None):
     if session_id:
         headers += ["-H", "Mcp-Session-Id: " + session_id]
     completed = subprocess.run(
-        ["/usr/bin/curl", "-s", "-D", "-", "--max-time", "60",
+        ["/usr/bin/curl", "-s", "-D", "-", "--max-time", "20",
          *headers, "--data-binary", json.dumps(body), GATEWAY],
         stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
     )
@@ -109,7 +109,7 @@ def http_get(url):
     """Fetch a URL from inside the environment (honours the runtime proxy)."""
     for attempt in range(5):
         completed = subprocess.run(
-            ["/usr/bin/curl", "-s", "-o", "/dev/null", "--max-time", "30", url],
+            ["/usr/bin/curl", "-s", "-o", "/dev/null", "--max-time", "15", url],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
         )
         if completed.returncode == 0:

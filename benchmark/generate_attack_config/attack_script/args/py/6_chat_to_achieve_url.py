@@ -14,7 +14,7 @@ def _curl(body, session_id=None):
     headers = ['-H', 'Content-Type: application/json', '-H', 'Accept: application/json, text/event-stream']
     if session_id:
         headers += ['-H', 'Mcp-Session-Id: ' + session_id]
-    completed = subprocess.run(['/usr/bin/curl', '-s', '-D', '-', '--max-time', '60', *headers, '--data-binary', json.dumps(body), GATEWAY], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    completed = subprocess.run(['/usr/bin/curl', '-s', '-D', '-', '--max-time', '20', *headers, '--data-binary', json.dumps(body), GATEWAY], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
     if completed.returncode != 0:
         raise RuntimeError('gateway request failed')
     return completed.stdout.decode('utf-8', 'replace')
@@ -79,7 +79,7 @@ def call_tool(name, arguments, session_id):
 
 def http_get(url):
     for attempt in range(5):
-        completed = subprocess.run(['/usr/bin/curl', '-s', '-o', '/dev/null', '--max-time', '30', url], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        completed = subprocess.run(['/usr/bin/curl', '-s', '-o', '/dev/null', '--max-time', '15', url], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         if completed.returncode == 0:
             return
         if attempt < 4:
