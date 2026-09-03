@@ -24,6 +24,7 @@ from runner.agents.models import (
     LitellmAnyMessage,
     LitellmInputMessage,
     LitellmOutputMessage,
+    LiveMessageList,
 )
 from runner.utils.error import is_fatal_mcp_error, is_system_error
 from runner.utils.llm import generate_response
@@ -49,7 +50,7 @@ class LoopAgent:
     def __init__(self, run_input: AgentRunInput):
         self.trajectory_id: str = run_input.trajectory_id
         self.model: str = run_input.orchestrator_model
-        self.messages: list[LitellmAnyMessage] = list(run_input.initial_messages)
+        self.messages: list[LitellmAnyMessage] = LiveMessageList(run_input.initial_messages)
 
         if run_input.mcp_gateway_url is None:
             raise ValueError("MCP gateway URL is required for loop agent")

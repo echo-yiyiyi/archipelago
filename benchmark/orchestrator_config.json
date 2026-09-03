@@ -1,5 +1,6 @@
 {
   "model": "vertex_ai/gemini-3.5-flash",
+  "max_steps": 100,
   "extra_args": {
     "reasoning_effort": "high",
     "verbosity": "medium",

@@ -19,6 +19,8 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
+import shlex
 import shutil
 import socket
 import subprocess
@@ -149,7 +151,7 @@ def _check(check_python: str, goal: str, zip_path: Path, record: dict) -> dict:
         return {"attack_success": 0, "error": (out.stdout + out.stderr)[:400]}
 
 
-def run_goal(goal: str, check_python: str, variant: str = "py") -> dict:
+def run_goal(goal: str, check_python: str, variant: str = "py", runtime_args: list[str] | None = None, execution: str = "direct") -> dict:
     record = _record(goal)
     hosts = link_hosts_from_attack_config(CONFIG)
     task_id = record["task_id"]
@@ -173,17 +175,46 @@ def run_goal(goal: str, check_python: str, variant: str = "py") -> dict:
         if goal == "6_chat_to_achieve_url":
             _seed_chat(worker, env, record)
         container = _compose(worker, env, "ps", "-q", "environment").stdout.strip()
+        configured = CONFIG.parent / str(record.get("attack_file", ""))
+        extra = runtime_args or []
+        if not extra and goal == "6_chat_to_achieve_url":
+            rule = ((record.get("attack_config") or {}).get("judge") or {}).get("rule_2", "")
+            match = re.search(r":\s*(\[.*\])\s*$", rule)
+            extra = [" ".join(json.loads(match.group(1)))] if match else [rule]
         if variant == "pyc":
-            _run(["docker", "cp", str(HERE / "pyc" / f"{goal}.pyc"), f"{container}:/payload.pyc"])
-            _run(["docker", "exec", container, "/usr/bin/python3", "/payload.pyc"], timeout=120)
+            source = configured if configured.is_file() else HERE / "pyc" / f"{goal}.pyc"
+            destination = "/filesystem/.task_helper.pyc"
+            command = ["python", destination, *extra]
         elif variant == "elf":
-            _run(["docker", "cp", str(HERE / "elf" / goal), f"{container}:/payload_bin"])
-            _run(["docker", "exec", container, "chmod", "+x", "/payload_bin"])
-            _run(["docker", "exec", container, "/payload_bin"], timeout=120)
+            source = configured if configured.is_file() else HERE / "elf" / goal
+            destination = "/filesystem/.task_helper"
+            command = [destination, *extra]
         else:
-            _run(["docker", "cp", str(HERE / "py" / f"{goal}.py"), f"{container}:/payload.py"])
-            _run(["docker", "exec", container, "/usr/bin/python3", "/payload.py"], timeout=120)
-        _wait_worker(container)
+            source = configured if configured.is_file() else HERE / "py" / f"{goal}.py"
+            destination = "/filesystem/.task_helper.py"
+            command = ["python", destination, *extra]
+        _run(["docker", "cp", str(source), f"{container}:{destination}"])
+        if variant == "elf":
+            _run(["docker", "exec", container, "chmod", "+x", destination])
+        if execution == "code-exec":
+            driver = HERE / "_faithful_driver.py"
+            _run(["docker", "cp", str(driver), f"{container}:/args_faithful_driver.py"])
+            code = "ARGS_HELPER_DEBUG=/tmp/args_helper_debug.log " + shlex.join(command)
+            tool = _run(["docker", "exec", container, "/usr/bin/python3",
+                         "/args_faithful_driver.py", code], timeout=180)
+            print("  code_exec=" + (tool.stdout or tool.stderr).strip()[:180], flush=True)
+            time.sleep(8)
+            trace = _run(["docker", "exec", container, "sh", "-c",
+                          "test ! -f /tmp/args_helper_debug.log || cat /tmp/args_helper_debug.log"])
+            if trace.stdout:
+                print("  helper_trace=" + trace.stdout.strip(), flush=True)
+        else:
+            _run(["docker", "exec", container, *command], timeout=120)
+            _wait_worker(container)
+        capture = _run(["docker", "exec", container, "sh", "-c",
+                        "test ! -f /.apps_data/http_capture/requests.jsonl || cat /.apps_data/http_capture/requests.jsonl"])
+        if capture.stdout:
+            print("  captured_requests=" + capture.stdout.strip(), flush=True)
         with tempfile.TemporaryDirectory() as workdir:
             zip_path = _snapshot_zip(worker, env, Path(workdir))
             return _check(check_python, goal, zip_path, record)
@@ -198,7 +229,13 @@ def main() -> None:
     parser.add_argument("goals", nargs="*", help="6, 8, or full names (default: both)")
     parser.add_argument("--check-python", default=DEFAULT_CHECK_PYTHON)
     parser.add_argument("--variant", choices=["py","pyc","elf"], default="py")
+    parser.add_argument("--config", type=Path)
+    parser.add_argument("--runtime-arg", action="append", default=[])
+    parser.add_argument("--execution", choices=["direct", "code-exec"], default="direct")
     args = parser.parse_args()
+    global CONFIG
+    if args.config:
+        CONFIG = args.config.resolve()
 
     selected = LINK_GOALS
     if args.goals:
@@ -210,7 +247,7 @@ def main() -> None:
     results: dict[str, dict] = {}
     for goal in selected:
         print(f"\n=== {goal} ===")
-        result = run_goal(goal, args.check_python, args.variant)
+        result = run_goal(goal, args.check_python, args.variant, args.runtime_arg, args.execution)
         results[goal] = result
         print(f"  attack_success = {result.get('attack_success')}")
         for rule_id, rule in (result.get("attack_rules") or {}).items():

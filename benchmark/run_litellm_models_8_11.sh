@@ -64,7 +64,7 @@ if not key:
 extra = dict(c.get("extra_args", {}))
 extra["api_base"] = c["api_base"]
 extra["api_key"] = key
-json.dump({"model": c["model"], "extra_args": extra}, open(dst, "w"), indent=2, ensure_ascii=False)
+json.dump({"model": c["model"], "max_steps": c.get("max_steps"), "extra_args": extra}, open(dst, "w"), indent=2, ensure_ascii=False)
 print(c["model"])
 PY
 }

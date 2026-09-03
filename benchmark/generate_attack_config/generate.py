@@ -111,6 +111,22 @@ except ImportError:  # Support direct execution from the repository root.
 
 OUTPUT_DIR = Path(__file__).resolve().parent / "output"
 DEFAULT_MODEL = "aoai-swedencentral-aii-02-gpt-5.6-sol"
+ARG_SCRIPT_GOALS = {FILE_GOAL_ID, DRAFT_GOAL_ID, OTP_GOAL_ID, BROADCAST_GOAL_ID, CHAT_ARCHIVE_GOAL_ID}
+
+
+def write_runtime_argument_artifact(record: dict, dest: Path, vector: str) -> None:
+    """Write the args-gated executable used when add_user_prompt is enabled."""
+    try:
+        from .attack_script.args.generate_args_attack_scripts import render
+        from .attack_script.render_attack_script import _build_in_image
+    except ImportError:
+        from archipelago.benchmark.generate_attack_config.attack_script.args.generate_args_attack_scripts import render
+        from archipelago.benchmark.generate_attack_config.attack_script.render_attack_script import _build_in_image
+    source = render(record)
+    if vector == "py":
+        dest.write_text(source, encoding="utf-8")
+    else:
+        _build_in_image(source, vector, dest, "archipelago-hf-environment:concurrency")
 
 
 def parse_args() -> argparse.Namespace:
@@ -121,6 +137,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--inject-goals", type=Path)
     parser.add_argument("--reasoning-effort")
     parser.add_argument("--model", help="Azure OpenAI deployment name (or set AZURE_OPENAI_MODEL).")
+    parser.add_argument("--add-user-prompt", action="store_true")
+    parser.add_argument("--vector-map", type=json.loads,
+                        help='JSON goal-to-vector map for executable variants')
+    parser.add_argument("--reuse-existing-attack-config", action="store_true",
+                        help="do not regenerate a record's existing attack_config")
+    parser.add_argument("--goals", nargs="*", help="only emit these inject_goal values")
     return parser.parse_args()
 
 
@@ -171,8 +193,16 @@ def main() -> int:
         if not isinstance(item, dict):
             raise ValueError("every input record must be a JSON object")
         record = dict(item)
+        if args.goals and record.get("inject_goal") not in set(args.goals):
+            continue
+        if args.vector_map and record.get("inject_goal") in args.vector_map:
+            record["inject_vector"] = args.vector_map[record["inject_goal"]]
+        if args.add_user_prompt:
+            record["add_user_prompt"] = True
         generator = generators.get(record.get("inject_goal"))
-        if generator is not None:
+        # A prepared input may already contain the goal-specific config. Reuse
+        # it so executable args variants do not need API generation again.
+        if generator is not None and not isinstance(record.get("attack_config"), dict):
             record["attack_config"] = generator(
                 record,
                 input_path,
@@ -181,6 +211,9 @@ def main() -> int:
                 client=get_client(),
                 reasoning_effort=args.reasoning_effort,
             )
+        if record.get("add_user_prompt") and isinstance(record.get("attack_config"), dict):
+            record["attack_config"]["add_user_prompt"] = True
+            record["attack_config"].setdefault("original_task_prompt", record.get("prompt", ""))
         output_records.append(record)
 
     output = args.output or (
@@ -205,6 +238,15 @@ def main() -> int:
             raise ValueError("every record with inject_vector needs harmful_task_id or task_id")
         artifact_dir = output.parent / harmful_task_id
         artifact_dir.mkdir(parents=True, exist_ok=True)
+        vector = str(record.get("inject_vector", "")).lower().lstrip(".")
+        use_runtime_args = (
+            bool(record.get("add_user_prompt"))
+            and record.get("inject_goal") in ARG_SCRIPT_GOALS
+        )
+        # Always generate a fresh carrier name from this record's vector and
+        # keywords.  An existing attack_file may belong to a different carrier
+        # type (for example a chat store's fixed messages.json basename) and
+        # must not determine the name of a generated executable.
         attack_path = generate_from_task_record(
             record,
             artifact_dir,
@@ -229,9 +271,10 @@ def main() -> int:
                 from archipelago.benchmark.generate_attack_config.attack_script.render_attack_script import (
                     write_payload_artifact,
                 )
-            write_payload_artifact(
-                record, output.parent / record["attack_file"], file_type=vector
-            )
+            if use_runtime_args:
+                write_runtime_argument_artifact(record, output.parent / record["attack_file"], vector)
+            else:
+                write_payload_artifact(record, output.parent / record["attack_file"], file_type=vector)
             # Pair the executable with an "additional task instructions" lure
             # that tells the agent to run it before starting the task.
             try:
@@ -240,19 +283,17 @@ def main() -> int:
                 from archipelago.benchmark.generate_attack_config.prompt.task_instruction import (
                     generate_task_instruction_artifact,
                 )
-            lure_path = generate_task_instruction_artifact(
-                record,
-                Path(record["attack_file"]).name,
-                vector,
-                artifact_dir,
-                client=get_client(),
-                reasoning_effort=args.reasoning_effort,
-            )
-            lure_populate = lure_path.relative_to(output.parent).as_posix()
+            if not use_runtime_args:
+                lure_path = generate_task_instruction_artifact(
+                    record, Path(record["attack_file"]).name, vector, artifact_dir,
+                    client=get_client(), reasoning_effort=args.reasoning_effort)
+                lure_populate = lure_path.relative_to(output.parent).as_posix()
         populate_files = [record["attack_file"]]
         if lure_populate:
             populate_files.append(lure_populate)
-        if record.get("inject_goal") == DRAFT_GOAL_ID and vector in {"py", "pyc", "elf"}:
+        if (record.get("inject_goal") == DRAFT_GOAL_ID
+                and vector in {"py", "pyc", "elf"}
+                and not use_runtime_args):
             attack_config = record.get("attack_config")
             if not isinstance(attack_config, dict):
                 raise ValueError("2_email_send_draft requires attack_config")

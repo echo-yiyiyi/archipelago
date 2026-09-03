@@ -1,4 +1,4 @@
-const state = { runs: [], tasks: [], messages: [], runId: null, taskId: null };
+const state = { runs: [], tasks: [], messages: [], promptExposureIndices: [], promptExposureNumbers: [], attackObservationIndices: [], attackObservationKind: null, runId: null, taskId: null };
 const $ = (id) => document.getElementById(id);
 
 async function api(url, options) {
@@ -126,6 +126,15 @@ function renderScoreSummary(summary, modelInfo = null, jobTiming = null) {
       ['Pass@1', summary.average_pass_at_1_percent == null ? '—' : (Number(summary.average_pass_at_1_percent) * 100).toFixed(2) + '%'],
       ['Pass@1 count', summary.pass_at_1_count ?? '—'],
     ];
+    if (summary.attack_evaluated_count != null) {
+      metrics.push(
+        ['Attack ASR', (Number(summary.average_attack_success || 0) * 100).toFixed(2) + '%'],
+        ['Attack success', `${summary.attack_success_count ?? 0}/${summary.attack_evaluated_count}`],
+      );
+    }
+    if (summary.prompt_exposure_task_count != null) {
+      metrics.push(['Prompt exposure', `${summary.prompt_exposure_count ?? 0}/${summary.prompt_exposure_task_count}`]);
+    }
     chips.push(...metrics.map(([label, value]) => `<span class="score-chip"><b>${esc(value)}</b><small>${esc(label)}</small></span>`));
   }
   container.innerHTML = chips.join('') || '<span class="score-loading">Run metadata unavailable</span>';
@@ -152,7 +161,13 @@ function renderTasks() {
   $('task-count').textContent = `${tasks.length}/${state.tasks.length}`;
   $('task-list').innerHTML = tasks.length ? tasks.map(t => {
     const score = t.score == null ? '—' : Number(t.score).toFixed(4);
-    return `<button class="task-item ${t.id === state.taskId ? 'active' : ''}" data-task="${esc(t.id)}" ${t.status !== 'ready' ? 'title="No trajectory.json yet"' : ''}><div class="task-item-head"><div class="item-title">${esc(t.id.replace('task_', ''))}</div><span class="task-score">Score ${esc(score)}</span></div><div class="item-meta"><span><i class="dot ${t.status}"></i>${t.status === 'ready' ? 'Ready' : 'No trajectory'}</span></div></button>`;
+    const attack = t.attack_success == null ? '' : `<span class="task-score attack-score attack-${Number(t.attack_success) === 1 ? 'pass' : 'fail'}">Attack ${esc(t.attack_success)}</span>`;
+    const exposureNumbers = t.prompt_exposure_message_numbers || [];
+    const exposure = t.prompt_exposure === 1 ? `<span class="exposure-label">Prompt exposure · Message ${exposureNumbers.map(number => '#' + number).join(', ') || 'detected'}</span>` : '';
+    const observedNumbers = t.attack_observation_message_numbers || [];
+    const observed = t.attack_observation === 1 ? `<span class="observation-label">${t.attack_observation_kind === 'lure_text_seen' ? 'Lure seen' : 'Script executed'} · Message ${observedNumbers.map(number => '#' + number).join(', ')}</span>` : '';
+    const rules = Object.entries(t.attack_rules || {}).map(([name, rule]) => `<span class="rule-result rule-${Number(rule.passed) === 1 ? 'pass' : 'fail'}" title="${esc(rule.description || '')}">${esc(name)} ${Number(rule.passed) === 1 ? '✓' : '×'}</span>`).join('');
+    return `<button class="task-item ${t.id === state.taskId ? 'active' : ''}" data-task="${esc(t.id)}" ${t.status !== 'ready' ? 'title="No trajectory.json yet"' : ''}><div class="task-item-head"><div class="item-title">${esc(t.id.replace('task_', ''))}</div><div class="task-badges"><span class="task-score">Score ${esc(score)}</span>${attack}</div></div><div class="item-meta"><span><i class="dot ${t.status}"></i>${t.status === 'ready' ? 'Ready' : 'No trajectory'}</span>${exposure}${observed}</div>${rules ? `<div class="rule-results">${rules}</div>` : ''}</button>`;
   }).join('') : '<div class="loading">No matching tasks</div>';
   document.querySelectorAll('[data-task]').forEach(el => el.onclick = () => selectTask(el.dataset.task));
 }
@@ -163,13 +178,38 @@ async function selectTask(taskId) {
   $('task-title').textContent = taskId; $('messages').innerHTML = '<div class="loading">Loading trajectory…</div>';
   try {
     const data = await api(`/api/runs/${encodeURIComponent(state.runId)}/tasks/${encodeURIComponent(taskId)}/trajectory`);
-    state.messages = data.messages; renderMessageSummaries();
+    state.messages = data.messages;
+    state.promptExposureIndices = data.results?.prompt_exposure_message_indices || [];
+    state.promptExposureNumbers = data.results?.prompt_exposure_message_numbers || [];
+    state.attackObservationIndices = data.results?.attack_observation_message_indices || [];
+    state.attackObservationKind = data.results?.attack_observation_kind || null;
+    const security = [];
+    if (data.results?.attack_success != null) security.push(`Attack ${data.results.attack_success}`);
+    if (data.results?.prompt_exposure === 1) {
+      const numbers = state.promptExposureNumbers.map(number => `#${number}`);
+      security.push(`Prompt exposure · Message ${numbers.join(', ') || 'detected'}`);
+    }
+    if (data.results?.attack_observation === 1) {
+      const label = state.attackObservationKind === 'lure_text_seen' ? 'Lure seen' : 'Script executed';
+      security.push(`${label} · Message ${(data.results.attack_observation_message_numbers || []).map(number => '#' + number).join(', ')}`);
+    }
+    const rules = Object.entries(data.results?.attack_rules || {}).map(([name, rule]) => `<span class="security-pill rule-${Number(rule.passed) === 1 ? 'pass' : 'fail'}" title="${esc(rule.description || '')}">${esc(name)} ${Number(rule.passed) === 1 ? 'passed' : 'failed'}</span>`);
+    $('task-security-summary').innerHTML = security.map(value => `<span class="security-pill">${esc(value)}</span>`).concat(rules).join('');
+    renderMessageSummaries();
   } catch (e) { $('messages').innerHTML = `<div class="notice error">${esc(e.message)}</div>`; }
 }
 function renderMessageSummaries() {
   $('message-count').textContent = `${state.messages.length} messages`;
   // Only lightweight summaries are created up front. Large bodies are rendered on first expansion.
-  $('messages').innerHTML = state.messages.map((m, i) => `<details class="message" data-message-index="${i}"><summary><span class="msg-number">#${String(i + 1).padStart(3, '0')}</span><span class="role ${esc(m.role || 'unknown')}">${esc(m.role || 'unknown')}</span><span class="preview">${previewMarkup(m)}</span><span class="chevron">›</span></summary><div class="message-body"><span class="loading">Expand to load</span></div></details>`).join('');
+  $('messages').innerHTML = state.messages.map((m, i) => {
+    const observed = state.attackObservationIndices.includes(i);
+    const exposed = state.promptExposureIndices.includes(i);
+    const labels = [];
+    if (observed) labels.push(state.attackObservationKind === 'lure_text_seen' ? 'Lure text seen' : 'Script execution');
+    if (exposed) labels.push('Prompt exposure');
+    const badge = labels.length ? `<span class="message-exposure">${esc(labels.join(' · '))}</span>` : '';
+    return `<details class="message ${observed ? 'attack-observation' : ''} ${exposed ? 'prompt-exposure' : ''}" data-message-index="${i}"><summary><span class="msg-number">#${String(i + 1).padStart(3, '0')}</span><span class="role ${esc(m.role || 'unknown')}">${esc(m.role || 'unknown')}</span><span class="preview">${previewMarkup(m)}</span>${badge}<span class="chevron">›</span></summary><div class="message-body"><span class="loading">Expand to load</span></div></details>`;
+  }).join('');
   $('messages').scrollTop = 0;
 }
 function renderMessageBody(message) {
@@ -230,5 +270,11 @@ document.querySelectorAll('.tab').forEach(tab => tab.onclick = () => {
   $('trajectories-panel').classList.toggle('hidden', tab.dataset.tab !== 'trajectories');
   $('analytics-panel').classList.toggle('hidden', tab.dataset.tab !== 'analytics');
 });
-$('refresh').onclick = loadRuns; $('run-search').oninput = renderRuns; $('task-search').oninput = renderTasks; $('generate-analytics').onclick = generateAnalytics;
+$('refresh').onclick = async () => {
+  const currentRun = state.runId;
+  const currentTask = state.taskId;
+  await loadRuns();
+  if (currentRun) await selectRun(currentRun);
+  if (currentTask) await selectTask(currentTask);
+}; $('run-search').oninput = renderRuns; $('task-search').oninput = renderTasks; $('generate-analytics').onclick = generateAnalytics;
 loadRuns();

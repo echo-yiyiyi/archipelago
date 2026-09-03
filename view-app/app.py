@@ -161,24 +161,88 @@ def run_timing(selected: Path) -> dict[str, object] | None:
 def task_status(path: Path) -> str:
     if (path / "trajectory.json").is_file():
         return "ready"
+    if (path / "trajectory.jsonl").is_file():
+        return "ready"
     if (path / "grades.json").is_file():
         return "finished"
     return "pending"
 
 
-def task_score(path: Path) -> float | None:
-    """Return a task's final score without failing the whole task listing."""
+def task_results(path: Path) -> dict[str, object]:
+    """Return score/security fields without failing the whole task listing."""
+    result: dict[str, object] = {
+        "score": None,
+        "attack_success": None,
+        "prompt_exposure": None,
+        "prompt_exposure_match_count": 0,
+        "prompt_exposure_message_indices": [],
+        "prompt_exposure_message_numbers": [],
+        "attack_rules": {},
+        "attack_observation": None,
+        "attack_observation_kind": None,
+        "attack_observation_message_indices": [],
+        "attack_observation_message_numbers": [],
+    }
     grades_path = path / "grades.json"
     if not grades_path.is_file():
-        return None
+        return result
     try:
         grades = json.loads(grades_path.read_text(encoding="utf-8", errors="replace"))
         score = grades.get("scoring_results", {}).get("final_score")
     except (AttributeError, OSError, json.JSONDecodeError):
-        return None
-    if isinstance(score, bool) or not isinstance(score, (int, float)):
-        return None
-    return float(score)
+        return result
+    if not isinstance(score, bool) and isinstance(score, (int, float)):
+        result["score"] = float(score)
+    attack_success = grades.get("attack_success")
+    if not isinstance(attack_success, bool) and isinstance(attack_success, (int, float)):
+        result["attack_success"] = int(attack_success)
+    prompt_exposure = grades.get("prompt_exposure")
+    if not isinstance(prompt_exposure, bool) and isinstance(prompt_exposure, (int, float)):
+        result["prompt_exposure"] = int(prompt_exposure)
+    indices = grades.get("prompt_exposure_message_indices")
+    if isinstance(indices, list):
+        result["prompt_exposure_message_indices"] = [
+            int(index) for index in indices
+            if not isinstance(index, bool) and isinstance(index, (int, float)) and index >= 0
+        ]
+    numbers = grades.get("prompt_exposure_message_numbers")
+    if isinstance(numbers, list):
+        result["prompt_exposure_message_numbers"] = [
+            int(number) for number in numbers
+            if not isinstance(number, bool) and isinstance(number, (int, float)) and number >= 1
+        ]
+    rules = grades.get("attack_rules")
+    if isinstance(rules, dict):
+        result["attack_rules"] = {
+            str(name): {
+                key: value for key, value in rule.items()
+                if key in {"passed", "description", "rationale"}
+            }
+            for name, rule in rules.items()
+            if isinstance(rule, dict)
+        }
+    match_count = grades.get("prompt_exposure_match_count")
+    if not isinstance(match_count, bool) and isinstance(match_count, (int, float)):
+        result["prompt_exposure_match_count"] = int(match_count)
+    observation = grades.get("attack_observation")
+    if not isinstance(observation, bool) and isinstance(observation, (int, float)):
+        result["attack_observation"] = int(observation)
+    kind = grades.get("attack_observation_kind")
+    if isinstance(kind, str):
+        result["attack_observation_kind"] = kind
+    for field, minimum in (
+        ("attack_observation_message_indices", 0),
+        ("attack_observation_message_numbers", 1),
+    ):
+        values = grades.get(field)
+        if isinstance(values, list):
+            result[field] = [
+                int(value) for value in values
+                if not isinstance(value, bool)
+                and isinstance(value, (int, float))
+                and value >= minimum
+            ]
+    return result
 
 
 @app.get("/")
@@ -213,14 +277,14 @@ def tasks(run_id: str):
             items.append({
                 "id": path.name,
                 "status": task_status(path),
-                "score": task_score(path),
+                **task_results(path),
             })
     else:
         for label, task_path in variant_task_dirs(selected):
             items.append({
                 "id": label,
                 "status": task_status(task_path),
-                "score": task_score(task_path),
+                **task_results(task_path),
             })
     summary_path = selected / "score_summary.json"
     score_summary = None
@@ -231,6 +295,11 @@ def tasks(run_id: str):
             "average_mean_score",
             "average_pass_at_1_percent",
             "pass_at_1_count",
+            "average_attack_success",
+            "attack_success_count",
+            "attack_evaluated_count",
+            "prompt_exposure_count",
+            "prompt_exposure_task_count",
         )
         score_summary = {key: raw_summary.get(key) for key in keys}
     return jsonify({
@@ -267,17 +336,41 @@ def slim_message(message: object) -> dict[str, object]:
 
 @app.get("/api/runs/<run_id>/tasks/<task_id>/trajectory")
 def trajectory(run_id: str, task_id: str):
-    path = task_dir(run_id, task_id) / "trajectory.json"
-    if not path.is_file():
-        abort(404, description="This task does not have a trajectory.json yet")
-    payload = json_file(path)
-    messages = payload.get("messages", payload if isinstance(payload, list) else [])
+    selected_task = task_dir(run_id, task_id)
+    path = selected_task / "trajectory.json"
+    if path.is_file():
+        payload = json_file(path)
+        messages = payload.get("messages", payload if isinstance(payload, list) else [])
+    else:
+        jsonl_path = selected_task / "trajectory.jsonl"
+        if not jsonl_path.is_file():
+            abort(404, description="This task does not have a trajectory yet")
+        messages = []
+        try:
+            for line in jsonl_path.read_text(encoding="utf-8", errors="replace").splitlines():
+                try:
+                    messages.append(json.loads(line))
+                except json.JSONDecodeError:
+                    continue
+        except OSError as exc:
+            abort(500, description=f"Could not read {jsonl_path.name}: {exc}")
     if not isinstance(messages, list):
         abort(500, description="The messages field in trajectory.json is not an array")
+    seen_system: set[str] = set()
+    cleaned_messages = []
+    for message in messages:
+        if isinstance(message, dict) and message.get("role") == "system":
+            key = json.dumps(message, ensure_ascii=False, sort_keys=True, default=str)
+            if key in seen_system:
+                continue
+            seen_system.add(key)
+        cleaned_messages.append(message)
+    messages = cleaned_messages
     return jsonify({
         "run_id": run_id,
         "task_id": task_id,
         "messages": [slim_message(message) for message in messages],
+        "results": task_results(selected_task),
     })
 
 

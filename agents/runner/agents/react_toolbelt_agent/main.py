@@ -25,6 +25,7 @@ from runner.agents.models import (
     LitellmAnyMessage,
     LitellmInputMessage,
     LitellmOutputMessage,
+    LiveMessageList,
     get_msg_attr,
     get_msg_content,
 )
@@ -70,7 +71,7 @@ class ReActAgent:
     def __init__(self, run_input: AgentRunInput):
         self.trajectory_id: str = run_input.trajectory_id
         self.model: str = run_input.orchestrator_model
-        self.messages: list[LitellmAnyMessage] = list(run_input.initial_messages)
+        self.messages: list[LitellmAnyMessage] = LiveMessageList(run_input.initial_messages)
 
         if run_input.mcp_gateway_url is None:
             raise ValueError("MCP gateway URL is required for react toolbelt agent")
@@ -160,9 +161,9 @@ class ReActAgent:
             logger.bind(message_type="resum").info("Summarizing context")
             try:
                 before = len(self.messages)
-                self.messages = await self.resum.summarize(
+                self.messages = LiveMessageList(await self.resum.summarize(
                     self.messages, trigger="proactive_threshold"
-                )
+                ), write_existing=False)
                 # Only flag a compaction when context was actually reduced;
                 # summarize() can no-op and return the messages unchanged.
                 if len(self.messages) < before:

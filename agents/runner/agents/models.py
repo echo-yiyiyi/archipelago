@@ -3,6 +3,8 @@ Models for agent definitions and execution.
 """
 
 from collections.abc import Awaitable, Callable
+import json
+import os
 from enum import StrEnum
 from typing import Any
 
@@ -25,6 +27,29 @@ LitellmOutputMessage = Message
 LitellmAnyMessage = (
     LitellmInputMessage | LitellmResponsesInputMessage | LitellmOutputMessage
 )
+
+
+class LiveMessageList(list):
+    def __init__(self, values=(), write_existing=True):
+        self._trajectory_jsonl = os.environ.get("TRAJECTORY_JSONL")
+        super().__init__()
+        for value in values:
+            if write_existing:
+                self.append(value)
+            else:
+                super().append(value)
+
+    def append(self, value):
+        super().append(value)
+        if not self._trajectory_jsonl:
+            return
+        try:
+            payload = value.model_dump(mode="json") if hasattr(value, "model_dump") else value
+            with open(self._trajectory_jsonl, "a", encoding="utf-8") as handle:
+                handle.write(json.dumps(payload, ensure_ascii=False, default=str) + "\n")
+                handle.flush()
+        except (OSError, TypeError, ValueError):
+            pass
 
 def get_msg_role(msg: LitellmAnyMessage) -> str:
     """Get role from either TypedDict or Pydantic Message."""

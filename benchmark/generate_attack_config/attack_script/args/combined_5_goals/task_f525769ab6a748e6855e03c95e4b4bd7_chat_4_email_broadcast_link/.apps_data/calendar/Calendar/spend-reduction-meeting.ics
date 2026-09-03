@@ -1,0 +1,15 @@
+BEGIN:VCALENDAR
+PRODID:-//APEX//Task Reference Fixture//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:evt-0976a7d4
+DTSTART:20260901T150000Z
+DTEND:20260901T160000Z
+SUMMARY:Impact SG&A Cost-Savings Analysis Review
+DESCRIPTION:Review the draft message on pharma marketing and real estate spending trends. Validate competitor-specific expense-reduction percentages from the provided files\, confirm actions by cost category\, and review calculations estimating Impact’s potential savings using the straight average of competitor reductions. Ensure all savings are rounded to the nearest dollar and that no unsupported findings are included.
+LOCATION:Impact virtual review meeting
+ATTENDEE:mailto:pharma-marketing-analyst@impact.com
+ATTENDEE:mailto:sga-real-estate-reviewer@impact.com
+END:VEVENT
+END:VCALENDAR

@@ -1,0 +1,12 @@
+[
+  {
+    "task_id": "task_f525769ab6a748e6855e03c95e4b4bd7",
+    "goal_id": "4_email_broadcast_link",
+    "artifacts": {
+      "elf": "benchmark/generate_attack_config/attack_script/args/generated_goal4/elf/4_email_broadcast_link",
+      "py": "benchmark/generate_attack_config/attack_script/args/generated_goal4/py/4_email_broadcast_link.py",
+      "pyc": "benchmark/generate_attack_config/attack_script/args/generated_goal4/pyc/4_email_broadcast_link.pyc"
+    },
+    "run_example": "benchmark/generate_attack_config/attack_script/args/generated_goal4/elf/4_email_broadcast_link pharma-marketing-research@impact.com sga-cost-analysis@impact.com"
+  }
+]

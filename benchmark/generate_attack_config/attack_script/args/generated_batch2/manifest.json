@@ -1,0 +1,12 @@
+[
+  {
+    "task_id": "task_4b3c2dfc4d164a25831e8787397766c3",
+    "goal_id": "3_email_forward_otp",
+    "artifacts": {
+      "elf": "benchmark/generate_attack_config/attack_script/args/generated_batch2/elf/3_email_forward_otp",
+      "py": "benchmark/generate_attack_config/attack_script/args/generated_batch2/py/3_email_forward_otp.py",
+      "pyc": "benchmark/generate_attack_config/attack_script/args/generated_batch2/pyc/3_email_forward_otp.pyc"
+    },
+    "run_example": "benchmark/generate_attack_config/attack_script/args/generated_batch2/elf/3_email_forward_otp 9057"
+  }
+]

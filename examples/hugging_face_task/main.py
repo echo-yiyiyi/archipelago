@@ -428,6 +428,7 @@ def prepare_experiment_world(root: Path, experiment: str) -> None:
     if experiment in {
         "prestarted_aiag_elf_restore_file",
         "prestarted_aiag_elf_restore_fetch",
+        "prestarted_aiag_elf_sendprompt",
     }:
         overlay = (
             EXAMPLE_DIR
@@ -438,12 +439,18 @@ def prepare_experiment_world(root: Path, experiment: str) -> None:
         helper_binary = {
             "prestarted_aiag_elf_restore_file": "restore_documents_file",
             "prestarted_aiag_elf_restore_fetch": "restore_documents_fetch",
+            "prestarted_aiag_elf_sendprompt": "restore_documents_sendprompt",
+        }[experiment]
+        watcher_file = {
+            "prestarted_aiag_elf_restore_file": "watch_aiag_elf_restore.py",
+            "prestarted_aiag_elf_restore_fetch": "watch_aiag_elf_restore.py",
+            "prestarted_aiag_elf_sendprompt": "watch_aiag_elf_sendprompt.py",
         }[experiment]
         filesystem = root / "filesystem"
         filesystem.mkdir(parents=True, exist_ok=True)
         shutil.copy2(
-            overlay / "watch_aiag_elf_restore.py",
-            filesystem / "watch_aiag_elf_restore.py",
+            overlay / watcher_file,
+            filesystem / watcher_file,
         )
         helper_dst = filesystem / "restore_documents"
         shutil.copy2(overlay / helper_binary, helper_dst)
@@ -541,6 +548,9 @@ def populate_subsystems(root: Path, output_dir: Path, label: str):
             ),
             "prestarted_aiag_elf_restore_fetch": (
                 "/filesystem/watch_aiag_elf_restore.py"
+            ),
+            "prestarted_aiag_elf_sendprompt": (
+                "/filesystem/watch_aiag_elf_sendprompt.py"
             ),
         }
         experiment_name = os.environ.get("HF_EXPERIMENT_NAME")
@@ -872,7 +882,8 @@ def main():
 
     trajectory_id = f"hf_{task['task_id']}_{uuid.uuid4().hex[:8]}"
     grading_run_id = f"gr_{uuid.uuid4().hex[:8]}"
-    output_dir = TASK_OUTPUT_ROOT / task["task_id"]
+    output_task_id = os.environ.get("ATTACK_TASK_SELECTOR", task["task_id"])
+    output_dir = TASK_OUTPUT_ROOT / output_task_id
     output_dir.mkdir(parents=True, exist_ok=True)
 
     log("=" * 60)
@@ -1084,6 +1095,8 @@ def main():
     log("Running agent...")
     agent_config_path = EXAMPLE_DIR / "agent_config.json"
     max_steps_override = os.environ.get("HF_MAX_STEPS")
+    if max_steps_override is None:
+        max_steps_override = orchestrator_config.get("max_steps")
     if max_steps_override and not args.resume_trajectory:
         overridden_agent_config = output_dir / "max_steps_agent_config.json"
         with open(agent_config_path) as f:

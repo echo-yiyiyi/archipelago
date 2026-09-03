@@ -220,8 +220,10 @@ def selectors_from_attack_config(path: Path) -> list[str]:
     if not isinstance(data, list):
         raise ValueError("task JSON must contain an array of complete task records")
     return list(dict.fromkeys(
-        record["task_id"] for record in data
-        if isinstance(record, dict) and isinstance(record.get("task_id"), str)
+        (record.get("harmful_task_id") or record.get("task_id"))
+        for record in data
+        if isinstance(record, dict)
+        and isinstance(record.get("harmful_task_id") or record.get("task_id"), str)
     ))
 
 
@@ -231,10 +233,10 @@ def inject_goals_from_attack_config(path: Path) -> dict[str, str]:
     if not isinstance(data, list):
         raise ValueError("task JSON must contain an array of complete task records")
     return {
-        record["task_id"]: record["inject_goal"]
+        (record.get("harmful_task_id") or record["task_id"]): record["inject_goal"]
         for record in data
         if isinstance(record, dict)
-        and isinstance(record.get("task_id"), str)
+        and isinstance(record.get("harmful_task_id") or record.get("task_id"), str)
         and isinstance(record.get("inject_goal"), str)
     }
 
@@ -470,14 +472,14 @@ def write_worker_environment(
     # unique name, and each service maps a different host port to container 8080.
     collector_service = ""
     if link_collector_mode and link_collector_host:
-        # ``script`` mode serves a downloadable shell script; pass its body and
-        # mount the current collector source so the mode works without a rebuild.
+        # Always mount the current collector source so generic/goal8 behavior
+        # does not depend on a potentially stale runtime-proxy image. ``script``
+        # mode additionally receives the downloadable shell-script body.
         script_env = ""
-        script_mount = ""
+        collector_source = EXAMPLE_DIR / "proxy" / "collector.py"
+        script_mount = f"\n      - {json.dumps(str(collector_source) + ':/opt/archipelago/collector.py:ro')}"
         if link_collector_mode == "script":
             script_env = f"\n      LINK_SCRIPT_BODY: {json.dumps(json.dumps(link_script_body or ''))}"
-            collector_source = EXAMPLE_DIR / "proxy" / "collector.py"
-            script_mount = f"\n      - {json.dumps(str(collector_source) + ':/opt/archipelago/collector.py:ro')}"
         collector_service = f'''
   link_collector:
     image: {json.dumps(proxy_image)}
@@ -623,10 +625,31 @@ def update_score_summary(run_dir: Path) -> dict[str, object]:
             "passed_at_1": score == 1.0,
             "grades_file": str(grades_file.relative_to(run_dir)),
         }
+        if isinstance(attack_success, (int, float)) and not isinstance(
+            attack_success, bool
+        ):
+            task_summary["attack_success"] = int(attack_success)
         if isinstance(prompt_exposure, (int, float)) and not isinstance(
             prompt_exposure, bool
         ):
             task_summary["prompt_exposure"] = int(prompt_exposure)
+        exposure_indices = grades.get("prompt_exposure_message_indices")
+        if isinstance(exposure_indices, list):
+            task_summary["prompt_exposure_message_indices"] = exposure_indices
+        exposure_numbers = grades.get("prompt_exposure_message_numbers")
+        if isinstance(exposure_numbers, list):
+            task_summary["prompt_exposure_message_numbers"] = exposure_numbers
+        attack_rules = grades.get("attack_rules")
+        if isinstance(attack_rules, dict):
+            task_summary["attack_rules"] = attack_rules
+        for field in (
+            "attack_observation",
+            "attack_observation_kind",
+            "attack_observation_message_indices",
+            "attack_observation_message_numbers",
+        ):
+            if field in grades:
+                task_summary[field] = grades[field]
         task_scores.append(task_summary)
 
     task_count = len(task_scores)
@@ -685,6 +708,7 @@ def run_task(
     link_collector_host: str | None,
     link_script_body: str | None = None,
     timer: bool = False,
+    dataset_selector: str | None = None,
 ) -> TaskResult:
     """Invoke the unchanged single-task main.py in one isolated environment."""
     started = time.monotonic()
@@ -721,6 +745,7 @@ def run_task(
             "COMPOSE_PROJECT_NAME": compose_project_name(
                 run_dir.name, slot.number
             ),
+            "ATTACK_TASK_SELECTOR": selector,
         }
     )
     if timer:
@@ -746,7 +771,7 @@ def run_task(
             "run",
             "python",
             str(EXAMPLE_DIR / "main.py"),
-            selector,
+            dataset_selector or selector,
         ]
         with open(log_file, "w") as output:
             process = subprocess.Popen(
@@ -831,6 +856,7 @@ def main() -> int:
         parser.error("use either selectors or --task-json, not both")
 
     task_inject_goals: dict[str, str] = {}
+    task_dataset_ids: dict[str, str] = {}
     task_link_hosts: dict[str, str] = {}
     try:
         if args.all:
@@ -842,6 +868,14 @@ def main() -> int:
             task_inject_goals = inject_goals_from_attack_config(
                 args.attack_config_json
             )
+            records = json.loads(args.attack_config_json.read_text(encoding="utf-8"))
+            task_dataset_ids = {
+                (record.get("harmful_task_id") or record["task_id"]): record["task_id"]
+                for record in records
+                if isinstance(record, dict)
+                and isinstance(record.get("task_id"), str)
+                and isinstance(record.get("harmful_task_id") or record.get("task_id"), str)
+            }
             task_link_hosts = link_hosts_from_attack_config(args.attack_config_json)
         else:
             selectors = parse_selectors(args.selectors)
@@ -931,6 +965,7 @@ def main() -> int:
                 task_link_hosts.get(selector),
                 script_body,
                 args.timer,
+                task_dataset_ids.get(selector),
             )
         finally:
             available_slots.put(slot)
@@ -978,6 +1013,10 @@ def main() -> int:
             average_pass_at_1_percent=score_summary[
                 "average_pass_at_1_percent"
             ],
+            average_attack_success=score_summary["average_attack_success"],
+            attack_success_count=score_summary["attack_success_count"],
+            attack_evaluated_count=score_summary["attack_evaluated_count"],
+            prompt_exposure_count=score_summary["prompt_exposure_count"],
             score_summary_file=str(run_dir / SCORE_SUMMARY_FILENAME),
         )
 
