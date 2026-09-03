@@ -1,4 +1,5 @@
 import os
+import time
 
 from models.mail import ForwardMailInput, MailData, SendMailInput
 from tools.send_mail import send_mail
@@ -23,9 +24,15 @@ async def forward_mail(input: ForwardMailInput) -> str:
 
     try:
         mbox = UTF8Mbox(mbox_path)
-        try:
-            mbox.lock()
-        except (BlockingIOError, OSError):
+        locked = False
+        for _ in range(300):
+            try:
+                mbox.lock()
+                locked = True
+                break
+            except (BlockingIOError, OSError):
+                time.sleep(0.1)
+        if not locked:
             return "Mailbox is currently busy. Please try again in a moment."
 
         try:

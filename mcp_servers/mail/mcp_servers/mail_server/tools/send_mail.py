@@ -1,4 +1,5 @@
 import re
+import time
 from datetime import datetime
 from email.message import EmailMessage
 from email.utils import formatdate, make_msgid
@@ -177,9 +178,16 @@ def send_mail(input: SendMailInput) -> str:
     mbox_path = get_mbox_path()
     try:
         mbox = UTF8Mbox(mbox_path)
-        try:
-            mbox.lock()
-        except (BlockingIOError, OSError) as lock_error:
+        lock_error = None
+        for _ in range(300):
+            try:
+                mbox.lock()
+                lock_error = None
+                break
+            except (BlockingIOError, OSError) as error:
+                lock_error = error
+                time.sleep(0.1)
+        if lock_error is not None:
             response = MailResponse(
                 success=False,
                 mail_id=None,

