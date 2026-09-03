@@ -8,6 +8,14 @@ LOG_DIR="$ROOT/examples/hugging_face_task/output/concurrent/args_5tasks_6models_
 GEN_DIR="$LOG_DIR/configs"
 mkdir -p "$LOG_DIR" "$GEN_DIR"
 
+MODELS=${MODELS:-opus5,luna,kimik3,deepseekv4,gemini35,glm53}
+if [[ "${1:-}" == "--models" ]]; then
+  MODELS=${2:?missing value for --models}
+elif [[ -n "${1:-}" ]]; then
+  MODELS=$1
+fi
+IFS=',' read -r -a SELECTED_MODELS <<< "$MODELS"
+
 echo "=== Docker cleanup (images are preserved) ==="
 docker container prune -f
 docker network prune -f
@@ -39,17 +47,18 @@ build_litellm_config "$ROOT/litellm_configs/kimi_k3_max.json" "$GEN_DIR/kimi_k3.
 
 declare -A CFG=(
   [opus5]="$ROOT/benchmark/orchestrator_config_opus.json"
-  [gpt56sol]="$ROOT/benchmark/orchestrator_config_gpt_sol_high.json"
+  [luna]="$ROOT/benchmark/orchestrator_config_luna.json"
   [kimik3]="$GEN_DIR/kimi_k3.json"
   [deepseekv4]="$GEN_DIR/deepseek_v4_flash.json"
   [gemini35]="$ROOT/benchmark/orchestrator_config_gemini35.json"
   [glm53]="$GEN_DIR/glm_5_3_flash.json"
 )
-declare -A PORT=( [opus5]=19080 [gpt56sol]=19180 [kimik3]=19280 [deepseekv4]=19380 [gemini35]=19480 [glm53]=19580 )
-declare -A CIDR=( [opus5]=220 [gpt56sol]=221 [kimik3]=222 [deepseekv4]=223 [gemini35]=224 [glm53]=225 )
+declare -A PORT=( [opus5]=19080 [luna]=19180 [kimik3]=19280 [deepseekv4]=19380 [gemini35]=19480 [glm53]=19580 )
+declare -A CIDR=( [opus5]=220 [luna]=221 [kimik3]=222 [deepseekv4]=223 [gemini35]=224 [glm53]=225 )
 
 PIDS=()
-for tag in opus5 gpt56sol kimik3 deepseekv4 gemini35 glm53; do
+for tag in "${SELECTED_MODELS[@]}"; do
+  [[ -n "${CFG[$tag]:-}" ]] || { echo "Unknown model: $tag"; exit 2; }
   run_id="args5_${tag}_$(date +%Y%m%d_%H%M%S)"
   log="$LOG_DIR/${run_id}.out"
   echo "Launching $tag: five tasks, port ${PORT[$tag]}, CIDR 10.${CIDR[$tag]}.0.0/16"
@@ -64,7 +73,7 @@ for tag in opus5 gpt56sol kimik3 deepseekv4 gemini35 glm53; do
   echo "  pid=$! log=$log"
 done
 
-echo "Started 6 models x 5 tasks = 30 tasks."
+echo "Started ${#SELECTED_MODELS[@]} models x 5 tasks = $(( ${#SELECTED_MODELS[@]} * 5 )) tasks."
 echo "Waiting for all six model runs; Ctrl-C stops this wrapper only."
 status=0
 for pid in "${PIDS[@]}"; do
