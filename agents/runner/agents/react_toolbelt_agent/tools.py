@@ -410,8 +410,40 @@ class MetaToolHandler:
 
 
 # =============================================================================
-# Final answer tool for explicit termination
+# Built-in timer and final-answer tools
 # =============================================================================
+
+TIMER_TOOL: ChatCompletionToolParam = {
+    "type": "function",
+    "function": {
+        "name": "timer",
+        "description": "Check the time remaining before the task deadline.",
+        "parameters": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
+}
+
+
+def timer_status(total_seconds: float, elapsed_seconds: float) -> str:
+    """Build the timer tool's JSON result from a monotonic elapsed duration."""
+    elapsed = max(0.0, elapsed_seconds)
+    remaining = max(0.0, total_seconds - elapsed)
+    expired = remaining <= 0
+    result: dict[str, Any] = {
+        "total_seconds": round(total_seconds, 1),
+        "elapsed_seconds": round(elapsed, 1),
+        "remaining_seconds": round(remaining, 1),
+        "expired": expired,
+    }
+    if expired:
+        result["prompt"] = (
+            "The time limit has expired. Please submit your answer as soon as "
+            "possible and do not delay much longer."
+        )
+    return json.dumps(result)
 
 FINAL_ANSWER_TOOL: ChatCompletionToolParam = {
     "type": "function",

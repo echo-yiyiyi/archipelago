@@ -3,6 +3,7 @@ ReAct Toolbelt Agent with ReSum Context Management.
 """
 
 import asyncio
+import json
 import time
 from typing import Any
 
@@ -12,10 +13,10 @@ from litellm.exceptions import ContextWindowExceededError, Timeout
 from litellm.experimental_mcp_client import call_openai_tool, load_mcp_tools
 from litellm.files.main import ModelResponse
 from loguru import logger
-from openai.types.chat.chat_completion_tool_param import ChatCompletionToolParam
 from openai.types.chat.chat_completion_message_tool_call import (
     ChatCompletionMessageToolCall,
 )
+from openai.types.chat.chat_completion_tool_param import ChatCompletionToolParam
 
 from runner.agents.models import (
     AgentRunInput,
@@ -42,8 +43,10 @@ from .tools import (
     FINAL_ANSWER_TOOL,
     META_TOOL_NAMES,
     META_TOOLS,
+    TIMER_TOOL,
     MetaToolHandler,
     parse_final_answer,
+    timer_status,
 )
 
 
@@ -87,6 +90,14 @@ class ReActAgent:
         self.replay_history: bool = bool(
             (run_input.custom_args or {}).get("replay_tool_calls")
         )
+        raw_timer_seconds = (run_input.custom_args or {}).get("timer_seconds")
+        self.timer_seconds: float | None = (
+            float(raw_timer_seconds)
+            if isinstance(raw_timer_seconds, (int, float))
+            and not isinstance(raw_timer_seconds, bool)
+            and raw_timer_seconds > 0
+            else None
+        )
         self.resume_summarization_record: dict[str, Any] | None = (
             (run_input.custom_args or {}).get("resume_summarization_record")
         )
@@ -110,14 +121,17 @@ class ReActAgent:
         self._final_status: str = "completed"
         self.status: AgentStatus = AgentStatus.PENDING
         self.start_time: float | None = None
+        self.timer_started_at: float | None = None
+        self._automatic_timer_call_count: int = 0
         self._usage_tracker: UsageTracker = UsageTracker(
             track_token_breakdown=True, model=self.model
         )
 
     def _get_tools(self) -> list[ChatCompletionToolParam]:
-        """Get tools for LLM: meta-tools + toolbelt + final_answer."""
+        """Get tools for LLM: meta-tools + toolbelt + built-in tools."""
         toolbelt_tools = [self.all_tools[name] for name in self.toolbelt]
-        return list(META_TOOLS) + toolbelt_tools + [FINAL_ANSWER_TOOL]
+        timer_tools = [TIMER_TOOL] if self.timer_seconds is not None else []
+        return list(META_TOOLS) + toolbelt_tools + timer_tools + [FINAL_ANSWER_TOOL]
 
     async def _initialize_tools(self, client: Any) -> None:
         """Load tools from MCP gateway."""
@@ -155,6 +169,10 @@ class ReActAgent:
                     self._usage_tracker.track_compaction()
             except Exception as e:
                 logger.error(f"Summarization failed: {e}")
+
+        # Put a fresh timer result immediately before every model turn so it
+        # cannot be hidden by a preceding context compaction.
+        await self._append_automatic_timer_update(client)
 
         # Call LLM
         try:
@@ -296,8 +314,38 @@ class ReActAgent:
         """Process tool calls."""
         mcp_tool_calls: list[Any] = []
 
+        # Built-in timer calls have no shared mutable state and are all answered
+        # before terminal/MCP handling. This keeps parallel timer calls valid,
+        # including a batch that also contains final_answer.
+        for tool_call in tool_calls:
+            if tool_call.function.name != "timer":
+                continue
+            if self.timer_seconds is None or self.timer_started_at is None:
+                result = json.dumps({"error": "No timer is active for this run."})
+            else:
+                result = timer_status(
+                    self.timer_seconds, time.monotonic() - self.timer_started_at
+                )
+            logger.bind(
+                message_type="tool_result",
+                ref=tool_call.id,
+                name="timer",
+                payload=result,
+            ).info("Timer checked")
+            self.messages.append(
+                LitellmOutputMessage(
+                    role="tool",
+                    tool_call_id=tool_call.id,
+                    name="timer",
+                    content=result,
+                )
+            )
+
         for tool_call in tool_calls:
             name = tool_call.function.name
+
+            if name == "timer":
+                continue
 
             # Final answer - validate todos, then handle and return
             if name == "final_answer":
@@ -481,6 +529,31 @@ class ReActAgent:
         truncate_tool_messages(messages, self.model)
         self.messages.extend(messages)
 
+    async def _append_automatic_timer_update(self, client: Any) -> None:
+        """Call the built-in timer once before each model turn when enabled."""
+        if self.timer_seconds is None:
+            return
+
+        self._automatic_timer_call_count += 1
+        assistant_message = LitellmOutputMessage(
+            role="assistant",
+            content=None,
+            tool_calls=[
+                {
+                    "id": f"automatic_timer_{self._automatic_timer_call_count}",
+                    "type": "function",
+                    "function": {"name": "timer", "arguments": "{}"},
+                }
+            ],
+        )
+        self.messages.append(assistant_message)
+        result_start = len(self.messages)
+        await self._handle_tool_calls(client, assistant_message.tool_calls or [])
+        for message in self.messages[result_start:]:
+            content = get_msg_content(message)
+            if get_msg_attr(message, "role") == "tool" and isinstance(content, str):
+                self._usage_tracker.track_tool_output(content)
+
     def _build_output(self) -> AgentTrajectoryOutput:
         return AgentTrajectoryOutput(
             messages=self.resum.get_full_history(self.messages),
@@ -503,6 +576,7 @@ class ReActAgent:
                         await self._replay_tool_calls(client)
 
                     self.start_time = time.time()
+                    self.timer_started_at = time.monotonic()
                     self.status = AgentStatus.RUNNING
 
                     for step in range(self.max_steps):

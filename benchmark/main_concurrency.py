@@ -47,6 +47,7 @@ SCORE_SUMMARY_FILENAME = os.environ.get(
 )
 COMPOSE_CLEANUP_TIMEOUT_SECONDS = 60
 PROCESS_TERMINATION_GRACE_SECONDS = 10
+TIMER_SECONDS = 5 * 60
 
 
 @dataclass(frozen=True)
@@ -683,6 +684,7 @@ def run_task(
     link_collector_mode: str | None,
     link_collector_host: str | None,
     link_script_body: str | None = None,
+    timer: bool = False,
 ) -> TaskResult:
     """Invoke the unchanged single-task main.py in one isolated environment."""
     started = time.monotonic()
@@ -721,6 +723,10 @@ def run_task(
             ),
         }
     )
+    if timer:
+        environment["AGENT_TIMER_SECONDS"] = str(TIMER_SECONDS)
+    else:
+        environment.pop("AGENT_TIMER_SECONDS", None)
 
     returncode = 1
     error_message: str | None = None
@@ -807,6 +813,11 @@ def main() -> int:
         "--keep-environments",
         action="store_true",
         help="Keep the last container in each worker slot for debugging.",
+    )
+    parser.add_argument(
+        "--timer",
+        action="store_true",
+        help="Add a five-minute deadline prompt and enable the agent timer tool.",
     )
     args = parser.parse_args()
 
@@ -919,6 +930,7 @@ def main() -> int:
                 collector_mode,
                 task_link_hosts.get(selector),
                 script_body,
+                args.timer,
             )
         finally:
             available_slots.put(slot)
@@ -1038,6 +1050,8 @@ def main() -> int:
         "worker_count": worker_count,
         "environment_image": args.environment_image,
         "proxy_image": args.proxy_image,
+        "timer": args.timer,
+        "timer_seconds": TIMER_SECONDS if args.timer else None,
         "interrupted": interrupted,
         "requested_task_count": len(selectors),
         "finished_task_count": len(results),
