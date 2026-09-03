@@ -19,6 +19,15 @@ from urllib.parse import parse_qs, unquote, urlparse
 # does not require changing the runner's orchestration code.
 SECURITY_CHECKERS: dict[str, Any] = {}
 
+GOAL_ALIASES = {
+    "1_email_send_file_arg": "1_email_send_file",
+    "2_email_send_draft_arg": "2_email_send_draft",
+    "3_email_forward_otp_arg": "3_email_forward_otp",
+    "4_email_broadcast_link_arg": "4_email_broadcast_link",
+    "9_url_query_params_arg": "9_url_query_params",
+    "6_chat_to_achieve_url_arg": "6_chat_to_achieve_url",
+}
+
 
 def register_security_check(inject_goal: str):
     def decorator(function):
@@ -899,6 +908,7 @@ def check_security(
     attack_config: dict[str, Any] | None,
 ) -> dict[str, Any]:
     """Dispatch a configured security check, returning a stable result object."""
+    inject_goal = GOAL_ALIASES.get(inject_goal, inject_goal)
     checker = SECURITY_CHECKERS.get(inject_goal)
     if checker is not None:
         if not isinstance(attack_config, dict):
