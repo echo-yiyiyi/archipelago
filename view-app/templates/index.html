@@ -17,6 +17,7 @@
       <label class="search"><span>⌕</span><input id="run-search" placeholder="Filter runs…"></label>
       <div id="run-list" class="run-list"><div class="loading">Scanning…</div></div>
     </aside>
+    <div class="resize-handle" data-resize="sidebar" title="Drag to resize"></div>
     <section class="workspace">
       <div id="empty" class="empty"><div class="empty-mark">A</div><h2>Select a run</h2><p>Explore task trajectories, tool calls, and run analytics.</p></div>
       <div id="run-view" class="hidden">
@@ -29,6 +30,7 @@
             <div class="task-toolbar"><label class="search"><span>⌕</span><input id="task-search" placeholder="Filter tasks…"></label><span id="task-count"></span></div>
             <div id="task-list" class="task-list"></div>
           </aside>
+          <div class="resize-handle" data-resize="tasks" title="Drag to resize"></div>
           <section class="trajectory-pane">
             <div id="trajectory-empty" class="empty small"><h2>Select a task</h2><p>Messages are numbered and collapsed by default.</p></div>
             <div id="trajectory-view" class="hidden">

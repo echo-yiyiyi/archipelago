@@ -1,6 +1,22 @@
 const state = { runs: [], tasks: [], messages: [], promptExposureIndices: [], promptExposureNumbers: [], attackObservationIndices: [], attackObservationKind: null, runId: null, taskId: null };
 const $ = (id) => document.getElementById(id);
 
+document.querySelectorAll('.resize-handle').forEach(handle => {
+  handle.addEventListener('pointerdown', event => {
+    if (window.matchMedia('(max-width: 800px)').matches) return;
+    handle.setPointerCapture(event.pointerId);
+    handle.classList.add('dragging');
+    const root = document.documentElement;
+    const property = handle.dataset.resize === 'sidebar' ? '--sidebar-width' : '--task-width';
+    const start = event.clientX;
+    const initial = parseFloat(getComputedStyle(root).getPropertyValue(property)) || (property === '--sidebar-width' ? 290 : 310);
+    const move = e => root.style.setProperty(property, `${Math.max(190, Math.min(620, initial + e.clientX - start))}px`);
+    const stop = () => { handle.classList.remove('dragging'); handle.removeEventListener('pointermove', move); handle.removeEventListener('pointerup', stop); };
+    handle.addEventListener('pointermove', move);
+    handle.addEventListener('pointerup', stop, { once: true });
+  });
+});
+
 async function api(url, options) {
   const response = await fetch(url, options);
   const data = await response.json().catch(() => ({}));

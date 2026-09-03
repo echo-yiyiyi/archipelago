@@ -356,14 +356,14 @@ def trajectory(run_id: str, task_id: str):
             abort(500, description=f"Could not read {jsonl_path.name}: {exc}")
     if not isinstance(messages, list):
         abort(500, description="The messages field in trajectory.json is not an array")
-    seen_system: set[str] = set()
+    seen_initial: set[str] = set()
     cleaned_messages = []
     for message in messages:
-        if isinstance(message, dict) and message.get("role") == "system":
+        if isinstance(message, dict) and message.get("role") in {"system", "user"}:
             key = json.dumps(message, ensure_ascii=False, sort_keys=True, default=str)
-            if key in seen_system:
+            if key in seen_initial:
                 continue
-            seen_system.add(key)
+            seen_initial.add(key)
         cleaned_messages.append(message)
     messages = cleaned_messages
     return jsonify({

@@ -32,6 +32,11 @@ LitellmAnyMessage = (
 class LiveMessageList(list):
     def __init__(self, values=(), write_existing=True):
         self._trajectory_jsonl = os.environ.get("TRAJECTORY_JSONL")
+        if self._trajectory_jsonl and write_existing:
+            try:
+                write_existing = not os.path.exists(self._trajectory_jsonl) or os.path.getsize(self._trajectory_jsonl) == 0
+            except OSError:
+                pass
         super().__init__()
         for value in values:
             if write_existing:

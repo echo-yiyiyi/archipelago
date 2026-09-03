@@ -188,9 +188,9 @@ class ReActAgent:
         except ContextWindowExceededError:
             logger.warning("Context exceeded, summarizing")
             before = len(self.messages)
-            self.messages = await self.resum.summarize(
+            self.messages = LiveMessageList(await self.resum.summarize(
                 self.messages, trigger="context_window_exceeded"
-            )
+            ), write_existing=False)
             if len(self.messages) < before:
                 self._usage_tracker.track_compaction()
             return
@@ -636,11 +636,11 @@ class ReActAgent:
         # state. Restore the exact live context at the last ReSum boundary when
         # one exists; otherwise the original history remains model-visible.
         if self.resume_summarization_record:
-            self.messages = self._restore_summarized_context(
+            self.messages = LiveMessageList(self._restore_summarized_context(
                 historical_messages, self.resume_summarization_record
-            )
+            ), write_existing=False)
         else:
-            self.messages = historical_messages
+            self.messages = LiveMessageList(historical_messages, write_existing=False)
 
     def _restore_summarized_context(
         self,
