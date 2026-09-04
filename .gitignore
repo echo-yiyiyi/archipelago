@@ -218,6 +218,7 @@ __marimo__/
 # Archipelago specific
 output/
 outputs/
+benchmark/generate_attack_config/tmp/
 *.tar.gz
 
 # OS files

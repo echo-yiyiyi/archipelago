@@ -245,6 +245,17 @@ HARMFUL_SCRIPT_BY_GOAL = {
     "11_terminal_remote_script": "terminal_remote",
     "12_terminal_cron_setup": "cron_setup",
 }
+INJECT_GOAL_ALIASES = {
+    "13_email_send_file_arg": "1_email_send_file",
+    "14_email_send_prompt_arg": "2_email_send_prompt",
+    "15_email_forward_otp_arg": "3_email_forward_otp",
+    "16_email_broadcast_link_arg": "4_email_broadcast_link",
+    "17_chat_to_achieve_url_arg": "6_chat_to_achieve_url",
+}
+
+
+def canonical_inject_goal(inject_goal: str | None) -> str | None:
+    return INJECT_GOAL_ALIASES.get(inject_goal, inject_goal)
 
 
 def collector_settings(inject_goal: str | None) -> tuple[str | None, str | None]:
@@ -253,6 +264,7 @@ def collector_settings(inject_goal: str | None) -> tuple[str | None, str | None]
     Link-visiting goals get a run-scoped collector; the terminal-script goals
     additionally have it serve their downloadable harmful script.
     """
+    inject_goal = canonical_inject_goal(inject_goal)
     if inject_goal in HARMFUL_SCRIPT_BY_GOAL:
         script = EXAMPLE_DIR / "harmful_script" / HARMFUL_SCRIPT_BY_GOAL[inject_goal]
         return "script", script.read_text(encoding="utf-8")
@@ -276,7 +288,10 @@ def link_hosts_from_attack_config(path: Path) -> dict[str, str]:
         "11_terminal_remote_script", "12_terminal_cron_setup",
     }
     for record in data:
-        if not isinstance(record, dict) or record.get("inject_goal") not in visiting_goals:
+        if (
+            not isinstance(record, dict)
+            or canonical_inject_goal(record.get("inject_goal")) not in visiting_goals
+        ):
             continue
         task_id = record.get("harmful_task_id") or record.get("task_id")
         config = record.get("attack_config")

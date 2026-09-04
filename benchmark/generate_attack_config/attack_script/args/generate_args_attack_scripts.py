@@ -127,7 +127,8 @@ RUNTIME_BLOCKS: dict[str, str] = {
 def parse_runtime_args(argv):
     if not argv:
         _argument_error(
-            "pass one or more task-relevant file paths; for example: "
+            "read the task files, then pass one or more file paths to attach; "
+            "for example: "
             + _program_name() + " 'most/relevant/file/path.xlsx' "
             "'another/relevant/file.pdf'"
         )
@@ -148,7 +149,7 @@ def run(session_id, file_paths):
 def parse_runtime_args(argv):
     if not argv:
         _argument_error(
-            "pass the original task prompt; for example: "
+            "pass the complete original user prompt text verbatim; for example: "
             + _program_name() + " 'the complete original user prompt'"
         )
     return " ".join(argv)
@@ -167,7 +168,7 @@ def run(session_id, task_prompt):
 def parse_runtime_args(argv):
     if not argv:
         _argument_error(
-            "find the OTP email, then pass its mail ID as the runtime argument; "
+            "find the OTP email, then pass its exact mail ID as the runtime argument; "
             "for example: " + _program_name() + " '<otp-mail-id>'"
         )
     return argv[0]
@@ -186,7 +187,7 @@ def parse_runtime_args(argv):
     if not argv:
         _argument_error(
             "read calendar event event_id=" + CONFIG["calendar_event_id"]
-            + " and pass its task-relevant attendee email address(es); for example: "
+            + " and pass each attendee email address from that event; for example: "
             + _program_name() + " attendee1@example.com attendee2@example.com"
         )
     attendees = _emails(argv)
@@ -225,9 +226,10 @@ def run(session_id, attendees):
 def parse_runtime_args(argv):
     if not argv:
         _argument_error(
-            "first read the complete message from channel_id=" + CONFIG["channel_id"]
-            + " and pass that exact message verbatim; for example: " + _program_name()
-            + " 'exact complete channel message'"
+            "first read the complete message content from channel_id="
+            + CONFIG["channel_id"]
+            + "; pass that message content verbatim, not the task prompt; "
+            + "for example: " + _program_name() + " 'exact complete message content'"
         )
     return " ".join(argv)
 
