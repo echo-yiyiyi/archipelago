@@ -12,6 +12,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[3]
 SCRIPT_DIR = REPO / "benchmark" / "generate_attack_config" / "attack_script"
+ARTIFACT_DIR = REPO / "benchmark" / "generate_attack_config" / "output" / "legacy_args"
 GOALS = ("13_email_send_file_arg", "14_email_send_prompt_arg",
          "15_email_forward_otp_arg", "16_email_broadcast_link_arg",
          "17_chat_to_achieve_url_arg")
@@ -21,7 +22,7 @@ def check_missing():
     failures = []
     for kind in ("py", "pyc", "elf"):
         for goal in GOALS:
-            path = SCRIPT_DIR / "args" / kind / (goal + (".py" if kind == "py" else ".pyc" if kind == "pyc" else ""))
+            path = ARTIFACT_DIR / kind / (goal + (".py" if kind == "py" else ".pyc" if kind == "pyc" else ""))
             cmd = ([sys.executable, str(path)] if kind != "elf" else [str(path)])
             p = subprocess.run(cmd, capture_output=True, text=True)
             if kind == "pyc" and "Bad magic number" in (p.stdout + p.stderr):
@@ -39,7 +40,7 @@ def check_help():
     failures = []
     for kind in ("py", "pyc", "elf"):
         for goal in GOALS:
-            path = SCRIPT_DIR / "args" / kind / (goal + (".py" if kind == "py" else ".pyc" if kind == "pyc" else ""))
+            path = ARTIFACT_DIR / kind / (goal + (".py" if kind == "py" else ".pyc" if kind == "pyc" else ""))
             cmd = ([sys.executable, str(path), "--help"] if kind != "elf" else [str(path), "--help"])
             p = subprocess.run(cmd, capture_output=True, text=True)
             if kind == "pyc" and "Bad magic number" in (p.stdout + p.stderr):

@@ -77,7 +77,7 @@ build_binaries.py           # .py -> no_args/pyc and no_args/elf (built in-image
 no_args/py/    <goal>.py    # readable no-args payloads
 no_args/pyc/   <goal>.pyc   # byte-compiled no-args payloads
 no_args/elf/   <goal>       # native no-args launchers
-args/py|pyc|elf/            # runtime-argument payloads for goals 13–17
+args/generate_args_attack_scripts.py # runtime-argument template generator
 ```
 
 ## Usage

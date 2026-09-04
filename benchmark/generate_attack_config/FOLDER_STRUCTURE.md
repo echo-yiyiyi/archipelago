@@ -111,15 +111,17 @@ attack_script/
 │   └── elf/
 └── args/
     ├── generate_args_attack_scripts.py
-    ├── py/
-    ├── pyc/
-    └── elf/
+    └── README.md
 ```
 
 `render_attack_script.py` is the shared no-args renderer and compiler entry
 point. The args renderer generates helpers that require task material as
 runtime command-line arguments, such as file paths, complete message content,
 mail IDs, or attendee addresses.
+
+Generated args artifacts from older experiments are kept separately under
+`output/legacy_args/`; they are not templates and are not used by
+`generate.py`.
 
 ## Tests and verification tools
 
