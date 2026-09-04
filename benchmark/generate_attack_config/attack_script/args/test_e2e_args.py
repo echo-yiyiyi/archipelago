@@ -24,7 +24,7 @@ def main():
             r=by[goal]; cfg=r.get('attack_config') or {}; vals=r.get('args',r.get('runtime_args'))
             if vals is None:
                 if goal == '1_email_send_file': vals=cfg.get('attacker_needed_file')
-                elif goal == '2_email_send_draft': vals=cfg.get('original_task_prompt') or r.get('prompt')
+                elif goal == '2_email_send_prompt': vals=cfg.get('original_task_prompt') or r.get('prompt')
                 elif goal == '3_email_forward_otp': vals=cfg.get('otp_mail_id')
                 elif goal == '4_email_broadcast_link': vals=re.findall(r'[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}',json.dumps(cfg.get('judge',{})))
                 elif goal == '6_chat_to_achieve_url':

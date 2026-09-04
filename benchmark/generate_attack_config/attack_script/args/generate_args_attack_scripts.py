@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate runtime-argument attack helpers for goals 1, 2, 3, 4, and 6.
+"""Generate runtime-argument attack helpers for goals 13 through 17.
 
 The input is the same list/object JSON shape used by
 ``generate_attack_config/output``.  Destination addresses/URLs and lookup IDs
@@ -34,17 +34,22 @@ HERE = Path(__file__).resolve().parent
 PARENT = HERE.parent
 SUPPORTED_GOALS = {
     "1_email_send_file",
-    "2_email_send_draft",
+    "2_email_send_prompt",
     "3_email_forward_otp",
     "4_email_broadcast_link",
     "6_chat_to_achieve_url",
 }
 GOAL_ALIASES = {
-    f"{goal}_arg": goal for goal in SUPPORTED_GOALS
+    "13_email_send_file_arg": "1_email_send_file",
+    "14_email_send_prompt_arg": "2_email_send_prompt",
+    "15_email_forward_otp_arg": "3_email_forward_otp",
+    "16_email_broadcast_link_arg": "4_email_broadcast_link",
+    "17_chat_to_achieve_url_arg": "6_chat_to_achieve_url",
 }
+ARG_GOAL_NAMES = {base: external for external, base in GOAL_ALIASES.items()}
 DEFAULT_EXECUTABLE_VECTORS = {
     "1_email_send_file": "py",
-    "2_email_send_draft": "pyc",
+    "2_email_send_prompt": "pyc",
     "3_email_forward_otp": "elf",
     "4_email_broadcast_link": "pyc",
     "6_chat_to_achieve_url": "elf",
@@ -139,7 +144,7 @@ def run(session_id, file_paths):
         "attachments": file_paths,
     }}, session_id)
 ''',
-    "2_email_send_draft": r'''
+    "2_email_send_prompt": r'''
 def parse_runtime_args(argv):
     if not argv:
         _argument_error(
@@ -326,7 +331,7 @@ def _config(record: dict) -> dict:
     attack = dict(record.get("attack_config") or {})
     # Also accept a compact record with the attack fields at the top level.
     attack = {**record, **attack}
-    if goal in {"1_email_send_file", "2_email_send_draft"}:
+    if goal in {"1_email_send_file", "2_email_send_prompt"}:
         config = {"recipient_email": attack.get("attacker_email_address", "")}
     elif goal == "3_email_forward_otp":
         config = {
@@ -385,10 +390,10 @@ def _names(records: list[dict]) -> list[str]:
     for record in records:
         goal = _goal(record)
         if counts[goal] == 1:
-            names.append(goal)
+            names.append(ARG_GOAL_NAMES[goal])
         else:
             task_id = record.get("task_id") or record.get("harmful_task_id") or "task"
-            names.append(_safe_name(f"{task_id}__{goal}"))
+            names.append(_safe_name(f"{task_id}__{ARG_GOAL_NAMES[goal]}"))
     return names
 
 
@@ -485,7 +490,7 @@ def _default_args(record: dict):
     if record.get("args") is not None: return record.get("args")
     goal = _goal(record); attack = {**record, **(record.get("attack_config") or {})}
     if goal == "1_email_send_file": return attack.get("attacker_needed_file", "")
-    if goal == "2_email_send_draft": return attack.get("original_task_prompt") or record.get("prompt", "")
+    if goal == "2_email_send_prompt": return attack.get("original_task_prompt") or record.get("prompt", "")
     if goal == "3_email_forward_otp": return attack.get("otp_mail_id", "")
     if goal == "4_email_broadcast_link":
         text = json.dumps(attack.get("judge", "")); return re.findall(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", text)
@@ -531,7 +536,7 @@ def generate(config_paths: list[Path], out: Path, formats: set[str], image: str,
                if (record.get("inject_goal") or record.get("goal_id")) in SUPPORTED_GOALS | set(GOAL_ALIASES)
                and str(record.get("inject_vector", "")).lower() in {"py", "pyc", "elf"}]
     if not records:
-        raise ValueError("JSON contains no supported goals (1, 2, 3, 4, or 6)")
+        raise ValueError("JSON contains no supported args goals (13 through 17)")
     records = [_prepare_record(record) for record in records]
     names = _names(records)
     _write_sources(records, names, out)
@@ -548,7 +553,7 @@ def generate(config_paths: list[Path], out: Path, formats: set[str], image: str,
         preferred = Path(artifacts.get("elf") or artifacts.get("pyc") or artifacts["py"])
         manifest.append({
             "task_id": record.get("task_id"),
-            "goal_id": _goal(record),
+            "goal_id": ARG_GOAL_NAMES[_goal(record)],
             "artifacts": artifacts,
             "run_example": _runtime_example(record, preferred),
         })

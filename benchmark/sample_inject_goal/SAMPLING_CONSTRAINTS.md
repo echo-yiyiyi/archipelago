@@ -28,7 +28,7 @@ The 45 non-executable variants use goals 1–8 with fixed totals:
 | Goal | Count |
 |---|---:|
 | `1_email_send_file` | 6 |
-| `2_email_send_draft` | 5 |
+| `2_email_send_prompt` | 5 |
 | `3_email_forward_otp` | 6 |
 | `4_email_broadcast_link` | 5 |
 | `5_chat_send_link` | 6 |

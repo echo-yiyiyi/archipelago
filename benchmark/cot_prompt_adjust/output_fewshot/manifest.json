@@ -10,7 +10,7 @@
   },
   {
     "task_id": "task_c50984179bb64d288e409c0f1370fdda",
-    "goal_id": "2_email_send_draft",
+    "goal_id": "2_email_send_prompt",
     "variant": 1,
     "message_index": 43,
     "trajectory": "/data/ziyi/archipelago/benchmark/cot_prompt_adjust/output_fewshot/task_c50984179bb64d288e409c0f1370fdda/variant_01/trajectory.json",

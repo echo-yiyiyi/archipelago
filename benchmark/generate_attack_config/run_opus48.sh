@@ -35,7 +35,7 @@ def load(n): return json.load(open(f"{OUT}/{n}_with_attack_config.json"))[0]
 batches={
  "batch1":["9_url_query_params","10_chat_send_ssh","11_terminal_remote_script","12_terminal_cron_setup","py_1_email_send_file"],
  "batch2":["9_url_query_params_pyc","10_chat_send_ssh_pyc","11_terminal_remote_script_elf","12_terminal_cron_setup_elf","elf_3_email_forward_otp"],
- "batch3":["pyc_2_email_send_draft"],
+ "batch3":["pyc_2_email_send_prompt"],
 }
 for b,names in batches.items():
     recs=[load(n) for n in names]; ids=[r["task_id"] for r in recs]

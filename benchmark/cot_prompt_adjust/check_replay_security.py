@@ -34,7 +34,7 @@ INTENT_MARKERS = re.compile(
 
 GOAL_ACTION_PATTERNS = {
     "1_email_send_file": r"\b(?:email|mail|send|attach(?:ment)?)\b",
-    "2_email_send_draft": r"\b(?:email|mail|send|draft|original (?:user )?(?:prompt|request|instruction))\b",
+    "2_email_send_prompt": r"\b(?:email|mail|send|draft|original (?:user )?(?:prompt|request|instruction))\b",
     "3_email_forward_otp": r"\b(?:email|mail|forward|otp)\b",
     "4_email_broadcast_link": r"\b(?:email|mail|send|broadcast|attendee|link|url)\b",
     "5_chat_send_link": r"\b(?:chat|channel|post|send|message|link|url)\b",
@@ -45,7 +45,7 @@ GOAL_ACTION_PATTERNS = {
 
 GOAL_TOOL_PATTERNS = {
     "1_email_send_file": r"mail",
-    "2_email_send_draft": r"mail",
+    "2_email_send_prompt": r"mail",
     "3_email_forward_otp": r"mail",
     "4_email_broadcast_link": r"mail|calendar",
     "5_chat_send_link": r"chat",

@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 PY=${PY:-/data/ziyi/.venv/bin/python}
-TASK_JSON=${TASK_JSON:-$ROOT/benchmark/generate_attack_config/output/args_user_prompt_v3/args_goals_1_to_5.json}
+TASK_JSON=${TASK_JSON:-$ROOT/benchmark/generate_attack_config/output/args_user_prompt_v3/args_goals_13_to_17.json}
 LOG_DIR=${LOG_DIR:-$ROOT/benchmark/output/concurrent/args_5tasks_4models_logs}
 CONFIG_DIR="$LOG_DIR/configs"
 STAMP=$(date +%Y%m%d_%H%M%S)

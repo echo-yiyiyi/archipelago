@@ -140,7 +140,7 @@
           "y": {
             "fields": [
               "1_email_send_file",
-              "2_email_send_draft",
+              "2_email_send_prompt",
               "3_email_forward_otp",
               "4_email_broadcast_link",
               "5_chat_send_link",
@@ -175,7 +175,7 @@
           "y": {
             "fields": [
               "1_email_send_file",
-              "2_email_send_draft",
+              "2_email_send_prompt",
               "3_email_forward_otp",
               "4_email_broadcast_link",
               "5_chat_send_link",
@@ -346,7 +346,7 @@
       ],
       "file_goal_distribution": [
         {"goal": "1 · email_send_file", "count": 6, "share": 0.1333333333},
-        {"goal": "2 · email_send_draft", "count": 5, "share": 0.1111111111},
+        {"goal": "2 · email_send_prompt", "count": 5, "share": 0.1111111111},
         {"goal": "3 · email_forward_otp", "count": 6, "share": 0.1333333333},
         {"goal": "4 · email_broadcast_link", "count": 5, "share": 0.1111111111},
         {"goal": "5 · chat_send_link", "count": 6, "share": 0.1333333333},
@@ -356,7 +356,7 @@
       ],
       "executable_goal_distribution": [
         {"goal": "1 · email_send_file", "count": 3, "share": 0.0666666667},
-        {"goal": "2 · email_send_draft", "count": 3, "share": 0.0666666667},
+        {"goal": "2 · email_send_prompt", "count": 3, "share": 0.0666666667},
         {"goal": "3 · email_forward_otp", "count": 3, "share": 0.0666666667},
         {"goal": "4 · email_broadcast_link", "count": 3, "share": 0.0666666667},
         {"goal": "5 · chat_send_link", "count": 3, "share": 0.0666666667},
@@ -369,18 +369,18 @@
         {"goal": "12 · terminal_cron_setup", "count": 5, "share": 0.1111111111}
       ],
       "file_vector_goal_matrix": [
-        {"vector": "calendar", "group": "非执行文件", "total": 6, "1_email_send_file": 0, "2_email_send_draft": 1, "3_email_forward_otp": 1, "4_email_broadcast_link": 1, "5_chat_send_link": 0, "6_chat_to_achieve_url": 1, "7_calendar_create_event": 1, "8_fetch_external_link": 1},
-        {"vector": "chat", "group": "非执行文件", "total": 6, "1_email_send_file": 1, "2_email_send_draft": 0, "3_email_forward_otp": 1, "4_email_broadcast_link": 1, "5_chat_send_link": 1, "6_chat_to_achieve_url": 0, "7_calendar_create_event": 1, "8_fetch_external_link": 1},
-        {"vector": "email", "group": "非执行文件", "total": 6, "1_email_send_file": 1, "2_email_send_draft": 0, "3_email_forward_otp": 1, "4_email_broadcast_link": 1, "5_chat_send_link": 1, "6_chat_to_achieve_url": 0, "7_calendar_create_event": 1, "8_fetch_external_link": 1},
-        {"vector": "html", "group": "非执行文件", "total": 6, "1_email_send_file": 1, "2_email_send_draft": 1, "3_email_forward_otp": 1, "4_email_broadcast_link": 0, "5_chat_send_link": 1, "6_chat_to_achieve_url": 1, "7_calendar_create_event": 0, "8_fetch_external_link": 1},
-        {"vector": "md", "group": "非执行文件", "total": 6, "1_email_send_file": 1, "2_email_send_draft": 1, "3_email_forward_otp": 0, "4_email_broadcast_link": 0, "5_chat_send_link": 1, "6_chat_to_achieve_url": 1, "7_calendar_create_event": 1, "8_fetch_external_link": 1},
-        {"vector": "txt", "group": "非执行文件", "total": 6, "1_email_send_file": 1, "2_email_send_draft": 1, "3_email_forward_otp": 1, "4_email_broadcast_link": 1, "5_chat_send_link": 1, "6_chat_to_achieve_url": 1, "7_calendar_create_event": 0, "8_fetch_external_link": 0},
-        {"vector": "xlsx", "group": "非执行文件", "total": 9, "1_email_send_file": 1, "2_email_send_draft": 1, "3_email_forward_otp": 1, "4_email_broadcast_link": 1, "5_chat_send_link": 1, "6_chat_to_achieve_url": 1, "7_calendar_create_event": 2, "8_fetch_external_link": 1}
+        {"vector": "calendar", "group": "非执行文件", "total": 6, "1_email_send_file": 0, "2_email_send_prompt": 1, "3_email_forward_otp": 1, "4_email_broadcast_link": 1, "5_chat_send_link": 0, "6_chat_to_achieve_url": 1, "7_calendar_create_event": 1, "8_fetch_external_link": 1},
+        {"vector": "chat", "group": "非执行文件", "total": 6, "1_email_send_file": 1, "2_email_send_prompt": 0, "3_email_forward_otp": 1, "4_email_broadcast_link": 1, "5_chat_send_link": 1, "6_chat_to_achieve_url": 0, "7_calendar_create_event": 1, "8_fetch_external_link": 1},
+        {"vector": "email", "group": "非执行文件", "total": 6, "1_email_send_file": 1, "2_email_send_prompt": 0, "3_email_forward_otp": 1, "4_email_broadcast_link": 1, "5_chat_send_link": 1, "6_chat_to_achieve_url": 0, "7_calendar_create_event": 1, "8_fetch_external_link": 1},
+        {"vector": "html", "group": "非执行文件", "total": 6, "1_email_send_file": 1, "2_email_send_prompt": 1, "3_email_forward_otp": 1, "4_email_broadcast_link": 0, "5_chat_send_link": 1, "6_chat_to_achieve_url": 1, "7_calendar_create_event": 0, "8_fetch_external_link": 1},
+        {"vector": "md", "group": "非执行文件", "total": 6, "1_email_send_file": 1, "2_email_send_prompt": 1, "3_email_forward_otp": 0, "4_email_broadcast_link": 0, "5_chat_send_link": 1, "6_chat_to_achieve_url": 1, "7_calendar_create_event": 1, "8_fetch_external_link": 1},
+        {"vector": "txt", "group": "非执行文件", "total": 6, "1_email_send_file": 1, "2_email_send_prompt": 1, "3_email_forward_otp": 1, "4_email_broadcast_link": 1, "5_chat_send_link": 1, "6_chat_to_achieve_url": 1, "7_calendar_create_event": 0, "8_fetch_external_link": 0},
+        {"vector": "xlsx", "group": "非执行文件", "total": 9, "1_email_send_file": 1, "2_email_send_prompt": 1, "3_email_forward_otp": 1, "4_email_broadcast_link": 1, "5_chat_send_link": 1, "6_chat_to_achieve_url": 1, "7_calendar_create_event": 2, "8_fetch_external_link": 1}
       ],
       "executable_vector_goal_matrix": [
-        {"vector": "elf", "group": "可执行文件", "total": 15, "1_email_send_file": 1, "2_email_send_draft": 1, "3_email_forward_otp": 1, "4_email_broadcast_link": 1, "5_chat_send_link": 1, "6_chat_to_achieve_url": 1, "7_calendar_create_event": 1, "8_fetch_external_link": 1, "9_url_query_params": 1, "10_chat_send_ssh": 2, "11_terminal_remote_script": 2, "12_terminal_cron_setup": 2},
-        {"vector": "py", "group": "可执行文件", "total": 15, "1_email_send_file": 1, "2_email_send_draft": 1, "3_email_forward_otp": 1, "4_email_broadcast_link": 1, "5_chat_send_link": 1, "6_chat_to_achieve_url": 1, "7_calendar_create_event": 1, "8_fetch_external_link": 1, "9_url_query_params": 2, "10_chat_send_ssh": 2, "11_terminal_remote_script": 2, "12_terminal_cron_setup": 1},
-        {"vector": "pyc", "group": "可执行文件", "total": 15, "1_email_send_file": 1, "2_email_send_draft": 1, "3_email_forward_otp": 1, "4_email_broadcast_link": 1, "5_chat_send_link": 1, "6_chat_to_achieve_url": 1, "7_calendar_create_event": 1, "8_fetch_external_link": 1, "9_url_query_params": 2, "10_chat_send_ssh": 2, "11_terminal_remote_script": 1, "12_terminal_cron_setup": 2}
+        {"vector": "elf", "group": "可执行文件", "total": 15, "1_email_send_file": 1, "2_email_send_prompt": 1, "3_email_forward_otp": 1, "4_email_broadcast_link": 1, "5_chat_send_link": 1, "6_chat_to_achieve_url": 1, "7_calendar_create_event": 1, "8_fetch_external_link": 1, "9_url_query_params": 1, "10_chat_send_ssh": 2, "11_terminal_remote_script": 2, "12_terminal_cron_setup": 2},
+        {"vector": "py", "group": "可执行文件", "total": 15, "1_email_send_file": 1, "2_email_send_prompt": 1, "3_email_forward_otp": 1, "4_email_broadcast_link": 1, "5_chat_send_link": 1, "6_chat_to_achieve_url": 1, "7_calendar_create_event": 1, "8_fetch_external_link": 1, "9_url_query_params": 2, "10_chat_send_ssh": 2, "11_terminal_remote_script": 2, "12_terminal_cron_setup": 1},
+        {"vector": "pyc", "group": "可执行文件", "total": 15, "1_email_send_file": 1, "2_email_send_prompt": 1, "3_email_forward_otp": 1, "4_email_broadcast_link": 1, "5_chat_send_link": 1, "6_chat_to_achieve_url": 1, "7_calendar_create_event": 1, "8_fetch_external_link": 1, "9_url_query_params": 2, "10_chat_send_ssh": 2, "11_terminal_remote_script": 1, "12_terminal_cron_setup": 2}
       ],
       "vector_balance": [
         {"group_order": 1, "group": "非执行文件", "vector": "calendar", "total": 6, "allowed_goals": 8, "minimum": 0, "maximum": 1, "spread": 1, "repeated_goals": "—"},

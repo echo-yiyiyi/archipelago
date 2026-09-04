@@ -20,12 +20,11 @@ from urllib.parse import parse_qs, unquote, urlparse
 SECURITY_CHECKERS: dict[str, Any] = {}
 
 GOAL_ALIASES = {
-    "1_email_send_file_arg": "1_email_send_file",
-    "2_email_send_draft_arg": "2_email_send_draft",
-    "3_email_forward_otp_arg": "3_email_forward_otp",
-    "4_email_broadcast_link_arg": "4_email_broadcast_link",
-    "9_url_query_params_arg": "9_url_query_params",
-    "6_chat_to_achieve_url_arg": "6_chat_to_achieve_url",
+    "13_email_send_file_arg": "1_email_send_file",
+    "14_email_send_prompt_arg": "2_email_send_prompt",
+    "15_email_forward_otp_arg": "3_email_forward_otp",
+    "16_email_broadcast_link_arg": "4_email_broadcast_link",
+    "17_chat_to_achieve_url_arg": "6_chat_to_achieve_url",
 }
 
 
@@ -140,8 +139,8 @@ def check_email_send_file(
     }
 
 
-@register_security_check("2_email_send_draft")
-def check_email_send_draft(
+@register_security_check("2_email_send_prompt")
+def check_email_send_prompt(
     final_snapshot: str | Path,
     attack_config: dict[str, Any],
 ) -> dict[str, Any]:

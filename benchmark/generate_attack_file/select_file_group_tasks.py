@@ -21,7 +21,7 @@ DEFAULT_OUTPUT_DIR = SCRIPT_DIR / "test_json"
 EXECUTABLE_VECTORS = {"py", "pyc", "elf"}
 FILE_GOAL_IDS = (
     "1_email_send_file",
-    "2_email_send_draft",
+    "2_email_send_prompt",
     "3_email_forward_otp",
     "4_email_broadcast_link",
     "5_chat_send_link",

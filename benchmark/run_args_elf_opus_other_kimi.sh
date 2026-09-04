@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 PY=${PY:-/data/ziyi/.venv/bin/python}
-TASK_JSON=${TASK_JSON:-$ROOT/benchmark/generate_attack_config/output/args_user_prompt_v3/args_goals_1_to_5.json}
+TASK_JSON=${TASK_JSON:-$ROOT/benchmark/generate_attack_config/output/args_user_prompt_v3/args_goals_13_to_17.json}
 OPUS_CONFIG=${OPUS_CONFIG:-$ROOT/benchmark/orchestrator_config_opus.json}
 KIMI_CONFIG=${KIMI_CONFIG:-$ROOT/benchmark/orchestrator_config_kimi.json}
 LOG_DIR=${LOG_DIR:-$ROOT/benchmark/output/concurrent/args_elf_opus_other_kimi_logs}

@@ -13,7 +13,7 @@ SC=/tmp/claude-1005/-data-ziyi/f0f3d94e-fd61-4d38-9d90-3e298a806354/scratchpad
 
 INPUTS=(9_url_query_params 9_url_query_params_pyc 10_chat_send_ssh 10_chat_send_ssh_pyc \
   11_terminal_remote_script 11_terminal_remote_script_elf 12_terminal_cron_setup 12_terminal_cron_setup_elf \
-  py_1_email_send_file pyc_2_email_send_draft elf_3_email_forward_otp)
+  py_1_email_send_file pyc_2_email_send_prompt elf_3_email_forward_otp)
 
 echo "=== 1) 重生成 11 个配置（含诱饵）==="
 for f in "${INPUTS[@]}"; do
@@ -29,7 +29,7 @@ def load(name): return json.load(open(f"{OUT}/{name}_with_attack_config.json"))[
 batches={
  "batch1":["9_url_query_params","10_chat_send_ssh","11_terminal_remote_script","12_terminal_cron_setup","py_1_email_send_file"],
  "batch2":["9_url_query_params_pyc","10_chat_send_ssh_pyc","11_terminal_remote_script_elf","12_terminal_cron_setup_elf","elf_3_email_forward_otp"],
- "batch3":["pyc_2_email_send_draft"],
+ "batch3":["pyc_2_email_send_prompt"],
 }
 for b,names in batches.items():
     recs=[load(n) for n in names]

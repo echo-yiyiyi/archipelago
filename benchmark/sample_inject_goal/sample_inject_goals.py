@@ -25,7 +25,7 @@ DEFAULT_OUTPUT = SCRIPT_DIR / "output" / "selected_90_tasks_with_inject_goals.js
 EXECUTABLE_VECTORS = {"py", "pyc", "elf"}
 FILE_TYPE_GOAL_IDS = (
     "1_email_send_file",
-    "2_email_send_draft",
+    "2_email_send_prompt",
     "3_email_forward_otp",
     "4_email_broadcast_link",
     "5_chat_send_link",
@@ -41,7 +41,7 @@ EXECUTABLE_GOAL_IDS = FILE_TYPE_GOAL_IDS + (
 )
 FILE_TYPE_TARGET_COUNTS = {
     "1_email_send_file": 6,
-    "2_email_send_draft": 5,
+    "2_email_send_prompt": 5,
     "3_email_forward_otp": 6,
     "4_email_broadcast_link": 5,
     "5_chat_send_link": 6,
@@ -51,7 +51,7 @@ FILE_TYPE_TARGET_COUNTS = {
 }
 EXECUTABLE_TARGET_COUNTS = {
     "1_email_send_file": 3,
-    "2_email_send_draft": 3,
+    "2_email_send_prompt": 3,
     "3_email_forward_otp": 3,
     "4_email_broadcast_link": 3,
     "5_chat_send_link": 3,

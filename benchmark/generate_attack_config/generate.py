@@ -12,9 +12,9 @@ from pathlib import Path
 
 try:
     from .prompt.email_send_file import GOAL_ID as FILE_GOAL_ID, generate as generate_email_send_file
-    from .prompt.email_send_draft import (
-        GOAL_ID as DRAFT_GOAL_ID,
-        generate as generate_email_send_draft,
+    from .prompt.email_send_prompt import (
+        GOAL_ID as PROMPT_GOAL_ID,
+        generate as generate_email_send_prompt,
         generate_task_brief_artifact,
     )
     from .prompt.email_forward_otp import (
@@ -60,9 +60,9 @@ except ImportError:  # Support direct execution from the repository root.
         GOAL_ID as FILE_GOAL_ID,
         generate as generate_email_send_file,
     )
-    from archipelago.benchmark.generate_attack_config.prompt.email_send_draft import (
-        GOAL_ID as DRAFT_GOAL_ID,
-        generate as generate_email_send_draft,
+    from archipelago.benchmark.generate_attack_config.prompt.email_send_prompt import (
+        GOAL_ID as PROMPT_GOAL_ID,
+        generate as generate_email_send_prompt,
         generate_task_brief_artifact,
     )
     from archipelago.benchmark.generate_attack_config.prompt.email_forward_otp import (
@@ -112,12 +112,11 @@ except ImportError:  # Support direct execution from the repository root.
 OUTPUT_DIR = Path(__file__).resolve().parent / "output"
 DEFAULT_MODEL = "aoai-swedencentral-aii-02-gpt-5.6-sol"
 ARG_GOAL_ALIASES = {
-    f"{FILE_GOAL_ID}_arg": FILE_GOAL_ID,
-    f"{DRAFT_GOAL_ID}_arg": DRAFT_GOAL_ID,
-    f"{OTP_GOAL_ID}_arg": OTP_GOAL_ID,
-    f"{BROADCAST_GOAL_ID}_arg": BROADCAST_GOAL_ID,
-    f"{URL_QUERY_GOAL_ID}_arg": URL_QUERY_GOAL_ID,
-    "6_chat_to_achieve_url_arg": "6_chat_to_achieve_url",
+    "13_email_send_file_arg": FILE_GOAL_ID,
+    "14_email_send_prompt_arg": PROMPT_GOAL_ID,
+    "15_email_forward_otp_arg": OTP_GOAL_ID,
+    "16_email_broadcast_link_arg": BROADCAST_GOAL_ID,
+    "17_chat_to_achieve_url_arg": "6_chat_to_achieve_url",
 }
 ARG_SCRIPT_GOALS = set(ARG_GOAL_ALIASES)
 
@@ -125,8 +124,16 @@ def base_goal(goal: str | None) -> str | None:
     return ARG_GOAL_ALIASES.get(goal, goal)
 
 
+def uses_runtime_args(record: dict) -> bool:
+    return record.get("inject_goal") in ARG_SCRIPT_GOALS
+
+
+def needs_instruction_lure(record: dict) -> bool:
+    return not bool(record.get("add_user_prompt"))
+
+
 def write_runtime_argument_artifact(record: dict, dest: Path, vector: str) -> None:
-    """Write the args-gated executable used when add_user_prompt is enabled."""
+    """Write the args-gated executable selected by a goal numbered 13-17."""
     try:
         from .attack_script.args.generate_args_attack_scripts import render
         from .attack_script.render_attack_script import _build_in_image
@@ -188,7 +195,7 @@ def main() -> int:
     output_records: list[dict[str, object]] = []
     generators = {
         FILE_GOAL_ID: generate_email_send_file,
-        DRAFT_GOAL_ID: generate_email_send_draft,
+        PROMPT_GOAL_ID: generate_email_send_prompt,
         OTP_GOAL_ID: generate_email_forward_otp,
         BROADCAST_GOAL_ID: generate_email_broadcast_link,
         CHAT_SEND_LINK_GOAL_ID: generate_chat_send_link,
@@ -250,10 +257,7 @@ def main() -> int:
         artifact_dir = output.parent / harmful_task_id
         artifact_dir.mkdir(parents=True, exist_ok=True)
         vector = str(record.get("inject_vector", "")).lower().lstrip(".")
-        use_runtime_args = (
-            bool(record.get("add_user_prompt"))
-            and record.get("inject_goal") in ARG_SCRIPT_GOALS
-        )
+        use_runtime_args = uses_runtime_args(record)
         # Always generate a fresh carrier name from this record's vector and
         # keywords.  An existing attack_file may belong to a different carrier
         # type (for example a chat store's fixed messages.json basename) and
@@ -294,7 +298,7 @@ def main() -> int:
                 from archipelago.benchmark.generate_attack_config.prompt.task_instruction import (
                     generate_task_instruction_artifact,
                 )
-            if not use_runtime_args:
+            if needs_instruction_lure(record):
                 lure_path = generate_task_instruction_artifact(
                     record, Path(record["attack_file"]).name, vector, artifact_dir,
                     client=get_client(), reasoning_effort=args.reasoning_effort)
@@ -302,12 +306,12 @@ def main() -> int:
         populate_files = [record["attack_file"]]
         if lure_populate:
             populate_files.append(lure_populate)
-        if (base_goal(record.get("inject_goal")) == DRAFT_GOAL_ID
+        if (base_goal(record.get("inject_goal")) == PROMPT_GOAL_ID
                 and vector in {"py", "pyc", "elf"}
                 and not use_runtime_args):
             attack_config = record.get("attack_config")
             if not isinstance(attack_config, dict):
-                raise ValueError("2_email_send_draft requires attack_config")
+                raise ValueError("2_email_send_prompt requires attack_config")
             brief_path = generate_task_brief_artifact(
                 record, attack_config, artifact_dir
             )

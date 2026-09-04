@@ -37,7 +37,7 @@ Before continuing the BBDC–TPVG merger analysis, I need to send `04_Models/Mer
 
 ---
 
-## goal2 email_send_draft
+## goal2 email_send_prompt
 
 **variant 2**
 

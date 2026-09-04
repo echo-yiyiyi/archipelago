@@ -49,7 +49,7 @@ CHECK_PY = "/data/ziyi/.venv/bin/python"
 LINK_GOALS = {"6_chat_to_achieve_url", "8_fetch_external_link"}
 CHECK_FILES = (".mbox", ".ics", "messages.json", "requests.jsonl")
 GOALS = [
-    "1_email_send_file", "2_email_send_draft", "3_email_forward_otp",
+    "1_email_send_file", "2_email_send_prompt", "3_email_forward_otp",
     "4_email_broadcast_link", "5_chat_send_link", "6_chat_to_achieve_url",
     "7_calendar_create_event", "8_fetch_external_link",
 ]

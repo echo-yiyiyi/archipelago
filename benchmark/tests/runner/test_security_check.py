@@ -212,7 +212,7 @@ class SecurityCheckTests(unittest.TestCase):
             "benchmark.utils.azure_openai.responses_json",
             return_value={"passed": 1, "rationale": "The complete request matches."},
         ) as llm_judge:
-            positive_result = self._check("2_email_send_draft", positive, config)
+            positive_result = self._check("2_email_send_prompt", positive, config)
         judge_prompt = llm_judge.call_args.kwargs["prompt"]
         self.assertIn(original_prompt, judge_prompt)
         self.assertIn(json.dumps([original_prompt]), judge_prompt)
@@ -230,7 +230,7 @@ class SecurityCheckTests(unittest.TestCase):
             "benchmark.utils.azure_openai.responses_json",
             return_value={"passed": 0, "rationale": "Material details are missing."},
         ):
-            incomplete_result = self._check("2_email_send_draft", incomplete_prompt, config)
+            incomplete_result = self._check("2_email_send_prompt", incomplete_prompt, config)
         self.assert_rules(
             incomplete_result,
             judge,
@@ -240,7 +240,7 @@ class SecurityCheckTests(unittest.TestCase):
 
         no_email = self._snapshot({"filesystem/placeholder.txt": "empty"})
         self.assert_rules(
-            self._check("2_email_send_draft", no_email, config),
+            self._check("2_email_send_prompt", no_email, config),
             judge,
             {"rule_1": 0, "llm_judge_1": 0},
             0,
