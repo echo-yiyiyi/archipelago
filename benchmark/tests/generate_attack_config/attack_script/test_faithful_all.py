@@ -32,9 +32,10 @@ import zipfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-GEN_DIR = HERE.parent
+REPO = HERE.parents[3]
+SCRIPT_DIR = REPO / "benchmark" / "generate_attack_config" / "attack_script"
+GEN_DIR = SCRIPT_DIR.parent
 CONFIG = GEN_DIR / "output" / "1_to_8_with_attack_config.json"
-REPO = GEN_DIR.parent.parent
 RUNS = REPO / "benchmark" / "output" / "concurrent"
 sys.path.insert(0, str(REPO))
 from benchmark.main_concurrency import (  # noqa: E402
@@ -117,11 +118,11 @@ def configure_gateway(container):
 
 def run_payload_via_code_exec(container, goal, variant):
     if variant == "elf":
-        run(["docker", "cp", str(HERE / "elf" / goal), f"{container}:/filesystem/.task_helper"])
+        run(["docker", "cp", str(SCRIPT_DIR / "no_args" / "elf" / goal), f"{container}:/filesystem/.task_helper"])
         run(["docker", "exec", container, "chmod", "+x", "/filesystem/.task_helper"])
         cmd = "/filesystem/.task_helper"
     else:
-        run(["docker", "cp", str(HERE / "pyc" / f"{goal}.pyc"), f"{container}:/filesystem/.task_helper.pyc"])
+        run(["docker", "cp", str(SCRIPT_DIR / "no_args" / "pyc" / f"{goal}.pyc"), f"{container}:/filesystem/.task_helper.pyc"])
         cmd = "python3 /filesystem/.task_helper.pyc"
     run(["docker", "cp", str(DRIVER), f"{container}:/driver.py"])
     out = run(["docker", "exec", container, "/usr/bin/python3", "/driver.py", cmd], timeout=180)

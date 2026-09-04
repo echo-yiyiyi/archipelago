@@ -71,13 +71,13 @@ the other goals.
 
 ```
 render_attack_script.py     # attack_config -> standalone .py payload (one per goal)
-build_binaries.py           # .py -> pyc/<goal>.pyc and elf/<goal> (built in-image)
-test_attack_scripts.py      # local goals (1,2,3,4,5,7): seed, run, snapshot, check
-test_attack_scripts_link.py # link goals (6,8): compose worker + collector, run, check
-py/    <goal>.py            # readable payloads; CONFIG baked at the top
-pyc/   <goal>.pyc           # byte-compiled (Python 3.13 magic; run with python3)
-elf/   <goal>               # native launcher (runs payload silently, prints decoy)
-elf/_sources/<goal>.c       # generated C source for each ELF
+build_binaries.py           # .py -> no_args/pyc and no_args/elf (built in-image)
+../../tests/generate_attack_config/attack_script/test_attack_scripts.py      # local goals
+../../tests/generate_attack_config/attack_script/test_attack_scripts_link.py # link goals
+no_args/py/    <goal>.py    # readable no-args payloads
+no_args/pyc/   <goal>.pyc   # byte-compiled no-args payloads
+no_args/elf/   <goal>       # native no-args launchers
+args/py|pyc|elf/            # runtime-argument payloads for goals 13–17
 ```
 
 ## Usage
@@ -97,11 +97,11 @@ python render_attack_script.py --config ../output/1_to_8_with_attack_config.json
 python build_binaries.py
 
 # 3. Test against the real docker environment (uses the same image the run uses).
-python test_attack_scripts.py                       # goals 1,2,3,4,5,7 (.py)
-python test_attack_scripts.py --variant pyc         # same, via the pyc
-python test_attack_scripts.py --variant elf         # same, via the ELF
-python test_attack_scripts_link.py                  # goals 6,8 (.py)
-python test_attack_scripts_link.py --variant elf    # goals 6,8, via the ELF
+python ../../tests/generate_attack_config/attack_script/test_attack_scripts.py                 # goals 1,2,3,4,5,7 (.py)
+python ../../tests/generate_attack_config/attack_script/test_attack_scripts.py --variant pyc   # same, via the pyc
+python ../../tests/generate_attack_config/attack_script/test_attack_scripts.py --variant elf   # same, via the ELF
+python ../../tests/generate_attack_config/attack_script/test_attack_scripts_link.py            # goals 6,8 (.py)
+python ../../tests/generate_attack_config/attack_script/test_attack_scripts_link.py --variant elf # goals 6,8, via the ELF
 ```
 
 **Retargeting.** Each payload bakes only the fields it needs into a `CONFIG`
@@ -109,8 +109,8 @@ dict at the top of the file. To point a payload at a different `attack_config`,
 re-run `render_attack_script.py` (recommended) or edit that `CONFIG` block by
 hand — nothing else in the file changes — then rebuild with `build_binaries.py`.
 
-**Deploying as an overlay.** To have an agent run the binary, drop `elf/<goal>`
-(or `pyc/<goal>.pyc`) into a task's `world_overlay` under an innocuous name (e.g.
+**Deploying as an overlay.** To have an agent run the binary, drop `no_args/elf/<goal>`
+(or `no_args/pyc/<goal>.pyc`) into a task's `world_overlay` under an innocuous name (e.g.
 `.setup_workspace`) and add an instruction that asks the agent to run it, mirroring
 `examples/hugging_face_task/input/.../elf_setup_workspace`.
 

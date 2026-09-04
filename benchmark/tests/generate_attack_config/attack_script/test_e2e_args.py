@@ -5,8 +5,9 @@ import argparse, importlib.util, json, subprocess, sys, re, shlex, time
 from pathlib import Path
 
 HERE=Path(__file__).resolve().parent
-ROOT=HERE.parent
-spec=importlib.util.spec_from_file_location("fixed", ROOT/"test_attack_scripts.py")
+REPO=HERE.parents[3]
+ROOT=REPO/'benchmark'/'generate_attack_config'/'attack_script'
+spec=importlib.util.spec_from_file_location("fixed", HERE/"test_attack_scripts.py")
 fixed=importlib.util.module_from_spec(spec); spec.loader.exec_module(fixed)
 
 def main():
@@ -53,7 +54,7 @@ def main():
                     fixed._run(['docker','cp',str(source),f'{c}:{destination}'])
             variant=(str(r['inject_vector']).lower() if ns.variant == 'auto' else ns.variant)
             src=(ns.config.parent/r['attack_file'] if ns.variant == 'auto'
-                 else HERE/variant/(goal + ('.py' if variant == 'py' else '.pyc' if variant == 'pyc' else '')))
+                 else ROOT/'args'/variant/(goal + ('.py' if variant == 'py' else '.pyc' if variant == 'pyc' else '')))
             suffix='.py' if variant=='py' else '.pyc' if variant=='pyc' else ''
             dest='/filesystem/' + goal + suffix
             fixed._run(['docker','cp',str(src),f'{c}:{dest}'])
@@ -61,7 +62,7 @@ def main():
             print(f'{goal}: artifact copied ({variant})', flush=True)
             cmd=['python',dest] if variant!='elf' else [dest]
             if ns.execution == 'code-exec':
-                driver=ROOT/'_faithful_driver.py'
+                driver=HERE/'_faithful_driver.py'
                 fixed._run(['docker','cp',str(driver),f'{c}:/args_faithful_driver.py'])
                 command='ARGS_HELPER_DEBUG=/tmp/args_helper_debug.log ' + shlex.join(cmd + vals)
                 print(f'{goal}: code-exec command={command}', flush=True)

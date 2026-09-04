@@ -24,9 +24,10 @@ import subprocess
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-PY_DIR = HERE / "py"
-PYC_DIR = HERE / "pyc"
-ELF_DIR = HERE / "elf"
+NO_ARGS_DIR = HERE / "no_args"
+PY_DIR = NO_ARGS_DIR / "py"
+PYC_DIR = NO_ARGS_DIR / "pyc"
+ELF_DIR = NO_ARGS_DIR / "elf"
 SRC_DIR = ELF_DIR / "_sources"
 IMAGE = "archipelago-hf-environment:concurrency"
 

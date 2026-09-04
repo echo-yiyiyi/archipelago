@@ -28,8 +28,9 @@ from urllib.parse import urlparse
 
 
 HERE = Path(__file__).resolve().parent
-GEN_DIR = HERE.parent
-REPO = GEN_DIR.parent.parent
+REPO = HERE.parents[3]
+SCRIPT_DIR = REPO / "benchmark" / "generate_attack_config" / "attack_script"
+GEN_DIR = SCRIPT_DIR.parent
 DEFAULT_CONFIG = GEN_DIR / "output" / "selected_6_with_attack_config.json"
 RUNS = REPO / "benchmark" / "output" / "concurrent"
 MCP_CONFIG = REPO / "benchmark" / "mcp_config_all_oss_servers.json"

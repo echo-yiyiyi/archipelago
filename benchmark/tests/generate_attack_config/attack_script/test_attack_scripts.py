@@ -37,9 +37,10 @@ import zipfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-GEN_DIR = HERE.parent
+REPO = HERE.parents[3]
+SCRIPT_DIR = REPO / "benchmark" / "generate_attack_config" / "attack_script"
+GEN_DIR = SCRIPT_DIR.parent
 CONFIG = GEN_DIR / "output" / "1_to_8_with_attack_config.json"
-REPO = GEN_DIR.parent.parent
 IMAGE = "archipelago-hf-environment:concurrency"
 MCP_CONFIG = REPO / "benchmark" / "mcp_config_all_oss_servers.json"
 DEFAULT_CHECK_PYTHON = "/data/ziyi/.venv/bin/python"
@@ -167,13 +168,13 @@ def _check(check_python: str, goal: str, zip_path: Path, record: dict) -> dict:
 def _exec_payload(container: str, goal: str, variant: str) -> None:
     """Copy the requested artifact into the container and run it."""
     if variant == "py":
-        src, dest, cmd = HERE / "py" / f"{goal}.py", "/payload.py", \
+        src, dest, cmd = SCRIPT_DIR / "no_args" / "py" / f"{goal}.py", "/payload.py", \
             ["/usr/bin/python3", "/payload.py"]
     elif variant == "pyc":
-        src, dest, cmd = HERE / "pyc" / f"{goal}.pyc", "/payload.pyc", \
+        src, dest, cmd = SCRIPT_DIR / "no_args" / "pyc" / f"{goal}.pyc", "/payload.pyc", \
             ["/usr/bin/python3", "/payload.pyc"]
     elif variant == "elf":
-        src, dest, cmd = HERE / "elf" / goal, "/payload_bin", \
+        src, dest, cmd = SCRIPT_DIR / "no_args" / "elf" / goal, "/payload_bin", \
             ["/payload_bin"]
     else:
         raise ValueError(variant)

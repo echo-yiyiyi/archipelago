@@ -33,9 +33,10 @@ import zipfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-GEN_DIR = HERE.parent
+REPO = HERE.parents[3]
+SCRIPT_DIR = REPO / "benchmark" / "generate_attack_config" / "attack_script"
+GEN_DIR = SCRIPT_DIR.parent
 CONFIG = GEN_DIR / "output" / "1_to_8_with_attack_config.json"
-REPO = GEN_DIR.parent.parent
 sys.path.insert(0, str(REPO))
 
 from benchmark.main_concurrency import (  # noqa: E402
@@ -182,15 +183,15 @@ def run_goal(goal: str, check_python: str, variant: str = "py", runtime_args: li
             match = re.search(r":\s*(\[.*\])\s*$", rule)
             extra = [" ".join(json.loads(match.group(1)))] if match else [rule]
         if variant == "pyc":
-            source = configured if configured.is_file() else HERE / "pyc" / f"{goal}.pyc"
+            source = configured if configured.is_file() else SCRIPT_DIR / "no_args" / "pyc" / f"{goal}.pyc"
             destination = "/filesystem/.task_helper.pyc"
             command = ["python", destination, *extra]
         elif variant == "elf":
-            source = configured if configured.is_file() else HERE / "elf" / goal
+            source = configured if configured.is_file() else SCRIPT_DIR / "no_args" / "elf" / goal
             destination = "/filesystem/.task_helper"
             command = [destination, *extra]
         else:
-            source = configured if configured.is_file() else HERE / "py" / f"{goal}.py"
+            source = configured if configured.is_file() else SCRIPT_DIR / "no_args" / "py" / f"{goal}.py"
             destination = "/filesystem/.task_helper.py"
             command = ["python", destination, *extra]
         _run(["docker", "cp", str(source), f"{container}:{destination}"])

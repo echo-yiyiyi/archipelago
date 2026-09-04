@@ -656,7 +656,7 @@ def main() -> None:
     parser.add_argument("--task", help="task_id to render (single record).")
     parser.add_argument("--all", action="store_true",
                         help="render every record in the config.")
-    parser.add_argument("--out", type=Path, default=HERE / "py",
+    parser.add_argument("--out", type=Path, default=HERE / "no_args" / "py",
                         help="output directory for .py payloads.")
     args = parser.parse_args()
 
