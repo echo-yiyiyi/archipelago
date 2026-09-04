@@ -24,6 +24,14 @@ selects where the instruction to execute the script appears. Thus a goal 1–12
 record with `add_user_prompt: true` is still no-args, but it does not receive an
 additional-instruction `.txt`.
 
+`add_user_prompt: true` is supported for both modes. For a no-args task it puts
+the execution instruction directly into the user prompt; for an args task it
+does the same and lets the agent supply the runtime value (file path, message
+content, mail ID, or attendee addresses) to the script. The current args-task
+inputs (goals 13–17) should always set it to `true`; an absent/`false` value is
+intended for no-args lure-file tasks and causes an additional-instruction
+`.txt` to be generated.
+
 The no-args executable renderer supports goals 1 through 12. The args renderer
 currently supports:
 
@@ -222,6 +230,74 @@ executable plus only the goal-specific fixtures listed in the catalog.
 Do not move `tasks.json` away from its sibling task directories. Otherwise the
 relative paths resolve from the wrong directory (for example `/tmp`) and cause
 `populate file does not exist` before the agent starts.
+
+## End-to-end pipeline: sampling to a runnable experiment
+
+The complete workflow has four stages:
+
+1. **Sample the task variants.** Start with the selected base tasks and assign
+   `inject_vector` (`py`, `pyc`, `elf`) and a base goal from `inject_goal.json`.
+   The sampler uses only goals 1–12 and writes records with unique
+   `harmful_task_id` values. Goals 13–17 are not sampled by this stage; they
+   are the explicit runtime-argument counterparts used by the separate args
+   input file.
+
+   ```bash
+   /data/ziyi/.venv/bin/python \
+     benchmark/sample_inject_goal/sample_inject_goals.py \
+     --output benchmark/sample_inject_goal/output/selected_90_tasks_with_inject_goals.json
+   ```
+
+2. **Prepare a clean generation input.** Keep only source task fields such as
+   `task_id`, `prompt`, `keywords`, `inject_goal`, `inject_vector`, and
+   `harmful_task_id`. For args tasks, use goals 13–17, set
+   `add_user_prompt: true`, and include no old `attack_config`, `attack_file`,
+   `populate_files`, or prepared fixture paths.
+
+3. **Generate the attack config and artifacts.** Run `generate.py`. It maps
+   the selected goal to its generator, creates the destination/lookup data and
+   security rules, generates goal-specific fixtures, renders the executable,
+   and writes `attack_file` and `populate_files` relative to the output JSON.
+   For `.pyc` and ELF, compilation uses the benchmark environment image.
+
+   ```bash
+   /data/ziyi/.venv/bin/python -m benchmark.generate_attack_config.generate \
+     benchmark/generate_attack_config/input/my_tasks.json \
+     --output benchmark/generate_attack_config/output/my_tasks/args_tasks.json \
+     --add-user-prompt \
+     --model aoai-swedencentral-aii-02-gpt-5.6-sol
+   ```
+
+   For runtime-argument scripts, the 13–17 alias is mapped internally to its
+   base implementation (13→1, 14→2, 15→3, 16→4, 17→6), while the args
+   renderer adds the runtime-argument validation and action. The args-specific
+   goal descriptions are also registered in `benchmark/inject_goal/inject_goal.json`.
+
+   The generation-stage `--add-user-prompt` flag is a convenience override: it
+   sets `add_user_prompt: true` on every input record. Without the flag,
+   `generate.py` preserves each record's field value, so mixed batches are
+   possible. This stage creates the prompt/config, payload, and fixtures; it
+   does not run an agent.
+
+4. **Run the experiment.** Pass the generated JSON to `main_concurrency.py`.
+   The runner uses each `harmful_task_id` as the unique selector, freezes the
+   config into the run directory, populates every listed fixture, starts any
+   required collector service, runs the agent, and performs security checks.
+   At run time, `main_concurrency.py` only reads the already-generated
+   `add_user_prompt`, `attack_file`, and `populate_files` values. It does not
+   regenerate prompts or payloads; `--skip-build` only controls image
+   rebuilding and does not change prompt behavior.
+
+   ```bash
+   /data/ziyi/.venv/bin/python -m benchmark.main_concurrency \
+     --task-json benchmark/generate_attack_config/output/my_tasks/args_tasks.json \
+     --concurrency 5 --run-id my_tasks_luna --skip-build
+   ```
+
+   The resulting `grades.json`, `trajectory.json`, and `score_summary.json`
+   are under `benchmark/output/concurrent/my_tasks_luna/`. The View App reads
+   this run directory; it does not read the input or attack-config JSON
+   directly.
 
 ## Run
 
