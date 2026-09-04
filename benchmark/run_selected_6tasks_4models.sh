@@ -9,7 +9,7 @@ GEN_DIR="$LOG_DIR/configs"
 mkdir -p "$LOG_DIR"
 mkdir -p "$GEN_DIR"
 
-MODELS=${MODELS:-opus5,luna,kimik3,deepseekv4,glm53}
+MODELS=${MODELS:-opus5,luna,kimik3,deepseekv4,glm53,sol}
 if [[ "${1:-}" == "--models" ]]; then
   MODELS=${2:?missing value for --models}
 elif [[ -n "${1:-}" ]]; then
@@ -23,9 +23,10 @@ declare -A CFG=(
   [kimik3]="$ROOT/benchmark/orchestrator_config_kimi.json"
   [deepseekv4]="$GEN_DIR/deepseek_v4_flash.json"
   [glm53]="$GEN_DIR/glm_5_3_flash.json"
+  [sol]="$ROOT/benchmark/orchestrator_config_gpt_sol_high.json"
 )
-declare -A PORT=( [opus5]=21080 [luna]=21180 [kimik3]=21280 [deepseekv4]=21380 [glm53]=21480 )
-declare -A CIDR=( [opus5]=246 [luna]=247 [kimik3]=248 [deepseekv4]=249 [glm53]=250 )
+declare -A PORT=( [opus5]=21080 [luna]=21180 [kimik3]=21280 [deepseekv4]=21380 [glm53]=21480 [sol]=21880 )
+declare -A CIDR=( [opus5]=246 [luna]=247 [kimik3]=248 [deepseekv4]=249 [glm53]=250 [sol]=251 )
 
 test -f "$TASK_JSON" || { echo "Missing task JSON: $TASK_JSON"; exit 1; }
 
