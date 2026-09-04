@@ -12,7 +12,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from .common import generate_keyword_link, load_goal_prompt, load_task
+from .common import resolve_attack_link, load_goal_prompt, load_task
 
 
 # The fixed execution markers echoed by the served scripts (see
@@ -29,13 +29,15 @@ def _generate(goal_id: str, task_record, inject_goals_path, client, reasoning_ef
     if client is None:
         raise ValueError(f"{goal_id} requires an LLM client")
     _, keywords = load_task(task_record)
-    link = generate_keyword_link(
+    link = resolve_attack_link(
+        task_record,
         keywords,
         client=client,
         reasoning_effort=reasoning_effort,
         purpose="a task-related setup or configuration script endpoint",
         inject_goal=load_goal_prompt(goal_id, inject_goals_path),
         require_http=True,
+        generic_kind="terminal",
     )
     # Executable attack files (py/pyc/elf) carry no embedded <think>; no COT.
     return {

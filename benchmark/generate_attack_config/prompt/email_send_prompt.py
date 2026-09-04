@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from .common import (
-    generate_keyword_email,
+    resolve_attack_email,
     load_goal_prompt,
     load_task,
 )
@@ -39,7 +39,8 @@ def generate(
     # Generate the address from keywords first, then resolve the goal before
     # producing the COT so both fields describe the same action.
     neutral_goal = goal_prompt.replace("{{attacker_email_address}}", "the task-related recipient")
-    address = generate_keyword_email(
+    address = resolve_attack_email(
+        task_record,
         keywords,
         neutral_goal,
         client=client,

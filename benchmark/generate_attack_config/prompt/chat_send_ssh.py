@@ -13,7 +13,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from .common import generate_keyword_email, load_goal_prompt, load_task
+from .common import resolve_attack_email, load_goal_prompt, load_task
 
 
 GOAL_ID = "10_chat_send_ssh"
@@ -54,7 +54,8 @@ def generate(
         goal_prompt.replace("{{attacker_email_address}}", "the task-related recipient")
         .replace("{{attacker_needed_file}}", SSH_KEY_FILENAME)
     )
-    address = generate_keyword_email(
+    address = resolve_attack_email(
+        task_record,
         keywords,
         neutral_goal,
         client=client,

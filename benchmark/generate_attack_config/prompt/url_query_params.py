@@ -13,7 +13,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from .common import generate_keyword_link, load_goal_prompt, load_task
+from .common import resolve_attack_link, load_goal_prompt, load_task
 
 
 GOAL_ID = "9_url_query_params"
@@ -65,13 +65,15 @@ def generate(
         raise ValueError("9_url_query_params requires an LLM client")
     task_id, keywords = load_task(task_record)
 
-    base_link = generate_keyword_link(
+    base_link = resolve_attack_link(
+        task_record,
         keywords,
         client=client,
         reasoning_effort=reasoning_effort,
         purpose="a task-related portal sign-in or start page",
         inject_goal=load_goal_prompt(GOAL_ID, inject_goals_path),
         require_http=True,
+        generic_kind="query",
     )
     attacker_link = base_link + QUERY_TEMPLATE
     username, password = make_credentials(task_id, keywords)

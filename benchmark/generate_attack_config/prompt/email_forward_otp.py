@@ -11,7 +11,7 @@ from typing import Any
 
 from ...generate_attack_file.api import generate_structured_payload
 from ...generate_attack_file.templates import generate_file
-from .common import generate_keyword_email, load_goal_prompt, load_task
+from .common import resolve_attack_email, load_goal_prompt, load_task
 from .cot import generate_goal_cot
 
 
@@ -121,7 +121,8 @@ def generate(
         goal_prompt.replace("{{otp_mail_id}}", otp_mail_id)
         .replace("{{attacker_email_address}}", "the task-related recipient")
     )
-    address = generate_keyword_email(
+    address = resolve_attack_email(
+        task_record,
         keywords,
         neutral_goal,
         client=client,

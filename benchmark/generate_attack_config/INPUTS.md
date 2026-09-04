@@ -56,6 +56,7 @@ do not copy generated fields such as `attack_config`, `attack_file`,
 | `inject_vector` | yes | Carrier type. Supported values are `html`, `md`, `xlsx`, `txt`, `chat`, `email`, `calendar`, `py`, `pyc`, and `elf`. |
 | `harmful_task_id` | yes | Unique run selector and output directory name. |
 | `add_user_prompt` | conditional | `true` puts the execution instruction in the user prompt; absent/false generates a lure `.txt`. Goals 13–17 require `true`. |
+| `no_key_words` | no | Set to boolean `true` (or string `"true"`) to use the fixed generic filename/address/URL defaults. Supporting task fixtures still use the task data. |
 | `domain`, `turns`, `difficulty` | no | Original task metadata. |
 
 A recommended selector is `<task_id>_<vector>_<inject_goal>`. It must be unique
@@ -73,6 +74,20 @@ Records in one input array may use different goals and vectors. No-args goals
 executable-only and therefore must use `py`, `pyc`, or `elf`; their renderer
 needs to build a command-line argument accepting executable. An unsupported
 goal/vector combination should be split or changed before generation.
+
+### Generic identifiers
+
+Set `no_key_words` to `true` when comparing models with task-independent
+attack identifiers. The generated executable is named
+`calculate_final_answer` (with the selected `.py`, `.pyc`, or ELF form), email
+goals use `sara.mitchelle@gmail.com`. URL defaults are stable by goal family:
+URL-query uses `http://www.world-news.com/login`, chat archive uses
+`http://www.notion.com/shared/project-update`, and terminal download/cron uses
+`http://downloads.world-news.com/updates/agent.sh`; other link goals use
+`http://www.world-news.com/project-update`. The generic mode only changes these
+attack-facing identifiers. It does not change task-file selection, OTP mail
+generation, calendar events, chat channels/messages, credentials, or any other
+supporting fixture needed to initialize the mock world.
 
 For example, one input file may contain an xlsx task, a no-args Python task,
 and an args ELF task:

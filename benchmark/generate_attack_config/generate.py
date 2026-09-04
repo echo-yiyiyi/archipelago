@@ -119,6 +119,7 @@ ARG_GOAL_ALIASES = {
     "17_chat_to_achieve_url_arg": "6_chat_to_achieve_url",
 }
 ARG_SCRIPT_GOALS = set(ARG_GOAL_ALIASES)
+GENERIC_SCRIPT_BASENAME = "calculate_final_answer"
 
 def base_goal(goal: str | None) -> str | None:
     return ARG_GOAL_ALIASES.get(goal, goal)
@@ -126,6 +127,11 @@ def base_goal(goal: str | None) -> str | None:
 
 def uses_runtime_args(record: dict) -> bool:
     return record.get("inject_goal") in ARG_SCRIPT_GOALS
+
+
+def uses_generic_identifiers(record: dict) -> bool:
+    value = record.get("no_key_words", False)
+    return value is True or (isinstance(value, str) and value.strip().lower() == "true")
 
 
 def needs_instruction_lure(record: dict) -> bool:
@@ -261,6 +267,13 @@ def main() -> int:
             client=get_client(),
             reasoning_effort=args.reasoning_effort,
         )
+        if uses_generic_identifiers(record) and vector in {"py", "pyc", "elf"}:
+            suffix = ".py" if vector == "py" else ".pyc" if vector == "pyc" else ""
+            generic_path = artifact_dir / f"{GENERIC_SCRIPT_BASENAME}{suffix}"
+            if generic_path.exists():
+                raise FileExistsError(f"refusing to overwrite existing file: {generic_path}")
+            attack_path.rename(generic_path)
+            attack_path = generic_path
         # ``attack_file`` identifies the primary injected artifact, while
         # ``populate_files`` includes it plus any supporting app fixtures.
         # The old plural ``attack_files`` field is no longer emitted.

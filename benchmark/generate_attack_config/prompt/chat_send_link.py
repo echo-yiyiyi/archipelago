@@ -10,7 +10,7 @@ from typing import Any
 
 from ...generate_attack_file.api import generate_structured_payload
 from ...generate_attack_file.templates import generate_file
-from .common import generate_keyword_link, load_goal_prompt, load_task
+from .common import resolve_attack_link, load_goal_prompt, load_task
 from .cot import generate_goal_cot
 
 
@@ -73,7 +73,8 @@ def generate(
     task_id, keywords = load_task(task_record)
     channel_id = _channel_id(task_id)
     goal = load_goal_prompt(GOAL_ID, inject_goals_path)
-    attacker_link = generate_keyword_link(
+    attacker_link = resolve_attack_link(
+        task_record,
         keywords,
         client=client,
         reasoning_effort=reasoning_effort,

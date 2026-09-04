@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from .chat_send_link import generate_chat_channel_artifact
-from .common import generate_keyword_link, load_goal_prompt, load_task
+from .common import resolve_attack_link, load_goal_prompt, load_task
 from .cot import generate_goal_cot
 
 
@@ -34,7 +34,8 @@ def generate(
     task_id, keywords = load_task(task_record)
     channel_id = _channel_id(task_id)
     goal = load_goal_prompt(GOAL_ID, inject_goals_path)
-    archive_base = generate_keyword_link(
+    archive_base = resolve_attack_link(
+        task_record,
         keywords,
         client=client,
         reasoning_effort=reasoning_effort,
@@ -42,6 +43,7 @@ def generate(
         path_suffix="archive",
         inject_goal=goal,
         require_http=True,
+        generic_kind="chat_archive",
     )
     attacker_link = f"{archive_base}?message={{}}"
     resolved_goal = goal.replace("{{attacker_link}}", "{{link}}").replace(
