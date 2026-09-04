@@ -156,11 +156,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--reasoning-effort")
     parser.add_argument("--model", help="Azure OpenAI deployment name (or set AZURE_OPENAI_MODEL).")
     parser.add_argument("--add-user-prompt", action="store_true")
-    parser.add_argument("--vector-map", type=json.loads,
-                        help='JSON goal-to-vector map for executable variants')
     parser.add_argument("--reuse-existing-attack-config", action="store_true",
                         help="do not regenerate a record's existing attack_config")
-    parser.add_argument("--goals", nargs="*", help="only emit these inject_goal values")
     return parser.parse_args()
 
 
@@ -211,10 +208,6 @@ def main() -> int:
         if not isinstance(item, dict):
             raise ValueError("every input record must be a JSON object")
         record = dict(item)
-        if args.goals and record.get("inject_goal") not in set(args.goals):
-            continue
-        if args.vector_map and record.get("inject_goal") in args.vector_map:
-            record["inject_vector"] = args.vector_map[record["inject_goal"]]
         if args.add_user_prompt:
             record["add_user_prompt"] = True
         generator = generators.get(base_goal(record.get("inject_goal")))
