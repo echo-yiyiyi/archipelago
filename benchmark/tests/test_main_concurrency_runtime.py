@@ -8,12 +8,27 @@ import unittest
 from pathlib import Path
 
 from benchmark.main_concurrency import (
+    freeze_attack_config,
     link_hosts_from_attack_config,
     write_worker_environment,
 )
 
 
 class RuntimeServiceConfigurationTests(unittest.TestCase):
+    def test_attack_config_is_frozen_for_the_run(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "source.json"
+            run_dir = root / "run"
+            run_dir.mkdir()
+            source.write_text('[{"harmful_task_id":"old-selector"}]')
+            frozen = freeze_attack_config(source, run_dir)
+            source.write_text('[{"harmful_task_id":"new-selector"}]')
+            self.assertEqual(
+                json.loads(frozen.read_text())[0]["harmful_task_id"],
+                "old-selector",
+            )
+
     def test_visiting_link_host_becomes_collector_alias_and_no_proxy_host(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

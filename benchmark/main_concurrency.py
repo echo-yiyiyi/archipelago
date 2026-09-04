@@ -294,6 +294,13 @@ def link_hosts_from_attack_config(path: Path) -> dict[str, str]:
     return hosts
 
 
+def freeze_attack_config(source: Path, run_dir: Path) -> Path:
+    """Copy task metadata into the run so later source edits cannot affect grading."""
+    target = run_dir / "attack_config.json"
+    shutil.copy2(source.resolve(), target)
+    return target
+
+
 def validate_ports(base_port: int, count: int) -> None:
     """Fail before starting work if one of the requested ports is occupied."""
     sockets: list[socket.socket] = []
@@ -902,7 +909,10 @@ def main() -> int:
     global _run_logger
     _run_logger = RunLogger(run_dir)
     if args.attack_config_json:
-        os.environ["ATTACK_CONFIG_FILE"] = str(args.attack_config_json.resolve())
+        source_config = args.attack_config_json.resolve()
+        frozen_config = freeze_attack_config(source_config, run_dir)
+        os.environ["ATTACK_CONFIG_FILE"] = str(frozen_config)
+        os.environ["ATTACK_CONFIG_BASE_DIR"] = str(source_config.parent)
     update_score_summary(run_dir)
 
     if not args.skip_build:

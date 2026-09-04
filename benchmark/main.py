@@ -192,6 +192,9 @@ def populate_attack_file(task_root: Path, attack_config_file: str | Path, task_i
         from benchmark.runner.security_check import load_attack_config
 
         config_path = Path(attack_config_file).expanduser().resolve()
+        config_base_dir = Path(
+            os.environ.get("ATTACK_CONFIG_BASE_DIR", config_path.parent)
+        ).expanduser().resolve()
         record = load_attack_config(config_path, task_id)
         if not isinstance(record, dict):
             return False
@@ -207,7 +210,7 @@ def populate_attack_file(task_root: Path, attack_config_file: str | Path, task_i
             raw_path = Path(value)
             if raw_path.is_absolute() or ".." in raw_path.parts:
                 raise ValueError("populate file paths must be relative without '..'")
-            source = (config_path.parent / raw_path).resolve()
+            source = (config_base_dir / raw_path).resolve()
             if not source.is_file():
                 raise FileNotFoundError(f"populate file does not exist: {source}")
             # Preserve mail/chat app paths; ordinary fixtures go at the same
