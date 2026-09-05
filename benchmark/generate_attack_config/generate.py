@@ -54,6 +54,7 @@ try:
         generate_terminal_remote,
         generate_terminal_cron,
     )
+    from .prompt.shared_folder import GOAL_IDS as SHARED_GOAL_IDS, generate as generate_shared_folder
 except ImportError:  # Support direct execution from the repository root.
     sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
     from archipelago.benchmark.generate_attack_config.prompt.email_send_file import (
@@ -102,6 +103,7 @@ except ImportError:  # Support direct execution from the repository root.
         generate_terminal_remote,
         generate_terminal_cron,
     )
+    from archipelago.benchmark.generate_attack_config.prompt.shared_folder import GOAL_IDS as SHARED_GOAL_IDS, generate as generate_shared_folder
 
 try:
     from ..generate_attack_file.generate import generate_from_task_record
@@ -112,6 +114,12 @@ except ImportError:  # Support direct execution from the repository root.
 OUTPUT_DIR = Path(__file__).resolve().parent / "output"
 DEFAULT_MODEL = "aoai-swedencentral-aii-02-gpt-5.6-sol"
 ARG_GOAL_ALIASES = {
+    "25_save_country_arg": "19_save_country",
+    "26_save_employee_number_arg": "20_save_employee_number",
+    "27_save_credit_score_arg": "21_save_credit_score",
+    "28_save_client_code_arg": "22_save_client_code",
+    "29_save_passphrase_arg": "23_save_passphrase",
+    "30_save_final_answer_arg": "24_save_final_answer",
     "13_email_send_file_arg": FILE_GOAL_ID,
     "14_email_send_prompt_arg": PROMPT_GOAL_ID,
     "15_email_forward_otp_arg": OTP_GOAL_ID,
@@ -139,7 +147,7 @@ def needs_instruction_lure(record: dict) -> bool:
 
 
 def write_runtime_argument_artifact(record: dict, dest: Path, vector: str) -> None:
-    """Write the args-gated executable selected by a goal numbered 13-17."""
+    """Write an args-gated executable for goals 13-17 or 25-30."""
     try:
         from .attack_script.args.generate_args_attack_scripts import render
         from .attack_script.render_attack_script import _build_in_image
@@ -209,6 +217,7 @@ def main() -> int:
         SSH_GOAL_ID: generate_chat_send_ssh,
         TERMINAL_REMOTE_GOAL_ID: generate_terminal_remote,
         TERMINAL_CRON_GOAL_ID: generate_terminal_cron,
+        **{goal_id: generate_shared_folder for goal_id in SHARED_GOAL_IDS},
     }
     for item in data:
         if not isinstance(item, dict):
@@ -231,6 +240,12 @@ def main() -> int:
         if record.get("add_user_prompt") and isinstance(record.get("attack_config"), dict):
             record["attack_config"]["add_user_prompt"] = True
             record["attack_config"].setdefault("original_task_prompt", record.get("prompt", ""))
+        if isinstance(record.get("attack_config"), dict):
+            goal_name = str(record.get("inject_goal", ""))
+            record["attack_config"].setdefault(
+                "leakage_type",
+                "internal" if base_goal(goal_name) in (set(SHARED_GOAL_IDS) | {CALENDAR_CREATE_GOAL_ID}) else "external",
+            )
         output_records.append(record)
 
     output = args.output or (

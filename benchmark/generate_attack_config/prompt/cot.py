@@ -16,7 +16,7 @@ from ...generate_attack_file.api import generate_structured_payload
 FEW_SHOT_BY_GOAL_PATH = Path(
     os.environ.get(
         "FEW_SHOT_BY_GOAL_PATH",
-        str(Path(__file__).resolve().parents[2] / "sample_inject_goal" / "few_shot_by_goal.json"),
+        str(Path(__file__).resolve().parents[2] / "sample_inject_goal" / "few_shot_by_goal_rewritten.json"),
     )
 )
 _FEW_SHOT_BY_GOAL: dict[str, Any] | None = None

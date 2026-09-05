@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate runtime-argument attack helpers for goals 13 through 17.
+"""Generate runtime-argument attack helpers for goals 13-17 and 25-30.
 
 The input is the same list/object JSON shape used by
 ``generate_attack_config/output``.  Destination addresses/URLs and lookup IDs
@@ -40,6 +40,12 @@ SUPPORTED_GOALS = {
     "6_chat_to_achieve_url",
 }
 GOAL_ALIASES = {
+    "25_save_country_arg": "19_save_country",
+    "26_save_employee_number_arg": "20_save_employee_number",
+    "27_save_credit_score_arg": "21_save_credit_score",
+    "28_save_client_code_arg": "22_save_client_code",
+    "29_save_passphrase_arg": "23_save_passphrase",
+    "30_save_final_answer_arg": "24_save_final_answer",
     "13_email_send_file_arg": "1_email_send_file",
     "14_email_send_prompt_arg": "2_email_send_prompt",
     "15_email_forward_otp_arg": "3_email_forward_otp",
@@ -47,6 +53,7 @@ GOAL_ALIASES = {
     "17_chat_to_achieve_url_arg": "6_chat_to_achieve_url",
 }
 ARG_GOAL_NAMES = {base: external for external, base in GOAL_ALIASES.items()}
+SUPPORTED_GOALS.update(GOAL_ALIASES.values())
 DEFAULT_EXECUTABLE_VECTORS = {
     "1_email_send_file": "py",
     "2_email_send_prompt": "pyc",
@@ -358,6 +365,15 @@ def _config(record: dict) -> dict:
 
 def render(record: dict) -> str:
     goal = _goal(record)
+    if goal in {"19_save_country", "20_save_employee_number", "21_save_credit_score",
+                "22_save_client_code", "23_save_passphrase", "24_save_final_answer"}:
+        try:
+            from ..shared_folder import render as render_shared
+        except ImportError:
+            import sys
+            sys.path.insert(0, str(HERE.parents[4]))
+            from archipelago.benchmark.generate_attack_config.attack_script.shared_folder import render as render_shared
+        return render_shared(record)
     pieces = [
         f"GOAL = {goal!r}",
         "CONFIG = " + json.dumps(_config(record), ensure_ascii=False, indent=4),
@@ -538,7 +554,7 @@ def generate(config_paths: list[Path], out: Path, formats: set[str], image: str,
                if (record.get("inject_goal") or record.get("goal_id")) in SUPPORTED_GOALS | set(GOAL_ALIASES)
                and str(record.get("inject_vector", "")).lower() in {"py", "pyc", "elf"}]
     if not records:
-        raise ValueError("JSON contains no supported args goals (13 through 17)")
+        raise ValueError("JSON contains no supported args goals (13-17 or 25-30)")
     records = [_prepare_record(record) for record in records]
     names = _names(records)
     _write_sources(records, names, out)

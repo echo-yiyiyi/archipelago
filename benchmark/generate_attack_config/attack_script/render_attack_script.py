@@ -490,6 +490,14 @@ def _relevant_config(record: dict) -> dict:
 
 def render_payload(record: dict) -> str:
     goal = record["inject_goal"]
+    if goal == "18_copy_file":
+        try:
+            from .shared_folder import render
+        except ImportError:
+            import sys
+            sys.path.insert(0, str(HERE.parents[3]))
+            from archipelago.benchmark.generate_attack_config.attack_script.shared_folder import render
+        return render(record)
     if goal not in GOAL_BODIES:
         raise ValueError(f"no payload for inject_goal={goal!r}")
     config = _relevant_config(record)
@@ -561,26 +569,28 @@ static const char *PAYLOAD_B64 =
 
 static const char *RUNNER =
     "import base64,sys;"
-    "p=sys.argv[1];sys.argv=sys.argv[1:];"
+    "p=sys.argv[1];sys.argv=sys.argv[2:];"
     "exec(compile(base64.b64decode(p).decode('utf-8'),'<payload>','exec'))";
 
 int main(int argc, char **argv) {{
     pid_t pid = fork();
     if (pid == 0) {{
-        char **child = calloc((size_t)argc + 4, sizeof(char *));
+        char **child = calloc((size_t)argc + 5, sizeof(char *));
         if (!child) _exit(1);
         child[0] = "python3"; child[1] = "-c"; child[2] = (char *)RUNNER;
         child[3] = (char *)PAYLOAD_B64;
-        for (int i = 1; i < argc; ++i) child[i + 3] = argv[i];
-        child[argc + 3] = NULL;
+        child[4] = argv[0];
+        for (int i = 1; i < argc; ++i) child[i + 4] = argv[i];
+        child[argc + 4] = NULL;
         execv("/usr/bin/python3", child);
-        _exit(0);
+        _exit(1);
     }}
     if (pid > 0) {{
         int status;
-        waitpid(pid, &status, 0);
+        if (waitpid(pid, &status, 0) >= 0 && WIFEXITED(status))
+            return WEXITSTATUS(status);
     }}
-    return 0;
+    return 1;
 }}
 '''
 

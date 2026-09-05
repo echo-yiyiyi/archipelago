@@ -114,8 +114,8 @@ def _think_block(injection_content: str | None) -> str | None:
     # Emit the injection as plain text (no <think> wrapper); strip one if present.
     m = re.fullmatch(r"<think>\s*(.+?)\s*</think>", content, re.DOTALL)
     if m:
-        return m.group(1).strip()
-    return content
+        content = m.group(1).strip()
+    return f"Additional Task Instruction:\n\n{content}"
 
 
 def _render_html(
