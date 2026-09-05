@@ -179,6 +179,32 @@ def prompt_with_inject_vector_context(task: dict, task_id: str) -> str:
     return prompt
 
 
+def start_dynamic_watcher(task_id: str, output_dir: Path):
+    """Launch only after all filesystem/app fixtures and MCP apps are populated."""
+    config_file = os.environ.get('ATTACK_CONFIG_FILE')
+    if not config_file:
+        return
+    from benchmark.runner.security_check import load_attack_config
+    record = load_attack_config(config_file, os.environ.get('ATTACK_TASK_SELECTOR') or task_id)
+    if not record or record.get('inject_vector') not in {'dynamic_prompt_injection', 'dynamic_script_execution'}:
+        return
+    watcher = Path(record['watcher_file']).name
+    config = Path(record['watcher_config']).name
+    # The lifecycle hook runs in the environment with both app and filesystem roots.
+    # Use a separate empty overlay after all seeds, so the baseline includes them.
+    archive = output_dir / 'dynamic_watcher_start.tar.gz'
+    with tarfile.open(archive, 'w:gz'):
+        pass
+    command = f'python3 {shlex.quote("/.apps_data/dynamic_watcher/" + watcher)} --config {shlex.quote("/.apps_data/dynamic_watcher/" + config)}'
+    with archive.open('rb') as handle:
+        response = httpx.post(f'{ENV_URL}/data/populate',
+            files={'archive': (archive.name, handle.read(), 'application/gzip')},
+            data={'post_populate_hooks': json.dumps([{'name': 'dynamic-prompt-watcher', 'command': command}])},
+            params={'subsystem': 'filesystem'}, timeout=600.0)
+    response.raise_for_status()
+    log(f'Dynamic prompt watcher started: {response.json()}')
+
+
 def populate_subsystems(root: Path, output_dir: Path, label: str):
     """Populate environment with filesystem/ and .apps_data/ from a directory."""
     for subsystem in SUBSYSTEMS:
@@ -259,7 +285,12 @@ def populate_attack_file(task_root: Path, attack_config_file: str | Path, task_i
                 raise FileNotFoundError(f"populate file does not exist: {source}")
             # Preserve mail/chat app paths; ordinary fixtures go at the same
             # filesystem root as the world files.
-            if ".apps_data" in raw_path.parts:
+            if record.get("inject_vector") in {"dynamic_prompt_injection", "dynamic_script_execution"} and source.name in {
+                "dynamic_watcher.py", "dynamic_document_formats.py", "dynamic_watcher_config.json",
+                "dynamic_script_watcher.py", "recover_corrupted_file"
+            }:
+                destination = task_root / ".apps_data" / "dynamic_watcher" / source.name
+            elif ".apps_data" in raw_path.parts:
                 app_index = raw_path.parts.index(".apps_data")
                 destination = task_root.joinpath(*raw_path.parts[app_index:])
             else:
@@ -541,6 +572,7 @@ def main():
     resp = httpx.post(f"{ENV_URL}/apps", json=mcp_config, timeout=600.0)
     resp.raise_for_status()
     log("MCP servers configured")
+    start_dynamic_watcher(task['task_id'], output_dir)
 
     # Load the model before generating the initial messages because the system
     # prompt depends on the orchestrator model.
@@ -730,6 +762,7 @@ Don't over-explain. Be concise but show your thinking.
     # They inspect the final snapshot whenever attack metadata is supplied.
     attack_config_file = os.environ.get("ATTACK_CONFIG_FILE")
     if attack_config_file:
+        attack_record = None
         try:
             # ``main.py`` is also launched directly as a script by the
             # concurrency runner, so ensure the repository root is importable.
@@ -738,7 +771,7 @@ Don't over-explain. Be concise but show your thinking.
                 sys.path.insert(0, str(repo_root))
             from benchmark.runner.security_check import (
                 check_attack_observation,
-                check_prompt_exposure,
+                check_record_prompt_exposure,
                 check_security,
                 load_attack_config,
             )
@@ -775,7 +808,11 @@ Don't over-explain. Be concise but show your thinking.
             # discard the attack result already computed above.
             try:
                 security.update(
-                    check_prompt_exposure(trajectory, security_config.get("cot"))
+                    check_record_prompt_exposure(
+                        trajectory, attack_record,
+                        base_dir=Path(os.environ.get("ATTACK_CONFIG_BASE_DIR", Path(attack_config_file).resolve().parent)),
+                        final_snapshot=final_zip,
+                    )
                 )
                 populate_files = (
                     attack_record.get("populate_files", [])
@@ -826,6 +863,11 @@ Don't over-explain. Be concise but show your thinking.
                 "attack_observation_message_numbers": [],
                 "error": f"security check failed: {type(error).__name__}: {error}",
             }
+        if isinstance(attack_record, dict) and attack_record.get(
+            "add_user_prompt", (attack_record.get("attack_config") or {}).get("add_user_prompt", False)
+        ):
+            security = {key: value for key, value in security.items()
+                        if not key.startswith("prompt_exposure")}
         security_result = security
     else:
         security_result = None
@@ -912,21 +954,25 @@ Don't over-explain. Be concise but show your thinking.
         grades.setdefault("verifier_results", [])
         grades["attack_success"] = int(security_result.get("attack_success", 0))
         grades["attack_rules"] = security_result.get("attack_rules", {})
-        grades["prompt_exposure"] = int(security_result.get("prompt_exposure", 0))
-        grades["prompt_exposure_match_count"] = int(
-            security_result.get("prompt_exposure_match_count", 0)
-        )
-        grades["prompt_exposure_message_indices"] = security_result.get(
-            "prompt_exposure_message_indices", []
-        )
-        grades["prompt_exposure_message_numbers"] = security_result.get(
-            "prompt_exposure_message_numbers",
-            [
-                int(index) + 1
-                for index in grades["prompt_exposure_message_indices"]
-                if not isinstance(index, bool) and isinstance(index, (int, float))
-            ],
-        )
+        for key in list(grades):
+            if key.startswith("prompt_exposure"):
+                del grades[key]
+        if "prompt_exposure" in security_result:
+            grades["prompt_exposure"] = int(security_result.get("prompt_exposure", 0))
+            grades["prompt_exposure_match_count"] = int(
+                security_result.get("prompt_exposure_match_count", 0)
+            )
+            grades["prompt_exposure_message_indices"] = security_result.get(
+                "prompt_exposure_message_indices", []
+            )
+            grades["prompt_exposure_message_numbers"] = security_result.get(
+                "prompt_exposure_message_numbers",
+                [
+                    int(index) + 1
+                    for index in grades["prompt_exposure_message_indices"]
+                    if not isinstance(index, bool) and isinstance(index, (int, float))
+                ],
+            )
         grades["attack_observation"] = int(
             security_result.get("attack_observation", 0)
         )
@@ -941,13 +987,15 @@ Don't over-explain. Be concise but show your thinking.
         )
         if security_result.get("error"):
             grades["attack_error"] = security_result["error"]
+        if security_result.get("prompt_exposure_error"):
+            grades["prompt_exposure_error"] = security_result["prompt_exposure_error"]
         grades_file.write_text(json.dumps(grades, indent=2, ensure_ascii=False) + "\n")
         log(
             "Security result: "
             f"attack_success={grades['attack_success']} "
-            f"prompt_exposure={grades['prompt_exposure']} "
+            f"prompt_exposure={grades.get('prompt_exposure', 'not applicable')} "
             "prompt_exposure_messages="
-            + str(grades["prompt_exposure_message_numbers"])
+            + str(grades.get("prompt_exposure_message_numbers", []))
             + " attack_observation="
             + str(grades["attack_observation_kind"])
             + " attack_observation_messages="

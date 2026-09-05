@@ -9,14 +9,17 @@ CONCURRENCY=${CONCURRENCY:-}
 BASE_PORT=${BASE_PORT:-25080}
 CIDR_START=${CIDR_START:-180}
 DRY_RUN=false
+TIMER_ARGS=()
 
 usage() {
-  echo "Usage: bash $0 --task-json FILE [--models sol,opus5,deepseekv4,glm53]"
+  echo "Usage: bash $0 --task-json FILE [--models sol,opus5,gemini,deepseekv4,glm53]"
   echo "  --concurrency N  Per-model task concurrency (default: min(task count, 32))"
   echo "  --base-port N    First model's base port (default: 25080)"
   echo "  --cidr-start N   First model's network: 10.N.0.0/16 (default: 180)"
   echo "  --dry-run       Validate inputs and show commands without launching"
-  echo "Models: sol, luna, opus5, deepseekv4, glm53"
+  echo "  --timer          Enable the benchmark task timer"
+  echo "  --max-steps N    Override HF_MAX_STEPS for all selected models"
+  echo "Models: sol, luna, terra, opus5, gemini, gemini35, kimik3, kimik3_litellm, deepseekv4, glm53"
 }
 while (($#)); do
   case "$1" in
@@ -26,6 +29,10 @@ while (($#)); do
     --base-port) BASE_PORT=${2:?missing base port}; shift 2 ;;
     --cidr-start) CIDR_START=${2:?missing CIDR start}; shift 2 ;;
     --dry-run) DRY_RUN=true; shift ;;
+    --timer) TIMER_ARGS=(--timer); shift ;;
+    --max-steps)
+      [[ "${2:-}" =~ ^[1-9][0-9]*$ ]] || { echo "--max-steps requires a positive integer" >&2; exit 2; }
+      export HF_MAX_STEPS=$2; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown argument: $1" >&2; usage >&2; exit 2 ;;
   esac
@@ -61,6 +68,11 @@ declare -A SEEN=()
 declare -A SOURCES=(
   [sol]="$ROOT/benchmark/orchestrator_config_gpt_sol_high.json"
   [luna]="$ROOT/benchmark/orchestrator_config_luna.json"
+  [terra]="$ROOT/benchmark/orchestrator_config_gpt_terra.json"
+  [gemini35]="$ROOT/benchmark/orchestrator_config_gemini35.json"
+  [gemini]="$ROOT/benchmark/orchestrator_config_gemini35.json"
+  [kimik3]="$ROOT/benchmark/orchestrator_config_kimi.json"
+  [kimik3_litellm]="$ROOT/litellm_configs/kimi_k3_max.json"
   [opus5]="$ROOT/benchmark/orchestrator_config_opus.json"
   [deepseekv4]="$ROOT/litellm_configs/deepseek_v4_flash.json"
   [glm53]="$ROOT/litellm_configs/glm_5_3_flash.json"
@@ -86,7 +98,7 @@ declare -A CFG=()
 for tag in "${SELECTED_MODELS[@]}"; do
   CFG[$tag]=${SOURCES[$tag]}
   case "$tag" in
-    deepseekv4|glm53)
+    deepseekv4|glm53|kimik3_litellm)
       CFG[$tag]="$GEN_DIR/$tag.json"
       if ! $DRY_RUN; then
         "$PY" - "${SOURCES[$tag]}" "${CFG[$tag]}" <<'PY'
@@ -113,9 +125,10 @@ for tag in "${SELECTED_MODELS[@]}"; do
   run_id="${RUN_PREFIX}_${tag}"
   log="$LOG_DIR/$run_id.out"
   command=("$PY" -m benchmark.main_concurrency --task-json "$TASK_JSON"
-           --concurrency "$CONCURRENCY" --base-port "$port" --run-id "$run_id" --skip-build)
+           --concurrency "$CONCURRENCY" --base-port "$port" --run-id "$run_id" --skip-build "${TIMER_ARGS[@]}")
   echo "$tag: $TASK_COUNT tasks, concurrency=$CONCURRENCY, port=$port, network=$cidr"
   if $DRY_RUN; then
+    if [[ -n "${HF_MAX_STEPS:-}" ]]; then printf 'HF_MAX_STEPS=%q ' "$HF_MAX_STEPS"; fi
     printf 'ORCHESTRATOR_CONFIG=%q RUNTIME_NETWORK_CIDR=%q ' "${CFG[$tag]}" "$cidr"
     printf '%q ' "${command[@]}"
     printf '\n'

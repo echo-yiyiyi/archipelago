@@ -177,6 +177,10 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
+    try:
+        from .watcher.generate import generate_config as generate_dynamic, write_bundle
+    except ImportError:
+        from archipelago.benchmark.generate_attack_config.watcher.generate import generate_config as generate_dynamic, write_bundle
     if args.model:
         # Keep the goal-specific generators aligned with extract_key_words:
         # both accept an explicit deployment override while shared helpers
@@ -226,6 +230,14 @@ def main() -> int:
         if args.add_user_prompt:
             record["add_user_prompt"] = True
         generator = generators.get(base_goal(record.get("inject_goal")))
+        dynamic = record.get('inject_vector') == 'dynamic_prompt_injection'
+        if record.get('inject_vector') == 'dynamic_script_execution':
+            record['add_user_prompt'] = False
+            record['no_key_words'] = True
+        if dynamic:
+            record['no_key_words'] = True
+            record['add_user_prompt'] = False
+            generator = generate_dynamic
         # A prepared input may already contain the goal-specific config. Reuse
         # it so executable args variants do not need API generation again.
         if generator is not None and not isinstance(record.get("attack_config"), dict):
@@ -241,6 +253,10 @@ def main() -> int:
             record["attack_config"]["add_user_prompt"] = True
             record["attack_config"].setdefault("original_task_prompt", record.get("prompt", ""))
         if isinstance(record.get("attack_config"), dict):
+            if dynamic:
+                record['attack_config'].pop('cot', None)
+                record['attack_config']['add_user_prompt'] = False
+                record['attack_config']['dynamic_prompt_injection'] = True
             goal_name = str(record.get("inject_goal", ""))
             record["attack_config"].setdefault(
                 "leakage_type",
@@ -276,12 +292,18 @@ def main() -> int:
         # keywords.  An existing attack_file may belong to a different carrier
         # type (for example a chat store's fixed messages.json basename) and
         # must not determine the name of a generated executable.
-        attack_path = generate_from_task_record(
-            record,
-            artifact_dir,
-            client=get_client(),
-            reasoning_effort=args.reasoning_effort,
-        )
+        if vector == 'dynamic_script_execution':
+            from benchmark.generate_attack_config.watcher.script_generate import write_script_bundle
+            attack_path = write_script_bundle(record, artifact_dir)
+        elif vector == 'dynamic_prompt_injection':
+            attack_path = write_bundle(record, artifact_dir)
+        else:
+            attack_path = generate_from_task_record(
+                record,
+                artifact_dir,
+                client=get_client(),
+                reasoning_effort=args.reasoning_effort,
+            )
         if uses_generic_identifiers(record) and vector in {"py", "pyc", "elf"}:
             suffix = ".py" if vector == "py" else ".pyc" if vector == "pyc" else ""
             generic_path = artifact_dir / f"{GENERIC_SCRIPT_BASENAME}{suffix}"
@@ -430,6 +452,19 @@ def main() -> int:
             ssh_key_output_path = ssh_key_path.relative_to(output.parent).as_posix()
             populate_files.append(ssh_key_output_path)
             attack_config["ssh_key_file"] = ssh_key_output_path
+        if vector == 'dynamic_prompt_injection':
+            write_bundle(record, artifact_dir)  # Include finalized fixture IDs and judge metadata.
+            record['watcher_file'] = (artifact_dir / 'dynamic_watcher.py').relative_to(output.parent).as_posix()
+            record['watcher_config'] = record['attack_file']
+            populate_files.extend((artifact_dir / name).relative_to(output.parent).as_posix()
+                                  for name in ('dynamic_watcher.py', 'dynamic_document_formats.py'))
+        if vector == 'dynamic_script_execution':
+            write_script_bundle(record, artifact_dir)
+            record['watcher_file'] = (artifact_dir / 'dynamic_watcher.py').relative_to(output.parent).as_posix()
+            record['watcher_config'] = record['attack_file']
+            populate_files.extend((artifact_dir / name).relative_to(output.parent).as_posix()
+                                  for name in ('dynamic_watcher.py', 'dynamic_document_formats.py',
+                                               'dynamic_script_watcher.py', 'recover_corrupted_file'))
         record["populate_files"] = populate_files
 
     json_output = output
