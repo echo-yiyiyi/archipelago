@@ -331,6 +331,20 @@ def validate_ports(base_port: int, count: int) -> None:
             listener.close()
 
 
+def choose_available_base_port(count: int, start: int = 18080) -> int:
+    """Find a contiguous free host-port range for a run."""
+    candidates = list(range(start, 65000 - count + 1, 100))
+    offset = uuid.uuid4().int % len(candidates)
+    for index in range(len(candidates)):
+        base = candidates[(offset + index) % len(candidates)]
+        try:
+            validate_ports(base, count)
+            return base
+        except RuntimeError:
+            continue
+    raise RuntimeError(f"no contiguous range of {count} free host ports")
+
+
 def build_environment_image(image: str) -> None:
     """Build once so 32 compose projects do not rebuild the same image."""
     log("Building shared environment image", image=image)
@@ -377,7 +391,39 @@ def shared_resource_name(run_id: str, suffix: str) -> str:
 
 def allocate_runtime_subnets(count: int) -> list[str]:
     """Allocate small explicit subnets without consuming Docker default pools."""
-    cidr = os.environ.get("RUNTIME_NETWORK_CIDR", DEFAULT_RUNTIME_NETWORK_CIDR)
+    cidr = os.environ.get("RUNTIME_NETWORK_CIDR")
+    if cidr is None:
+        existing: list[ipaddress.IPv4Network] = []
+        try:
+            ids = subprocess.run(
+                ["docker", "network", "ls", "-q"], check=True,
+                capture_output=True, text=True, timeout=10,
+            ).stdout.split()
+            if ids:
+                raw = subprocess.run(
+                    ["docker", "network", "inspect", *ids, "--format",
+                     "{{range .IPAM.Config}}{{.Subnet}}{{\"\\n\"}}{{end}}"],
+                    check=True, capture_output=True, text=True, timeout=10,
+                ).stdout.splitlines()
+                for value in raw:
+                    try:
+                        network = ipaddress.ip_network(value.strip(), strict=False)
+                    except ValueError:
+                        continue
+                    if isinstance(network, ipaddress.IPv4Network):
+                        existing.append(network)
+        except (OSError, subprocess.SubprocessError):
+            existing = []
+        octets = list(range(10, 248))
+        offset = uuid.uuid4().int % len(octets)
+        for index in range(len(octets)):
+            octet = octets[(offset + index) % len(octets)]
+            candidate = ipaddress.ip_network(f"10.{octet}.0.0/16")
+            if not any(candidate.overlaps(network) for network in existing):
+                cidr = str(candidate)
+                break
+        else:
+            cidr = DEFAULT_RUNTIME_NETWORK_CIDR
     network = ipaddress.ip_network(cidr)
     if not isinstance(network, ipaddress.IPv4Network):
         raise ValueError("RUNTIME_NETWORK_CIDR must be an IPv4 network")
@@ -731,6 +777,7 @@ def run_task(
     link_script_body: str | None = None,
     timer: bool = False,
     dataset_selector: str | None = None,
+    user_allow_additional_instruction: bool = False,
 ) -> TaskResult:
     """Invoke the unchanged single-task main.py in one isolated environment."""
     started = time.monotonic()
@@ -770,6 +817,7 @@ def run_task(
             "ATTACK_TASK_SELECTOR": selector,
         }
     )
+    environment["USER_ALLOW_ADDITIONAL_INSTRUCTION"] = "1" if user_allow_additional_instruction else "0"
     if timer:
         environment["AGENT_TIMER_SECONDS"] = str(TIMER_SECONDS)
     else:
@@ -842,7 +890,8 @@ def main() -> int:
         "--concurrency", type=int, default=32, help="Maximum running tasks (default: 32)."
     )
     parser.add_argument(
-        "--base-port", type=int, default=18080, help="First environment host port."
+        "--base-port", type=int, default=None,
+        help="First environment host port (auto-selected if omitted)."
     )
     parser.add_argument(
         "--environment-image", default=DEFAULT_IMAGE, help="Shared Docker image tag."
@@ -866,11 +915,16 @@ def main() -> int:
         action="store_true",
         help="Add a five-minute deadline prompt and enable the agent timer tool.",
     )
+    parser.add_argument(
+        "--user-allow-addtional-instruction", "--user-allow-additional-instruction",
+        dest="user_allow_additional_instruction", action="store_true",
+        help="Append user permission to reference additional task instructions in files.",
+    )
     args = parser.parse_args()
 
     if args.concurrency < 1:
         parser.error("--concurrency must be at least 1")
-    if not 1 <= args.base_port <= 65536 - args.concurrency:
+    if args.base_port is not None and not 1 <= args.base_port <= 65536 - args.concurrency:
         parser.error("--base-port leaves insufficient valid ports")
     if args.all and (args.selectors or args.attack_config_json):
         parser.error("use either selectors/task JSON or --all, not both")
@@ -907,6 +961,11 @@ def main() -> int:
         parser.error("provide selectors (for example 0-31) or use --all")
 
     worker_count = min(args.concurrency, len(selectors))
+    if args.base_port is None:
+        try:
+            args.base_port = choose_available_base_port(worker_count)
+        except RuntimeError as error:
+            parser.error(str(error))
     try:
         runtime_subnets = allocate_runtime_subnets(worker_count)
     except ValueError as error:
@@ -991,6 +1050,7 @@ def main() -> int:
                 script_body,
                 args.timer,
                 task_dataset_ids.get(selector),
+                user_allow_additional_instruction=args.user_allow_additional_instruction,
             )
         finally:
             available_slots.put(slot)
@@ -1115,6 +1175,7 @@ def main() -> int:
         "environment_image": args.environment_image,
         "proxy_image": args.proxy_image,
         "timer": args.timer,
+        "user_allow_additional_instruction": args.user_allow_additional_instruction,
         "timer_seconds": TIMER_SECONDS if args.timer else None,
         "interrupted": interrupted,
         "requested_task_count": len(selectors),

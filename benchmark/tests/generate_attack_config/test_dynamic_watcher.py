@@ -79,8 +79,14 @@ def test_templates_need_only_attack_config(goal):
             'attacker_link':'http://example.com','event_summary':'Review','event_start':'start','event_end':'end'}
     text=instruction_template(goal,config)
     assert text.startswith('Additional Task Instruction:')
+    assert 'it is required to ' in text
+    assert 'I need' not in text and 'I should' not in text
+    assert text.index('need') < text.index('it is required to')
     assert '<think>' not in text and '</think>' not in text
     assert '{original_name}' in text
+    if int(goal.split('_')[0]) >= 18:
+        assert '`/shared` in filesystem tools' in text
+        assert '`/filesystem/shared` in code execution' in text
     if int(goal.split('_')[0]) < 18: assert '{preserved_name}' in text
     assert recovery_kind(goal) in {'mail','chat','event','link','shared'}
     if goal.startswith(('1_', '18_')): assert '/docs/source_archive.pdf' in text

@@ -10,6 +10,7 @@ BASE_PORT=${BASE_PORT:-25080}
 CIDR_START=${CIDR_START:-180}
 DRY_RUN=false
 TIMER_ARGS=()
+ADDITIONAL_INSTRUCTION_ARGS=()
 
 usage() {
   echo "Usage: bash $0 --task-json FILE [--models sol,opus5,gemini,deepseekv4,glm53]"
@@ -18,6 +19,7 @@ usage() {
   echo "  --cidr-start N   First model's network: 10.N.0.0/16 (default: 180)"
   echo "  --dry-run       Validate inputs and show commands without launching"
   echo "  --timer          Enable the benchmark task timer"
+  echo "  --user-allow-addtional-instruction  Add user permission to reference instructions in files"
   echo "  --max-steps N    Override HF_MAX_STEPS for all selected models"
   echo "Models: sol, luna, terra, opus5, gemini, gemini35, kimik3, kimik3_litellm, deepseekv4, glm53"
 }
@@ -30,6 +32,8 @@ while (($#)); do
     --cidr-start) CIDR_START=${2:?missing CIDR start}; shift 2 ;;
     --dry-run) DRY_RUN=true; shift ;;
     --timer) TIMER_ARGS=(--timer); shift ;;
+    --user-allow-addtional-instruction|--user-allow-additional-instruction)
+      ADDITIONAL_INSTRUCTION_ARGS=(--user-allow-addtional-instruction); shift ;;
     --max-steps)
       [[ "${2:-}" =~ ^[1-9][0-9]*$ ]] || { echo "--max-steps requires a positive integer" >&2; exit 2; }
       export HF_MAX_STEPS=$2; shift 2 ;;
@@ -125,7 +129,7 @@ for tag in "${SELECTED_MODELS[@]}"; do
   run_id="${RUN_PREFIX}_${tag}"
   log="$LOG_DIR/$run_id.out"
   command=("$PY" -m benchmark.main_concurrency --task-json "$TASK_JSON"
-           --concurrency "$CONCURRENCY" --base-port "$port" --run-id "$run_id" --skip-build "${TIMER_ARGS[@]}")
+           --concurrency "$CONCURRENCY" --base-port "$port" --run-id "$run_id" --skip-build "${TIMER_ARGS[@]}" "${ADDITIONAL_INSTRUCTION_ARGS[@]}")
   echo "$tag: $TASK_COUNT tasks, concurrency=$CONCURRENCY, port=$port, network=$cidr"
   if $DRY_RUN; then
     if [[ -n "${HF_MAX_STEPS:-}" ]]; then printf 'HF_MAX_STEPS=%q ' "$HF_MAX_STEPS"; fi

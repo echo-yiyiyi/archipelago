@@ -913,6 +913,29 @@ def _exposure_candidates(value, depth=0):
             yield '\n'.join(row[0] if row else '' for row in rows)
 
 
+def _dynamic_script_exposure_layout(text):
+    """Normalize document renderers without discarding instruction content."""
+    import ast
+
+    lines = []
+    for line in _exposure_newlines(text).splitlines():
+        line = re.sub(r'^\s*\[body\.p\.\d+\]:\s*', '', line)
+        # Code tools often print each spreadsheet row as a Python list.
+        # Only unwrap a single string cell; retain multi-cell rows verbatim.
+        try:
+            row = ast.literal_eval(line.strip()) if line.strip().startswith('[') else None
+        except (ValueError, SyntaxError):
+            row = None
+        if isinstance(row, list) and len(row) == 1 and isinstance(row[0], str):
+            line = row[0]
+        lines.append(line)
+    text = '\n'.join(lines).translate(str.maketrans({'’': "'", '‘': "'", '“': '"', '”': '"'}))
+    # File apps expose workspace-root paths, whereas the watcher records
+    # container-root paths. Keep the entire remaining path for exact matching.
+    text = re.sub(r'(?<![\w/])/filesystem/', '/', text)
+    return _exposure_layout(text)
+
+
 def _watcher_exposure_config(record, base_dir, final_snapshot):
     if final_snapshot:
         with zipfile.ZipFile(final_snapshot) as archive:
@@ -997,6 +1020,14 @@ def check_record_prompt_exposure(trajectory, record, *, base_dir, final_snapshot
     indices = set()
     for value in texts:
         indices.update(check_prompt_exposure(trajectory, value)["prompt_exposure_message_indices"])
+        if vector == "dynamic_script_execution" and value.strip():
+            expected = _dynamic_script_exposure_layout(value)
+            for index, message in enumerate((trajectory or {}).get("messages", [])):
+                if message.get("role") == "tool" and any(
+                    expected in _dynamic_script_exposure_layout(candidate)
+                    for candidate in _exposure_candidates(message.get("content"))
+                ):
+                    indices.add(index)
     if template:
         # Only file-name slots vary at runtime; all prepared instruction prose
         # must appear together. Decode nested MCP JSON before matching.

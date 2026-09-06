@@ -92,6 +92,10 @@ def _with_cot(
         reasoning_effort=reasoning_effort,
         goal_id=goal,
     )
+    config["cot"] += (
+        '\nShared-folder paths: use `/shared` in filesystem tools and '
+        '`/filesystem/shared` in code execution; both refer to the same workspace folder.'
+    )
     return config
 
 

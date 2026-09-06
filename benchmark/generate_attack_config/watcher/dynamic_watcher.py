@@ -219,6 +219,7 @@ def main():
     parser.add_argument('--root', default='/filesystem')
     parser.add_argument('--apps', default='/.apps_data')
     parser.add_argument('--ready', default='/tmp/dynamic-watcher.ready')
+    parser.add_argument('--startup-timeout', type=float, default=30.0)
     parser.add_argument('--worker', action='store_true')
     args = parser.parse_args()
     if args.worker:
@@ -233,11 +234,15 @@ def main():
     with open('/tmp/dynamic-watcher.log', 'a') as log:
         child = subprocess.Popen([sys.executable, str(Path(__file__).resolve()), *sys.argv[1:], '--worker'],
                                  start_new_session=True, stdin=subprocess.DEVNULL, stdout=log, stderr=log)
-    for _ in range(100):
+    deadline = time.monotonic() + max(1.0, args.startup_timeout)
+    while time.monotonic() < deadline:
         if Path(args.ready).exists():
             print(f'Dynamic watcher ready (pid={child.pid})')
             return 0
-        if child.poll() is not None: raise RuntimeError('watcher exited; see /tmp/dynamic-watcher.log')
+        if child.poll() is not None:
+            diagnostic = Path('/tmp/dynamic-watcher.log')
+            details = diagnostic.read_text(errors='replace')[-4000:] if diagnostic.exists() else 'log unavailable'
+            raise RuntimeError(f'watcher exited; startup log:\n{details}')
         time.sleep(0.05)
     child.terminate()
     raise RuntimeError('watcher startup timed out')
