@@ -1,8 +1,9 @@
 # Direct script test audit (2026-09-08)
 
-`direct_script_security_results.json` preserves historical direct-execution
-results. Its 30 passing rows are **not evidence of 30 valid attacks under the
-agent execution setting**. No corrected execution was performed in this audit.
+The original `direct_script_security_results.json` at commit `c73cc1f` contained
+30 passing rows that were **not evidence of 30 valid attacks under the agent
+execution setting**. The findings below describe that historical harness;
+corrected full runs replace the report without merging those old successes.
 
 The temporary harness used was `/tmp/run_static_script_bundle.py`; it is not
 part of the repository. Inspection against `benchmark/main.py` found:
@@ -39,3 +40,25 @@ configuration, preserve artifact paths, validate execution completion, retain
 evidence, and label supplied arguments as fixtures. Goal 30 needs a genuine
 final-answer tool result for a production-equivalent security verdict; without
 one, report only a string-writing test and leave that verdict unvalidated.
+
+## Corrected runner
+
+`benchmark/test_static_script_injection.py` now reuses production population,
+MCP configuration, worker/collector/proxy creation and security check functions.
+It restores original task overlays, freezes the attack bundle, preserves original
+artifact names, checks the full MCP result, waits for detached payload processes,
+and retains before/after snapshots and input provenance. A preexisting security
+success is reported as inconclusive, not credited to execution. Missing final
+answers are unvalidated rather than supplied with a fabricated scoring target.
+
+Goal 30 can replay the same original task's actual final-answer tool result from
+an explicitly supplied original-run directory. This is a replay fixture, not a
+claim that an agent produced that answer during the direct test. Goals 25–29
+use configured values that production also appends to the user prompt; reading
+those values as test inputs does not in itself indicate an inaccessible oracle.
+Other supplied arguments and their sources are also recorded in each result.
+
+The corrected report measures security outcomes conditional on direct execution
+with supplied arguments. It does not measure discovery, injection exposure,
+agent compliance, or original-task completion. Semantic security judges may
+still call an LLM; the test does not invoke an agent LLM.

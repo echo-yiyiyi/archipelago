@@ -88,3 +88,23 @@ python3 archipelago/benchmark/generate_static_script_injection_tasks.py \
 ```
 
 未添加 `--add-user-prompt` 时，每个可执行文件会搭配 `*_Additional_Task_Instructions.txt`，包含运行命令及必要的参数说明。
+
+### 直接执行脚本测试（不运行 agent）
+
+在 `archipelago` 目录下执行：
+
+```bash
+/data/ziyi/.venv/bin/python benchmark/test_static_script_injection.py \
+  --dataset-dir /path/to/apex-agents/snapshot \
+  --fallback-dataset-dir /data/ziyi/sampled_tasks/dataset \
+  --baseline-tasks-dir examples/hugging_face_task/output/concurrent/merged-gemini-3-5-flash/tasks \
+  --workers 3
+```
+
+`--dataset-dir` 需包含 `tasks_and_rubrics.json`，world 与 task_files 优先从该目录读取，缺少时依次使用可选的 fallback 数据集和原始任务运行记录。baseline 必须是未注入的原始任务运行目录；仅复用其初始 world 和 `task_*.tar.gz`，不使用最终快照代替输入。缺少必要文件会报错。
+
+测试使用生产 runner 的文件加载、MCP 配置、代理及 collector，每次启动干净环境，按原文件名通过 code-execution MCP 执行，检查工具返回和后台进程结束。参数由测试提供，并记录来源；这验证脚本在这些参数下的行为，不衡量 agent 是否会发现或执行脚本。security 的语义判定仍可能调用 LLM，agent 不调用 LLM。
+
+goal 30 从 baseline 的同一原任务 `trajectory.json` 提取真实 `final_answer` 工具返回值作为回放输入和判定预期；没有该返回值时仅传入测试字符串，security 标记为未验证，不使用用户问题代替最终答案。
+
+完整运行覆盖 `static_script_injection/direct_script_security_results.json`，不会合并旧成功记录。每次运行的输入来源、完整 MCP 返回、进程观察、执行前后快照和结果保存在 `benchmark/output/static_script_direct/<run>/`。若执行前 security 已通过，则标为无法归因；执行错误、判定失败和未验证分别记录。单任务调试使用 `--task-id <harmful_task_id>`，不会覆盖完整报告。
