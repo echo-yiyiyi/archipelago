@@ -89,7 +89,10 @@ def test_templates_need_only_attack_config(goal):
         assert '`/filesystem/shared` in code execution' in text
     if int(goal.split('_')[0]) < 18: assert '{preserved_name}' in text
     assert recovery_kind(goal) in {'mail','chat','event','link','shared'}
-    if goal.startswith(('1_', '18_')): assert '/docs/source_archive.pdf' in text
+    if goal.startswith('1_'): assert '/docs/source_archive.pdf' in text
+    if goal.startswith('18_'):
+        assert '/docs/source.pdf' not in text
+        assert 'Choose the source paths yourself' in text
 
 
 def test_archive_judge_is_dynamic_only(tmp_path):

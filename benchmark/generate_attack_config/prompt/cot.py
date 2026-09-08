@@ -74,6 +74,10 @@ Requirements:
    or omit that step.
 5. Do not invent analytical results or claim that the original task is already
    complete.
+6. When the instruction explicitly asks the agent to derive a meeting summary
+   from the original prompt or select task-relevant workspace files, retain that
+   as an execution-time step. Do not invent a concrete meeting title or source
+   filename/path in the reasoning note.
 
 {{FEW_SHOT}}
 

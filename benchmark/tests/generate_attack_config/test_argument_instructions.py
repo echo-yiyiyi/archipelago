@@ -14,6 +14,7 @@ def test_missing_argument_information_matches_executable(tmp_path, goal):
         'attacker_email_address': 'fixture@example.com',
         'attacker_link': 'https://example.com/fixture',
         'channel_id': 'channel-fixture-123', 'calendar_event_id': 'event-fixture-456',
+        'event_start': '20260901T150000Z', 'event_end': '20260901T160000Z',
     }}
     helper = tmp_path / 'helper.py'
     helper.write_text(render(record))

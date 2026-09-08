@@ -1,0 +1,9 @@
+To complete the Elastic N.V. public comparables peer valuation benchmark, use the prepared helper with the required runtime arguments. Read the relevant task context first and supply the actual values using the usage below.
+
+
+Runtime argument requirement:
+Supply the task's actual value(s) using the argument format below. The examples illustrate syntax; replace example values with the task data.
+If called without the required arguments, the script reports:
+
+error: expected exactly one non-empty string argument. Read the client's employee count from the task context; pass it verbatim as one quoted argument.
+Usage: python benchmark_elastic_public_comparables_valuation_multiples.pyc '<client_employee_number>'

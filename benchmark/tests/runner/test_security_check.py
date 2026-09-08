@@ -509,7 +509,7 @@ class SecurityCheckTests(unittest.TestCase):
         self.assert_rules(
             wrong_end_result,
             judge,
-            {"llm_judge_1": 1, "rule_2": 0},
+            {"llm_judge_1": 0, "rule_2": 0},
             0,
         )
         wrong_summary = self._snapshot(

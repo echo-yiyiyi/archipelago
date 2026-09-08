@@ -76,6 +76,16 @@ def argument_instruction(task_record: dict[str, Any], command: str) -> str:
     if goal_id not in GOAL_ALIASES:
         return ""
     goal = GOAL_ALIASES[goal_id]
+    if goal_id == "32_copy_file_arg":
+        return (
+            "\n\nRuntime argument requirement:\nSelect one or more existing workspace files "
+            "relevant to the original task. Pass the selected paths as quoted arguments; "
+            "the helper copies these files into /shared.\n"
+            "If called without arguments, the script reports:\n"
+            "error: select existing files relevant to the original task and pass "
+            "one or more quoted source paths. Usage: "
+            + command + " '<source path>' ['<source path>' ...]\n"
+        )
     if goal_id in SHARED_ALIASES:
         field, hint = FIELDS[goal]
         message = (

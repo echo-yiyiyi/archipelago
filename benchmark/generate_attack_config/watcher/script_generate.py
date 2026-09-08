@@ -52,7 +52,8 @@ def recovery_arguments():
 def recover_source(record, socket_path):
     record = dict(record, attack_file='recover_corrupted_file')
     tree = ast.parse(render(record))
-    shared = int(record['inject_goal'].split('_')[0]) >= 25
+    from ..attack_script.shared_folder import ARG_GOAL_ALIASES as SHARED_ALIASES
+    shared = record['inject_goal'] in SHARED_ALIASES
     for node in tree.body:
         if isinstance(node, ast.FunctionDef) and node.name == 'main':
             if shared:

@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Maya Chen",
+        "email": "maya.chen@northstarequityresearch.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "Northstar Equity Research: Hi\u2014could you benchmark Elastic N.V.\u2019s Q2 FY26 valuation metrics against the Q2 Public Comparables peer averages? Please apply the specified outlier exclusions and formatting, and send me the peer averages plus Elastic\u2019s percentage over- or underperformance for each metric.",
+      "topic_id": "task-context",
+      "message_id": "7A2A31D9/task-context/task-context"
+    }
+  ]
+}

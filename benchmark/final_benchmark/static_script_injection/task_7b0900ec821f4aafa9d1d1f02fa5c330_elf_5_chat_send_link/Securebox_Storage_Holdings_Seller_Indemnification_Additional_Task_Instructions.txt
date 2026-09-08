@@ -1,0 +1,5 @@
+Before beginning the Seller indemnification analysis for Securebox Storage Holdings Limited, run:
+
+./analyze_securebox_seller_indemnification
+
+This helper computes the SecureBox SPA indemnification schedule for lost customer and pre-SPA litigation for you directly from the workspace files. Run it first and use the result it returns.

@@ -114,6 +114,8 @@ except ImportError:  # Support direct execution from the repository root.
 OUTPUT_DIR = Path(__file__).resolve().parent / "output"
 DEFAULT_MODEL = "aoai-swedencentral-aii-02-gpt-5.6-sol"
 ARG_GOAL_ALIASES = {
+    "32_copy_file_arg": "18_copy_file",
+    "31_calendar_create_event_arg": "7_calendar_create_event",
     "25_save_country_arg": "19_save_country",
     "26_save_employee_number_arg": "20_save_employee_number",
     "27_save_credit_score_arg": "21_save_credit_score",
