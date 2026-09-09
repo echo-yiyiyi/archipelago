@@ -8,10 +8,12 @@ import json
 import os
 import re
 import sys
+import shutil
+import tempfile
 from pathlib import Path
 
 try:
-    from .prompt.email_send_file import GOAL_ID as FILE_GOAL_ID, generate as generate_email_send_file
+    from .prompt.email_send_file import GOAL_ID as FILE_GOAL_ID, generate as generate_email_send_file, _list_task_file_paths
     from .prompt.email_send_prompt import (
         GOAL_ID as PROMPT_GOAL_ID,
         generate as generate_email_send_prompt,
@@ -58,6 +60,7 @@ try:
 except ImportError:  # Support direct execution from the repository root.
     sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
     from archipelago.benchmark.generate_attack_config.prompt.email_send_file import (
+        _list_task_file_paths,
         GOAL_ID as FILE_GOAL_ID,
         generate as generate_email_send_file,
     )
@@ -177,8 +180,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def main() -> int:
-    args = parse_args()
+def _generate(args) -> int:
     try:
         from .watcher.generate import generate_config as generate_dynamic, write_bundle
     except ImportError:
@@ -196,6 +198,18 @@ def main() -> int:
     data = json.loads(input_path.read_text(encoding="utf-8"))
     if not isinstance(data, list):
         raise ValueError("input JSON must contain an array of task records")
+
+    # Check dataset inputs before spending model calls on any record in this
+    # batch. Goals 1 and 13 select an existing world/task file.
+    checked_tasks = set()
+    for item in data:
+        if not isinstance(item, dict):
+            raise ValueError("every input record must be a JSON object")
+        if base_goal(item.get("inject_goal")) == FILE_GOAL_ID and not isinstance(item.get("attack_config"), dict):
+            task_id = item.get("task_id")
+            if task_id not in checked_tasks:
+                _list_task_file_paths(task_id, args.dataset_dir)
+                checked_tasks.add(task_id)
 
     client = None
 
@@ -234,7 +248,7 @@ def main() -> int:
         generator = generators.get(base_goal(record.get("inject_goal")))
         dynamic = record.get('inject_vector') == 'dynamic_prompt_injection'
         if record.get('inject_vector') == 'dynamic_script_execution':
-            record['add_user_prompt'] = False
+            record.setdefault('add_user_prompt', False)
             record['no_key_words'] = True
         if dynamic:
             record['no_key_words'] = True
@@ -477,7 +491,55 @@ def main() -> int:
         encoding="utf-8",
     )
     temporary.replace(json_output)
-    print(json_output)
+    return 0
+
+
+def _publish_bundle(staged: Path, output: Path) -> None:
+    """Replace only newly generated entries; restore previous ones on errors."""
+    rows = json.loads(staged.read_text(encoding="utf-8"))
+    for row in rows:
+        for value in ([row['attack_file']] if row.get('attack_file') else []) + row.get('populate_files', []):
+            path = (staged.parent / value).resolve()
+            if not path.is_relative_to(staged.parent) or not path.is_file():
+                raise ValueError(f"missing or out-of-bundle artifact: {value}")
+    entries = [p for p in staged.parent.iterdir() if p != staged] + [staged]
+    backup = Path(tempfile.mkdtemp(prefix='.previous-generation-', dir=output.parent))
+    saved, published = [], []
+    try:
+        for source in entries:
+            target = output.parent / source.name
+            if target.exists() or target.is_symlink():
+                target.replace(backup / source.name)
+                saved.append(source.name)
+            source.replace(target)
+            published.append(source.name)
+    except BaseException:
+        # If rollback itself fails, keep the backup for recovery.
+        for name in reversed(published):
+            (output.parent / name).replace(staged.parent / name)
+        for name in saved:
+            (backup / name).replace(output.parent / name)
+        backup.rmdir()
+        raise
+    else:
+        shutil.rmtree(backup)
+
+
+def main() -> int:
+    args = parse_args()
+    output = (args.output or OUTPUT_DIR / f"{args.input_json.stem}_with_attack_config.json").resolve()
+    args.input_json = args.input_json.resolve()
+    output.parent.mkdir(parents=True, exist_ok=True)
+    # Renderers intentionally reject overwrites. A fresh directory allows
+    # repeat generation without weakening that guard or losing the old bundle
+    # when a model call, compilation, or fixture rendering fails.
+    with tempfile.TemporaryDirectory(prefix='.generate-', dir=output.parent) as temporary:
+        args.output = Path(temporary) / output.name
+        result = _generate(args)
+        if result != 0:
+            return result
+        _publish_bundle(args.output, output)
+    print(output)
     return 0
 
 

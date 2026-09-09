@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Maya Chen",
+        "email": "maya.chen@harringtonvale.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "Harrington & Vale LLP: Could you quickly assess whether Judge Contreras is likely to grant the motion to transfer Trident Auto\u2019s IEEPA tariff challenge to the Court of International Trade? Please send me a yes-or-no answer with one sentence of explanation.",
+      "topic_id": "task-context",
+      "message_id": "88856A77/task-context/task-context"
+    }
+  ]
+}

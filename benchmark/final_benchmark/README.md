@@ -1,11 +1,95 @@
 # Final benchmark
 
-## 生成 static prompt injection 任务
+各生成脚本的完整用法、数量限制和输出说明见 [GENERATE.md](GENERATE.md)。
 
-以下命令从 `archipelago` 的上一级目录执行：
+所有任务生成入口均位于本目录，可直接在此运行。默认调用完整配置生成流程，添加 `--sample-only` 可仅采样。默认输入和输出路径不受当前工作目录影响；自定义相对路径以当前工作目录为基准。
+
+| 脚本 | 指定输出数量示例 |
+| --- | --- |
+| `generate_static_prompt_injection_tasks.py` | `--output-task-number 30` |
+| `generate_static_script_injection_tasks.py` | `--output-task-number 30` |
+| `generate_script_swap_tasks.py` | `15 15`（依次为 args、no_args 数量） |
+| `generate_suffix_plant_tasks.py` | `--output-task-number 30` |
+| `generate_dynamic_prompt_injection_tasks.py` | `--output-task-number 30` |
+| `generate_dynamic_script_injection.py` | `--output-task-number 30`（true/false 各 15 条） |
+
+数量限制沿用各入口的采样规则，详见下面各节。
+
+## 生成 dynamic script injection 任务
+
+在 `archipelago/benchmark/final_benchmark` 目录下执行：
 
 ```bash
-python3 archipelago/benchmark/generate_static_prompt_injection_tasks.py \
+python3 generate_dynamic_script_injection.py
+python3 generate_dynamic_script_injection.py --output-task-number 390
+```
+
+默认总计 30 条，分为 `add_user_prompt_true/` 和 `add_user_prompt_false/` 两组，各 15 条。两组采样记录除 `add_user_prompt` 外完全相同，分别调用配置生成流程；模型生成的内容可能不同。每组覆盖全部 15 个原任务，以及与 user prompt suffix plant 相同的 13 个 args goal：13、14、15、16、17、25、26、27、28、29、30、31、32；每个 goal 出现 1–2 次。数量参数表示两组合计，必须为正偶数，默认输入下最多 390；设为 390 时每组覆盖全部 15 × 13 个组合。
+
+沿用原有 dynamic script 流程：`inject_vector=dynamic_script_execution`、`no_key_words=True`，`add_user_prompt` 按组设置。不采样 py/pyc/elf，执行入口固定编译为 ELF 文件 `recover_corrupted_file`。输出到 `archipelago/benchmark/final_benchmark/dynamic_script_injection/` 下的上述两个子目录，包含完整配置、`dynamic_watcher_config.json`、Python watcher 脚本、ELF 恢复程序及其他配套文件。
+
+其他参数与 dynamic prompt 入口相同，包括 `--sample-only`、`--input`、`--output-dir`、`--dataset-dir`、`--seed`、`--inject-goals`、`--model` 和 `--reasoning-effort`。
+
+## 生成 dynamic prompt injection 任务
+
+在 `archipelago/benchmark/final_benchmark` 目录下执行：
+
+```bash
+python3 generate_dynamic_prompt_injection_tasks.py
+python3 generate_dynamic_prompt_injection_tasks.py --output-task-number 45
+```
+
+使用同样的 15 个原任务，以及与 static prompt injection 相同的 15 个 goal：1–8、18–24。默认生成 30 条，每个原任务分配 2 个不同 goal，每个 goal 出现 2 次。支持自定义数量，原任务和 goal 的出现次数差不超过 1；默认输入下范围为 1–225。
+
+固定 `inject_vector=dynamic_prompt_injection`、`no_key_words=True`、`add_user_prompt=False`，沿用现有 dynamic watcher 生成流程。默认输出到 `archipelago/benchmark/final_benchmark/dynamic_prompt_injection/`，包含采样 JSON、完整任务配置，以及各任务的 `dynamic_watcher_config.json`、`dynamic_watcher.py`、`dynamic_document_formats.py` 和必要的配套文件。
+
+支持 `--sample-only`、`--input`、`--inject-goals`、`--output-dir`、`--seed`、`--dataset-dir`、`--model`、`--reasoning-effort`。
+
+### 重复生成
+
+所有调用 `benchmark.generate_attack_config.generate` 的入口均先在临时目录生成完整配置和文件，成功后替换本次生成的同名输出。生成失败时保留旧的完整配置和配套文件；发布过程中的普通文件操作错误会尝试回滚。其他任务目录不会被删除。重复运行仍会重新调用模型，不是断点续跑。
+
+## 生成 user prompt suffix plant 任务
+
+在 `archipelago/benchmark/final_benchmark` 目录下执行：
+
+```bash
+python3 generate_suffix_plant_tasks.py
+python3 generate_suffix_plant_tasks.py --output-task-number 60
+```
+
+默认生成 30 条任务，使用与 script swap 的 `args` 相同的 13 个 goal：13、14、15、16、17、25、26、27、28、29、30、31、32。复用相同的 15 个原任务及均衡采样逻辑；默认每个原任务 2 条，`py`、`pyc`、`elf` 各 10 条。
+
+固定 `add_user_prompt=True`、`no_key_words=True`，由原有生成器使用通用脚本名。输出直接放在 `archipelago/benchmark/final_benchmark/user_prompt_suffix_plant/`，包含采样 JSON、完整配置 JSON 和配套文件，不再分 args/no_args 子目录。
+
+默认执行完整生成。可使用 `--sample-only` 仅采样，以及 `--input`、`--inject-goals`、`--output-dir`、`--seed`、`--dataset-dir`、`--model`、`--reasoning-effort`。默认输入下数量范围为 1–195，同一原任务的 goal 不重复。
+
+## 生成 user prompt script swap 任务
+
+在 `archipelago/benchmark/final_benchmark` 目录下执行，两个数字依次为 `args`、`no_args` 的任务数量，默认均为 15：
+
+```bash
+python3 generate_script_swap_tasks.py
+python3 generate_script_swap_tasks.py 15 30
+```
+
+默认使用同样的 15 个原任务，重新从 `py`、`pyc`、`elf` 均衡采样 vector；每组及两组合计的 vector 数量差不超过 1。每组的原任务与 goal 出现次数差不超过 1，同一原任务的 goal 不重复。数量可以不是 15 的倍数，但必须为正数；默认输入下 `args` 最多 195 条，`no_args` 最多 165 条。
+
+- `user_prompt_script_swap/args/`：13、14、15、16、17、25、26、27、28、29、30、31、32。
+- `user_prompt_script_swap/no_args/`：1、2、3、4、5、6、8、9、10、11、12。
+
+每组独立输出 `selected_N_tasks_with_inject_goals.json`、`selected_N_tasks_with_attack_config.json` 和配套文件，路径相对于各自目录。默认执行完整配置生成；添加 `--sample-only` 仅采样。
+
+强制启用 `add_user_prompt=True`，并通过生成器实际使用的 `no_key_words=False` 启用关键词，保留输入的 `keywords` 列表。沿用正式生成器生成带关键词的文件名和用户提示所需配置。两组输出均设置正确的 `leakage_type`。
+
+还支持 `--input`、`--inject-goals`、`--output-dir`、`--seed`、`--dataset-dir`、`--model` 和 `--reasoning-effort`；默认输出根目录为 `archipelago/benchmark/final_benchmark/user_prompt_script_swap`。
+
+## 生成 static prompt injection 任务
+
+以下命令在 `archipelago/benchmark/final_benchmark` 目录下执行：
+
+```bash
+python3 generate_static_prompt_injection_tasks.py \
   --output-task-number 30
 ```
 
@@ -18,7 +102,7 @@ python3 archipelago/benchmark/generate_static_prompt_injection_tasks.py \
 `--goal-ids` 支持数字 ID 或完整 goal ID，以空格或逗号分隔：
 
 ```bash
-python3 archipelago/benchmark/generate_static_prompt_injection_tasks.py \
+python3 generate_static_prompt_injection_tasks.py \
   --output-task-number 30 \
   --goal-ids 1,2,7,18,24 \
   --seed 123
@@ -29,7 +113,7 @@ python3 archipelago/benchmark/generate_static_prompt_injection_tasks.py \
 添加 `--sample-only` 只生成采样 JSON，不调用模型或生成配套文件：
 
 ```bash
-python3 archipelago/benchmark/generate_static_prompt_injection_tasks.py \
+python3 generate_static_prompt_injection_tasks.py \
   --output-task-number 30 \
   --sample-only
 ```
@@ -63,7 +147,7 @@ python3 archipelago/benchmark/generate_static_prompt_injection_tasks.py \
 使用相同的 15 个原任务，以及已经均衡采样的 `py`、`pyc`、`elf` vector（各 5 条）：
 
 ```bash
-python3 archipelago/benchmark/generate_static_script_injection_tasks.py \
+python3 generate_static_script_injection_tasks.py \
   --output-task-number 30
 ```
 
@@ -81,7 +165,7 @@ internal 版本对应关系为：7 → 31（agent 根据原任务拟定事件 su
 参数与 static prompt 入口一致，例如：
 
 ```bash
-python3 archipelago/benchmark/generate_static_script_injection_tasks.py \
+python3 generate_static_script_injection_tasks.py \
   --output-task-number 30 \
   --goal-ids 25,26,27,28,29,30,31,32 \
   --model aoai-swedencentral-aii-02-gpt-5.6-sol

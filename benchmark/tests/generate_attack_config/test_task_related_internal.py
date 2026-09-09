@@ -8,7 +8,7 @@ from benchmark.generate_attack_config.prompt.shared_folder import generate as co
 from benchmark.generate_attack_config.attack_script.args.generate_args_attack_scripts import render
 from benchmark.generate_attack_config.prompt.task_instruction import argument_instruction
 from benchmark.runner.security_check import check_security
-from benchmark import generate_static_prompt_injection_tasks as sampler
+from benchmark.final_benchmark import generate_static_prompt_injection_tasks as sampler
 
 
 def test_choices_are_not_precomputed():

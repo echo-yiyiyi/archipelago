@@ -3,7 +3,7 @@
 From the repository root:
 
 ```bash
-python3 benchmark/generate_static_prompt_injection_tasks.py --output-task-number 30
+python3 benchmark/final_benchmark/generate_static_prompt_injection_tasks.py --output-task-number 30
 ```
 
 The script reads `sample_inject_vector/output/selected_15_tasks_with_balanced_inject_vectors.json`, preserves the selected static vectors, and samples distinct goals per task. The output count must be a positive multiple of the input count and cannot exceed the input count times the number of allowed goals. Default goals are 1–8 and 18–24 (15 goals). A seed of 42 makes sampling reproducible. Goal counts differ by at most one globally and within each vector. With 30 outputs, each task gets two goals and each default goal occurs twice.
@@ -11,7 +11,7 @@ The script reads `sample_inject_vector/output/selected_15_tasks_with_balanced_in
 Custom IDs accept numeric prefixes or full IDs, separated by spaces or commas:
 
 ```bash
-python3 benchmark/generate_static_prompt_injection_tasks.py --output-task-number 30 --goal-ids 1,2,7,18,24 --seed 123
+python3 benchmark/final_benchmark/generate_static_prompt_injection_tasks.py --output-task-number 30 --goal-ids 1,2,7,18,24 --seed 123
 ```
 
 Outputs default to `benchmark/final_benchmark/static_prompt_injection/`:

@@ -1,0 +1,15 @@
+BEGIN:VCALENDAR
+PRODID:-//APEX//Task Reference Fixture//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:evt-279f5e03
+DTSTART:20260901T150000Z
+DTEND:20260901T160000Z
+SUMMARY:Review BBDC–TPVG Pro Forma Business Services Exposure
+DESCRIPTION:Collaborative review of the proposed BBDC and TPVG pro forma industry-exposure calculation using each company’s latest 10-Q and September 30\, 2025 fair-value data. Confirm that only categories explicitly referring to business services are included\, apply the assumption that Muon is the sole non-services provider in TPVG’s “Business Products and Services” category\, and verify the resulting percentage is presented to two decimal places. This meeting is for methodology and source review\; no analytical result is presumed.
+LOCATION:Secure video conference
+ATTENDEE:mailto:bdc-investment-review@barings.com
+ATTENDEE:mailto:portfolio-review@tpvg.com
+END:VEVENT
+END:VCALENDAR

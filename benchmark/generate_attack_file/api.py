@@ -8,6 +8,7 @@ API key or network access.
 from __future__ import annotations
 
 import os
+import logging
 from typing import Any
 
 from .prompt import build_file_generation_prompt
@@ -18,6 +19,11 @@ DEFAULT_AZURE_ENDPOINT = "https://aoai-swedencentral-aii-02.openai.azure.com"
 DEFAULT_MODEL = "aoai-swedencentral-aii-02-gpt-5.4-sol"
 DEFAULT_KEY_VAULT_URL = "https://kv-aii.vault.azure.net"
 DEFAULT_SECRET_NAME = "hinojoc-aoai-swedencentral-aii-02"
+LOGGER = logging.getLogger(__name__)
+
+
+def _field(value: Any, name: str, default: Any = None) -> Any:
+    return value.get(name, default) if isinstance(value, dict) else getattr(value, name, default)
 
 
 def _schema(properties: dict[str, dict[str, Any]]) -> dict[str, Any]:
@@ -177,13 +183,39 @@ def generate_structured_payload(
     if reasoning_effort and reasoning_effort.lower() != "auto":
         request["reasoning"] = {"effort": reasoning_effort}
 
-    response = active_client.responses.create(**request)
-    if not response.output_text:
-        raise RuntimeError("model returned no structured output text")
-    payload = parse_llm_json(response.output_text)
-    if not isinstance(payload, dict):
-        raise ValueError("structured output must be a JSON object")
-    return payload
+    for attempt in range(3):
+        response = active_client.responses.create(**request)
+        status = _field(response, "status")
+        reason = _field(_field(response, "incomplete_details"), "reason")
+        text = _field(response, "output_text", "") or ""
+        refused = any(
+            _field(content, "type") == "refusal"
+            for item in (_field(response, "output", []) or [])
+            for content in (_field(item, "content", []) or [])
+        )
+        diagnostic = (
+            f"schema={schema_name}, response_id={_field(response, 'id')}, "
+            f"status={status}, reason={reason}, refused={refused}, "
+            f"max_output_tokens={request['max_output_tokens']}, "
+            f"output_tokens={_field(_field(response, 'usage'), 'output_tokens')}"
+        )
+        if not refused and status in (None, "completed") and text.strip():
+            payload = parse_llm_json(text)
+            if not isinstance(payload, dict):
+                raise ValueError("structured output must be a JSON object")
+            return payload
+        exhausted = status == "incomplete" and reason == "max_output_tokens"
+        empty = status in (None, "completed") and not text.strip()
+        if not refused and attempt < 2 and (exhausted or empty):
+            if exhausted:
+                # The API budget includes reasoning. Grow only after confirmed
+                # exhaustion, bounded to 32K (or the caller's larger budget).
+                request["max_output_tokens"] = min(
+                    max(max_output_tokens, 32768), max(2048, request["max_output_tokens"] * 2)
+                )
+            LOGGER.warning("Retrying structured generation (%s), attempt %s/3", diagnostic, attempt + 2)
+            continue
+        raise RuntimeError(f"model returned no complete structured output: {diagnostic}")
 
 
 def generate_payload(

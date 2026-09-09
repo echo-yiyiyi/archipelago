@@ -26,6 +26,7 @@ DEFAULT_SELECTED_TASKS_PATH = (
     / "extract_key_words"
     / "selected_15_tasks_with_keywords.json"
 )
+REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
 EMAIL_ADDRESS_SCHEMA = {
@@ -295,6 +296,34 @@ def _visible_path(archive_path: str) -> str | None:
     return PurePosixPath(*path.parts[1:]).as_posix()
 
 
+def _resolve_world_archive(root: Path, task: dict[str, Any]) -> Path:
+    """Resolve a partial dataset cache using saved original world downloads.
+
+    main.py saves the unmodified dataset ZIP under its world ID before any
+    population or execution. Only those exact filenames are eligible here;
+    final_snapshot.zip and other execution snapshots must never be used.
+    """
+    filename = f"{task['world_id']}.zip"
+    expected = root / "world_files_zipped" / filename
+    if expected.is_file():
+        return expected
+    task_id = task['task_id']
+    for identifier in (task_id, task['world_id']):
+        if Path(identifier).name != identifier or identifier in {'.', '..'} or any(c in identifier for c in '*?[]'):
+            raise ValueError('unsafe task_id or world_id in dataset metadata')
+    for output in (REPO_ROOT / 'benchmark/output', REPO_ROOT / 'examples/hugging_face_task/output'):
+        direct = output / task_id / filename
+        if direct.is_file():
+            return direct
+        for path in sorted((output / 'concurrent').glob(f'*/tasks/{task_id}*/{filename}')):
+            if path.is_file():
+                return path
+    raise FileNotFoundError(
+        f"world archive does not exist: {expected}; no saved original world ZIP was found. "
+        "Download this world into the dataset or pass --dataset-dir with a complete copy."
+    )
+
+
 def _list_task_file_paths(
     task_id: str, dataset_dir: str | Path | None = None
 ) -> tuple[str, list[str]]:
@@ -308,9 +337,7 @@ def _list_task_file_paths(
     root = _find_dataset_dir(dataset_dir, task_id)
     task = _load_task(root, task_id)
     world_id = task["world_id"]
-    world_zip = root / "world_files_zipped" / f"{world_id}.zip"
-    if not world_zip.is_file():
-        raise FileNotFoundError(f"world archive does not exist: {world_zip}")
+    world_zip = _resolve_world_archive(root, task)
 
     visible: set[str] = set()
     with zipfile.ZipFile(world_zip) as archive:

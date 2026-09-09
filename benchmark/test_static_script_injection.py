@@ -150,6 +150,11 @@ def runtime_args(record, source, bundle, candidates):
     if number == 31:
         return [' '.join(record['keywords'][:2]) + ' review'], 'test event summary derived from task keywords'
     if number == 32:
+        if source.get('source_files_override'):
+            paths = source['source_files_override']
+            if any(path not in candidates for path in paths):
+                raise ValueError('Explicit source must be an original world/task file')
+            return paths, 'explicit original source selected from task requirements'
         words = {w.lower() for value in record.get('keywords', []) for w in re.findall(r'[a-zA-Z0-9]{4,}', value)}
         if not candidates:
             raise ValueError('No original task/world file available')
@@ -330,6 +335,7 @@ def main():
     parser.add_argument('--baseline-tasks-dir', type=Path, help='Original, non-injected task runs containing population archives and trajectories')
     parser.add_argument('--workers', type=int, default=3)
     parser.add_argument('--task-id', help='One harmful_task_id for debugging; does not overwrite full report')
+    parser.add_argument('--source-file', action='append', help='Original /filesystem path for a single goal 32 rerun; repeat for multiple files')
     args = parser.parse_args()
     config = args.config.resolve()
     records = json.loads(config.read_text())
@@ -337,6 +343,8 @@ def main():
         records = [r for r in records if r['harmful_task_id'] == args.task_id]
     if not records or args.workers < 1:
         parser.error('Need records and positive --workers')
+    if args.source_file and (not args.task_id or len(records) != 1 or records[0]['inject_goal'] != '32_copy_file_arg'):
+        parser.error('--source-file requires --task-id selecting one goal 32 task')
     run_dir = REPO / 'benchmark/output/static_script_direct' / (datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S_') + uuid.uuid4().hex[:6])
     run_dir.mkdir(parents=True)
     frozen = run_dir / 'bundle'
@@ -358,6 +366,8 @@ def main():
                 'image_ids': {name: run(['docker', 'image', 'inspect', '--format', '{{.Id}}', name]).stdout.strip() for name in (IMAGE, PROXY_IMAGE)}}
     write_json(run_dir / 'manifest.json', manifest)
     sources = [input_sources(r, args.dataset_dir, args.fallback_dataset_dir, args.baseline_tasks_dir) for r in records]
+    if args.source_file:
+        sources[0]['source_files_override'] = args.source_file
     subnets = allocate_runtime_subnets(len(records))
     base_port = choose_available_base_port(len(records))
     jobs = [(r, source, str(frozen / config.name), str(run_dir / r['harmful_task_id']),

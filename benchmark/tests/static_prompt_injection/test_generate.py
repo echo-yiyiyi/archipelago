@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from benchmark import generate_static_prompt_injection_tasks as generate
+from benchmark.final_benchmark import generate_static_prompt_injection_tasks as generate
 
 
 class StaticGenerationTests(unittest.TestCase):

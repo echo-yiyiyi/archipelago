@@ -46,7 +46,8 @@ def _value(task_record: dict[str, Any], field: str, description: str, schema: di
         schema,
         client=client,
         reasoning_effort=reasoning_effort,
-        max_output_tokens=128,
+        # The Responses API budget also covers reasoning, not just this value.
+        max_output_tokens=2048,
     )
     result = str(payload.get(field, "")).strip()
     if not result:
