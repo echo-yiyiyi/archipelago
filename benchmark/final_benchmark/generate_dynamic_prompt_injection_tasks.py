@@ -53,8 +53,8 @@ def main(argv=None, *, script_mode=False):
         for enabled in (True, False):
             group = deepcopy(records)
             for row in group:
-                row['add_user_prompt'] = enabled
-            generate_bundle(group, args.output_dir.resolve() / f'add_user_prompt_{str(enabled).lower()}', args)
+                row['user_allow_additional_instruction'] = enabled
+            generate_bundle(group, args.output_dir.resolve() / f'allow_additional_instruction_{str(enabled).lower()}', args)
     else:
         generate_bundle(records, args.output_dir.resolve(), args)
     return 0

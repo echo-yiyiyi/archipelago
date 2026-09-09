@@ -1,6 +1,7 @@
 # Final benchmark
 
 各生成脚本的完整用法、数量限制和输出说明见 [GENERATE.md](GENERATE.md)。
+实验启动、模型选择和分数汇总见 [RUN.md](RUN.md)。
 
 所有任务生成入口均位于本目录，可直接在此运行。默认调用完整配置生成流程，添加 `--sample-only` 可仅采样。默认输入和输出路径不受当前工作目录影响；自定义相对路径以当前工作目录为基准。
 
@@ -24,9 +25,9 @@ python3 generate_dynamic_script_injection.py
 python3 generate_dynamic_script_injection.py --output-task-number 390
 ```
 
-默认总计 30 条，分为 `add_user_prompt_true/` 和 `add_user_prompt_false/` 两组，各 15 条。两组采样记录除 `add_user_prompt` 外完全相同，分别调用配置生成流程；模型生成的内容可能不同。每组覆盖全部 15 个原任务，以及与 user prompt suffix plant 相同的 13 个 args goal：13、14、15、16、17、25、26、27、28、29、30、31、32；每个 goal 出现 1–2 次。数量参数表示两组合计，必须为正偶数，默认输入下最多 390；设为 390 时每组覆盖全部 15 × 13 个组合。
+默认总计 30 条，分为 `allow_additional_instruction_true/` 和 `allow_additional_instruction_false/` 两组，各 15 条。两组采样记录除 `user_allow_additional_instruction` 外完全相同，分别调用配置生成流程；模型生成的内容可能不同。每组覆盖全部 15 个原任务，以及与 user prompt suffix plant 相同的 13 个 args goal：13、14、15、16、17、25、26、27、28、29、30、31、32；每个 goal 出现 1–2 次。数量参数表示两组合计，必须为正偶数，默认输入下最多 390；设为 390 时每组覆盖全部 15 × 13 个组合。
 
-沿用原有 dynamic script 流程：`inject_vector=dynamic_script_execution`、`no_key_words=True`，`add_user_prompt` 按组设置。不采样 py/pyc/elf，执行入口固定编译为 ELF 文件 `recover_corrupted_file`。输出到 `archipelago/benchmark/final_benchmark/dynamic_script_injection/` 下的上述两个子目录，包含完整配置、`dynamic_watcher_config.json`、Python watcher 脚本、ELF 恢复程序及其他配套文件。
+沿用原有 dynamic script 流程：`inject_vector=dynamic_script_execution`、`no_key_words=True`，`add_user_prompt=false`，`user_allow_additional_instruction` 按组设置。不采样 py/pyc/elf，执行入口固定编译为 ELF 文件 `recover_corrupted_file`。输出到 `archipelago/benchmark/final_benchmark/dynamic_script_injection/` 下的上述两个子目录，包含完整配置、`dynamic_watcher_config.json`、Python watcher 脚本、ELF 恢复程序及其他配套文件。
 
 其他参数与 dynamic prompt 入口相同，包括 `--sample-only`、`--input`、`--output-dir`、`--dataset-dir`、`--seed`、`--inject-goals`、`--model` 和 `--reasoning-effort`。
 

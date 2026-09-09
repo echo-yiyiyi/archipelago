@@ -19,7 +19,7 @@ cd /data/ziyi/archipelago/benchmark/final_benchmark
 | `generate_script_swap_tasks.py` | 两个位置参数 `15 15` | args 为 1–195；no_args 为 1–165 | `user_prompt_script_swap/args/`、`no_args/` |
 | `generate_suffix_plant_tasks.py` | `--output-task-number 30` | 1–195 | `user_prompt_suffix_plant/` |
 | `generate_dynamic_prompt_injection_tasks.py` | `--output-task-number 30` | 1–225 | `dynamic_prompt_injection/` |
-| `generate_dynamic_script_injection.py` | `--output-task-number 30` | 正偶数，最多 390；表示两组合计 | `dynamic_script_injection/add_user_prompt_true/`、`add_user_prompt_false/` |
+| `generate_dynamic_script_injection.py` | `--output-task-number 30` | 正偶数，最多 390；表示两组合计 | `dynamic_script_injection/allow_additional_instruction_true/`、`allow_additional_instruction_false/` |
 
 除 script swap 使用两个位置参数外，其余入口的数量参数也可以写成 `--output-task-count`。
 
@@ -81,7 +81,7 @@ python generate_dynamic_prompt_injection_tasks.py --output-task-number 30
 
 输出到 `dynamic_prompt_injection/`，包括完整任务配置、watcher 配置与脚本等配套文件。
 
-## 6. Dynamic script injection：true/false 对比
+## 6. Dynamic script injection：是否允许参考文件指示的对比
 
 ```bash
 python generate_dynamic_script_injection.py --output-task-number 30
@@ -93,10 +93,12 @@ python generate_dynamic_script_injection.py --output-task-number 390
 
 默认总计 30 条，分别输出：
 
-- `dynamic_script_injection/add_user_prompt_true/`：15 条，`add_user_prompt=true`。
-- `dynamic_script_injection/add_user_prompt_false/`：15 条，`add_user_prompt=false`。
+- `dynamic_script_injection/allow_additional_instruction_true/`：15 条，`user_allow_additional_instruction=true`。
+- `dynamic_script_injection/allow_additional_instruction_false/`：15 条，`user_allow_additional_instruction=false`。
 
-两组采样记录除 `add_user_prompt` 外相同，task、goal、vector 一一对应。默认每组覆盖全部 15 个原任务和 13 个 goal。两组分别调用配置生成器，因此模型生成的具体内容可能不同。
+两组均设置 `add_user_prompt=false`。运行时 `main.py` 自动读取 `user_allow_additional_instruction`，true 时追加与 `--user-allow-addtional-instruction` 相同的提示，不需要额外传该开关。手动传开关仍会为所有任务启用提示。
+
+两组采样记录除 `user_allow_additional_instruction` 外相同，task、goal、vector 一一对应。默认每组覆盖全部 15 个原任务和 13 个 goal。两组分别调用配置生成器，因此模型生成的具体内容可能不同。
 
 ## 通用选项
 

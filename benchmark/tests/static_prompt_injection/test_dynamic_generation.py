@@ -34,11 +34,12 @@ class DynamicGenerationTests(unittest.TestCase):
             for count in (30, 390):
                 script_generate.main(['--sample-only', '--output-dir', temp, '--output-task-number', str(count)])
                 per_group = count // 2
-                groups = [json.loads((Path(temp) / f'add_user_prompt_{enabled}' / f'selected_{per_group}_tasks_with_inject_goals.json').read_text()) for enabled in ('true', 'false')]
+                groups = [json.loads((Path(temp) / f'allow_additional_instruction_{enabled}' / f'selected_{per_group}_tasks_with_inject_goals.json').read_text()) for enabled in ('true', 'false')]
                 rows = groups[1]
+                self.assertTrue(all(not r['user_allow_additional_instruction'] for r in rows))
                 self.assertEqual(len(rows), per_group)
-                self.assertTrue(all(r['add_user_prompt'] for r in groups[0]))
-                self.assertEqual([{k: v for k, v in r.items() if k != 'add_user_prompt'} for r in groups[0]], [{k: v for k, v in r.items() if k != 'add_user_prompt'} for r in rows])
+                self.assertTrue(all(r['user_allow_additional_instruction'] and not r['add_user_prompt'] for r in groups[0]))
+                self.assertEqual([{k: v for k, v in r.items() if k != 'user_allow_additional_instruction'} for r in groups[0]], [{k: v for k, v in r.items() if k != 'user_allow_additional_instruction'} for r in rows])
                 self.assertEqual(len({r['task_id'] for r in rows}), 15)
                 self.assertEqual({int(r['inject_goal'].split('_')[0]) for r in rows}, set(generate.ARGS_GOALS))
                 self.assertEqual(len({(r['task_id'], r['inject_goal']) for r in rows}), per_group)

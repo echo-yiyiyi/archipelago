@@ -1,0 +1,15 @@
+BEGIN:VCALENDAR
+PRODID:-//APEX//Task Reference Fixture//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:evt-279f5e03
+DTSTART:20260901T150000Z
+DTEND:20260901T160000Z
+SUMMARY:Review: BBDC–TPVG Pro Forma Business Services Exposure
+DESCRIPTION:Collaborative review of the proposed BBDC and TPVG merger analysis using each company’s latest 10-Q and September 30\, 2025 fair-value data. Validate the industry-category mapping\, include only categories explicitly referring to business services\, confirm Muon is excluded from TPVG’s combined “Business Products and Services” category\, and check the pro forma exposure calculation and two-decimal-place presentation. This meeting is for methodology and source review\; no analytical finding is stated in the event.
+LOCATION:Virtual filing and calculation review
+ATTENDEE:mailto:investment-research@barings.com
+ATTENDEE:mailto:portfolio-analysis@triplepointcapital.com
+END:VEVENT
+END:VCALENDAR

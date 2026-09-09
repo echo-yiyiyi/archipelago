@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import concurrent.futures
+import hashlib
 import ipaddress
 import json
 import math
@@ -379,13 +380,13 @@ def build_proxy_image(image: str) -> None:
 
 def compose_project_name(run_id: str, worker: int) -> str:
     slug = re.sub(r"[^a-z0-9_-]", "_", run_id.lower()).strip("_-")
-    slug = slug[:40] or uuid.uuid4().hex[:8]
+    slug = slug[:31] + '_' + hashlib.sha256(run_id.encode()).hexdigest()[:8]
     return f"archipelago_hf_{slug}_w{worker:02d}"
 
 
 def shared_resource_name(run_id: str, suffix: str) -> str:
     slug = re.sub(r"[^a-z0-9_-]", "_", run_id.lower()).strip("_-")
-    slug = slug[:40] or uuid.uuid4().hex[:8]
+    slug = slug[:31] + '_' + hashlib.sha256(run_id.encode()).hexdigest()[:8]
     return f"archipelago_hf_{slug}_{suffix}"
 
 
@@ -905,6 +906,8 @@ def main() -> int:
         help="Use already-built environment and proxy images.",
     )
     parser.add_argument("--run-id", help="Run output directory name.")
+    parser.add_argument("--output-root", type=Path,
+                        help="Parent directory for the run; defaults to benchmark/output/concurrent.")
     parser.add_argument(
         "--keep-environments",
         action="store_true",
@@ -978,7 +981,7 @@ def main() -> int:
     run_id = args.run_id or time.strftime("run_%Y%m%d_%H%M%S_") + uuid.uuid4().hex[:8]
     if not re.fullmatch(r"[A-Za-z0-9_.-]+", run_id):
         parser.error("--run-id may contain only letters, digits, _, -, and .")
-    run_dir = EXAMPLE_DIR / "output" / "concurrent" / run_id
+    run_dir = (args.output_root.resolve() if args.output_root else EXAMPLE_DIR / "output" / "concurrent") / run_id
     (run_dir / "logs").mkdir(parents=True, exist_ok=False)
     global _run_logger
     _run_logger = RunLogger(run_dir)
