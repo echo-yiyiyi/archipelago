@@ -19,7 +19,7 @@ from litellm.exceptions import (
     Timeout,
 )
 from litellm.files.main import ModelResponse
-from litellm.types.utils import Message
+from litellm.types.utils import Choices, Message
 from loguru import logger
 from openai.types.chat.chat_completion_tool_param import ChatCompletionToolParam
 
@@ -222,6 +222,54 @@ def _extract_psf_reasoning_delta(chunk: Any) -> str:
         if isinstance(reasoning, str):
             return reasoning
     return ""
+
+
+def _merge_responses_choices(response: ModelResponse, model: str) -> ModelResponse:
+    """Rejoin one Responses turn split into text and tool-call choices by LiteLLM.
+
+    Ordinary Chat Completions choices are alternative answers, so only merge
+    explicit Responses routes. Preserve the response's usage and metadata.
+    """
+    if "/responses/" not in model or len(response.choices) < 2:
+        return response
+    if not all(isinstance(choice, Choices) for choice in response.choices):
+        return response
+
+    choices = response.choices
+    payload = choices[0].message.model_dump(exclude_none=True)
+    for field in ("content", "reasoning_content", "refusal"):
+        values = [getattr(choice.message, field, None) for choice in choices]
+        values = [value for value in values if value is not None]
+        if values:
+            if all(isinstance(value, str) for value in values):
+                payload[field] = "\n".join(values)
+            else:
+                payload[field] = [
+                    block
+                    for value in values
+                    for block in (
+                        [{"type": "text", "text": value}] if isinstance(value, str)
+                        else list(value)
+                    )
+                ]
+    for field in ("tool_calls", "reasoning_items", "thinking_blocks", "annotations"):
+        values = [
+            item for choice in choices
+            for item in (getattr(choice.message, field, None) or [])
+        ]
+        if values:
+            payload[field] = values
+    provider_fields = {}
+    for choice in choices:
+        provider_fields.update(getattr(choice.message, "provider_specific_fields", None) or {})
+    if provider_fields:
+        payload["provider_specific_fields"] = provider_fields
+    merged = choices[0].model_copy(update={
+        "message": Message.model_validate(payload),
+        "finish_reason": "tool_calls" if payload.get("tool_calls") else choices[-1].finish_reason,
+        "index": 0,
+    })
+    return response.model_copy(update={"choices": [merged]})
 
 
 def responses_args_to_completions(extra_args: dict[str, Any]) -> dict[str, Any]:
@@ -872,12 +920,12 @@ async def generate_response(
                 raise RuntimeError("stream_chunk_builder returned None — empty stream")
             # ok flips only AFTER validation succeeds, so a parse/shape failure
             # is counted as status:error (not a false success on the baseline).
-            validated = ModelResponse.model_validate(rebuilt)
+            validated = _merge_responses_choices(ModelResponse.model_validate(rebuilt), model)
             ok = True
             return validated
 
         response = await acompletion(**kwargs)
-        validated = ModelResponse.model_validate(response)
+        validated = _merge_responses_choices(ModelResponse.model_validate(response), model)
         ok = True
         return validated
     except BaseException as exc:

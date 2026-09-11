@@ -82,6 +82,8 @@ def main(argv=None):
     parser.add_argument('category', help='Category, category/subcategory, or all')
     parser.add_argument('--model', required=True, help='Existing orchestrator config suffix, e.g. gemini35 or luna')
     parser.add_argument('--concurrency', type=int, default=3)
+    parser.add_argument('--input-root', type=Path, default=ROOT,
+                        help='Task category root, e.g. benchmark/all_category_test')
     parser.add_argument('--output-root', type=Path, default=BENCHMARK / 'output/final_benchmark')
     parser.add_argument('--skip-build', action='store_true')
     parser.add_argument('--timer', action='store_true')
@@ -93,7 +95,7 @@ def main(argv=None):
     if not model_config.is_file():
         parser.error(f'model config does not exist: {model_config}')
     try:
-        batches = discover(args.category)
+        batches = discover(args.category, root=args.input_root.resolve())
         if not json.loads(model_config.read_text()).get('model'):
             raise ValueError(f'{model_config}: missing model field')
     except (ValueError, OSError) as error:

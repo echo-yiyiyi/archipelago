@@ -1,0 +1,11 @@
+{
+  "model": "openai/responses/gpt-6-astra",
+  "max_steps": 100,
+  "extra_args": {
+    "api_base": "https://api.openai.com/v1",
+    "allowed_openai_params": ["reasoning_effort"],
+    "reasoning": {
+      "effort": "low"
+    }
+  }
+}

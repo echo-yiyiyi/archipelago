@@ -648,11 +648,11 @@ Don't over-explain. Be concise but show your thinking.
 - `final_answer` is rejected if todos are incomplete
 """
     system_prompt = original_system_prompt
-    # GPT-5 models tend to emit the requested pre-tool explanation as a
+    # GPT-5/6 models can emit the requested pre-tool explanation as a
     # standalone response instead of calling a tool in the same turn. Match
     # both normal provider IDs (openai/gpt-5.x) and Azure deployment names
-    # (...-gpt-5.x) and omit that section for the whole GPT-5 family.
-    if re.search(r"(?:^|[/_-])gpt-5", orchestrator_config["model"], re.IGNORECASE):
+    # (...-gpt-5.x) and omit that section for both GPT-5 and GPT-6 families.
+    if re.search(r"(?:^|[/_-])gpt-[56](?=$|[._/-])", orchestrator_config["model"], re.IGNORECASE):
         _, tools_section = original_system_prompt.split("## Tools", maxsplit=1)
         system_prompt = (
             "You are an AI assistant that completes tasks by reasoning and using tools.\n\n\n"

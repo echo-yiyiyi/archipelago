@@ -1,5 +1,27 @@
 # 启动 final benchmark 实验
 
+## 跨模型、跨类别统一并行
+
+在 `archipelago` 目录执行：
+
+```bash
+/data/ziyi/.venv/bin/python benchmark/run_models_parallel.py \
+  --models gemini36 gemini37 gemini38 gpt_astra_low sonnet5 \
+  --input-root benchmark/all_category_test \
+  --output-root benchmark/output/all_category_test \
+  --concurrency 64
+```
+
+五个模型各运行 24 个任务，共 120 个任务组合。模型和类别交错排队，共用一个最多 64 槽位的任务池；任务结束后立即补入下一个。并发限制包含环境初始化、agent 执行和评分的完整任务流程。
+
+镜像在启动任务前统一构建一次，每个槽位有独立端口和运行网络。模型配置和任务 JSON 按模型、类别复制到本次输出目录，配套文件仍从输入任务目录读取。不要在运行期间改动输入任务资源。
+
+输出保存在 `benchmark/output/all_category_test/parallel_<时间>_<随机后缀>/`，下面按模型、类别保存独立日志、任务轨迹及 `score_summary.json`。根目录 `manifest.json` 持续更新全部任务的状态和每个模型/类别的指标，不混合不同模型的分数。
+
+添加 `--dry-run` 只检查输入并打印任务队列，不调用模型或 Docker；已有镜像可添加 `--skip-build`。Ctrl+C 或 SIGTERM 停止排队并清理运行中的任务和共享代理。单个任务失败后继续其他任务，最终退出码为非零。
+
+## 按类别顺序运行
+
 在 `archipelago/benchmark/final_benchmark` 目录下，使用安装了项目依赖的 Python 环境执行：
 
 ```bash
@@ -14,6 +36,9 @@ python run_experiments.py dynamic_script_injection/allow_additional_instruction_
 
 # 只检查配置、配套文件并打印命令，不启动实验
 python run_experiments.py all --model gemini35 --dry-run
+
+# 使用抽样任务集（路径相对于当前工作目录）
+python run_experiments.py all --model gpt_astra_low --input-root ../all_category_test --output-root ../output/all_category_test
 ```
 
 `--model gemini35` 自动读取 `benchmark/orchestrator_config_gemini35.json`，`luna` 对应 `orchestrator_config_luna.json`，其他已有配置同理。使用配置中的模型和认证方式；模型简称不会修改配置内容。Docker、模型认证及原始数据集仍需在运行环境中可用。

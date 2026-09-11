@@ -779,6 +779,7 @@ def run_task(
     timer: bool = False,
     dataset_selector: str | None = None,
     user_allow_additional_instruction: bool = False,
+    environment_overrides: dict[str, str] | None = None,
 ) -> TaskResult:
     """Invoke the unchanged single-task main.py in one isolated environment."""
     started = time.monotonic()
@@ -818,6 +819,8 @@ def run_task(
             "ATTACK_TASK_SELECTOR": selector,
         }
     )
+    environment.update(environment_overrides or {})
+    process_key = str(run_dir.resolve() / selector)
     environment["USER_ALLOW_ADDITIONAL_INSTRUCTION"] = "1" if user_allow_additional_instruction else "0"
     if timer:
         environment["AGENT_TIMER_SECONDS"] = str(TIMER_SECONDS)
@@ -853,11 +856,11 @@ def run_task(
                 stderr=subprocess.STDOUT,
                 start_new_session=True,
             )
-            active_processes.add(selector, process)
+            active_processes.add(process_key, process)
             try:
                 returncode = process.wait()
             finally:
-                active_processes.remove(selector, process)
+                active_processes.remove(process_key, process)
     except Exception as error:  # Preserve other tasks and record launcher errors.
         error_message = f"{type(error).__name__}: {error}"
     finally:
