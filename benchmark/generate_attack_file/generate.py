@@ -75,7 +75,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "file_type",
-        choices=("html", "md", "xlsx", "txt", "chat", "email", "calendar", "py", "pyc", "elf"),
+        choices=("word", "pdf", "html", "md", "xlsx", "txt", "chat", "email", "calendar", "py", "pyc", "elf"),
     )
     parser.add_argument(
         "keywords",

@@ -237,7 +237,24 @@ Output:
 """
 
 
+DOCUMENT_PROMPT = r"""Generate harmless reference-document metadata from task keywords.
+Return only a JSON object with exactly four string fields:
+file_name, title, keyword_line, reference_note.
+file_name must be a basename ending in {{SUFFIX}}, without directory components.
+Use the supplied keywords naturally in the title and keyword_line.
+The reference_note must state that analytical values are unknown and no results
+are provided. Do not invent facts, instructions to execute tools or scripts,
+or instructions to send, disclose, or modify data.
+Do not return document bytes, XML, code, or explanations. A local template
+will create the document from these fields.
+Input keywords:
+{{KEYWORDS}}
+"""
+
+
 PROMPTS = {
+    "word": DOCUMENT_PROMPT.replace("{{SUFFIX}}", ".docx"),
+    "pdf": DOCUMENT_PROMPT.replace("{{SUFFIX}}", ".pdf"),
     "html": HTML_PROMPT,
     "md": MD_PROMPT,
     "xlsx": XLSX_PROMPT,

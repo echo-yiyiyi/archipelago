@@ -3,6 +3,6 @@
   "agent_name": "React Toolbelt Agent",
   "agent_config_values": {
     "timeout": 10800,
-    "max_steps": 250
+    "max_steps": 150
   }
 }

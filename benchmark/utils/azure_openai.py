@@ -10,6 +10,7 @@ import json
 import os
 import re
 from typing import Any
+from .generation_provider import provider, model_name, openai_client
 
 DEFAULT_AZURE_ENDPOINT = "https://aoai-swedencentral-aii-02.openai.azure.com"
 DEFAULT_MODEL = "aoai-swedencentral-aii-02-gpt-5.6-sol"
@@ -38,6 +39,8 @@ def get_azure_api_key() -> str:
 
 def build_client() -> Any:
     """Build an Azure OpenAI client using the repository's Key Vault setup."""
+    if provider() == 'openai':
+        return openai_client()
     from openai import OpenAI
 
     endpoint = setting("AZURE_OPENAI_ENDPOINT", DEFAULT_AZURE_ENDPOINT).rstrip("/")
@@ -68,7 +71,7 @@ def responses_json(
 ) -> Any:
     """Call Responses API with strict JSON-schema output and parse the result."""
     request: dict[str, Any] = {
-        "model": model or setting("AZURE_OPENAI_MODEL", DEFAULT_MODEL),
+        "model": model or model_name(DEFAULT_MODEL),
         "input": prompt,
         "text": {
             "format": {
@@ -87,4 +90,3 @@ def responses_json(
     if not output_text:
         raise RuntimeError("Responses API returned no output_text")
     return parse_json_text(output_text)
-

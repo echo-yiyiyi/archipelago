@@ -173,7 +173,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--dataset-dir", type=Path)
     parser.add_argument("--inject-goals", type=Path)
     parser.add_argument("--reasoning-effort")
-    parser.add_argument("--model", help="Azure OpenAI deployment name (or set AZURE_OPENAI_MODEL).")
+    parser.add_argument("--provider", choices=("azure", "openai"), help="Generation provider; defaults to Azure or BENCHMARK_GENERATION_PROVIDER.")
+    parser.add_argument("--model", help="Model ID for OpenAI or deployment name for Azure.")
     parser.add_argument("--add-user-prompt", action="store_true")
     parser.add_argument("--no-keywords", "--no-key-words", dest="no_key_words", action="store_true",
                         help="Generate generic wording and identifiers without task keywords")
@@ -187,7 +188,16 @@ def _generate(args) -> int:
         from .watcher.generate import generate_config as generate_dynamic, write_bundle
     except ImportError:
         from archipelago.benchmark.generate_attack_config.watcher.generate import generate_config as generate_dynamic, write_bundle
-    if args.model:
+    if getattr(args, 'provider', None):
+        os.environ['BENCHMARK_GENERATION_PROVIDER'] = args.provider
+    try:
+        from ..utils.generation_provider import provider
+    except ImportError:
+        from archipelago.benchmark.utils.generation_provider import provider
+    if provider() == 'openai':
+        if args.model:
+            os.environ['OPENAI_GENERATION_MODEL'] = args.model
+    elif args.model:
         # Keep the goal-specific generators aligned with extract_key_words:
         # both accept an explicit deployment override while shared helpers
         # continue to read AZURE_OPENAI_MODEL.
@@ -398,7 +408,8 @@ def _generate(args) -> int:
                 reasoning_effort=args.reasoning_effort,
             )
             otp_output_path = otp_path.relative_to(output.parent).as_posix()
-            populate_files.append(otp_output_path)
+            if otp_output_path not in populate_files:
+                populate_files.append(otp_output_path)
             attack_config = record.get("attack_config")
             if not isinstance(attack_config, dict):
                 raise ValueError("3_email_forward_otp requires attack_config")

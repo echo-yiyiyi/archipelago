@@ -1,0 +1,14 @@
+{
+  "status": "passed",
+  "records": 10,
+  "distinct_goals": 10,
+  "distinct_task_ids": 10,
+  "checks": [
+    "records unchanged from source",
+    "one task per goal",
+    "all referenced artifacts byte-identical to source",
+    "watcher configs consistent"
+  ],
+  "evaluations_run": false,
+  "subset_manifest": "../subset_manifest.json"
+}

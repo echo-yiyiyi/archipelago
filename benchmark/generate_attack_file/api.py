@@ -13,6 +13,7 @@ from typing import Any
 
 from .prompt import build_file_generation_prompt
 from .templates import parse_llm_json
+from ..utils.generation_provider import provider, model_name, openai_client
 
 
 DEFAULT_AZURE_ENDPOINT = "https://aoai-swedencentral-aii-02.openai.azure.com"
@@ -37,6 +38,9 @@ def _schema(properties: dict[str, dict[str, Any]]) -> dict[str, Any]:
 
 STRING = {"type": "string"}
 SCHEMAS: dict[str, dict[str, Any]] = {
+    **{kind: _schema({key: STRING for key in
+        ("file_name", "title", "keyword_line", "reference_note")})
+       for kind in ("word", "pdf")},
     "html": _schema(
         {
             "file_name": STRING,
@@ -138,6 +142,8 @@ def get_azure_api_key() -> str:
 
 def build_client() -> Any:
     """Build an Azure OpenAI client using the existing Key Vault credential."""
+    if provider() == 'openai':
+        return openai_client()
     from openai import OpenAI
 
     endpoint = _setting("AZURE_OPENAI_ENDPOINT", DEFAULT_AZURE_ENDPOINT).rstrip("/")
@@ -168,7 +174,7 @@ def generate_structured_payload(
 
     active_client = client or build_client()
     request: dict[str, Any] = {
-        "model": _setting("AZURE_OPENAI_MODEL", DEFAULT_MODEL),
+        "model": model_name(DEFAULT_MODEL),
         "input": prompt,
         "text": {
             "format": {
@@ -197,7 +203,12 @@ def generate_structured_payload(
             f"schema={schema_name}, response_id={_field(response, 'id')}, "
             f"status={status}, reason={reason}, refused={refused}, "
             f"max_output_tokens={request['max_output_tokens']}, "
-            f"output_tokens={_field(_field(response, 'usage'), 'output_tokens')}"
+            f"output_tokens={_field(_field(response, 'usage'), 'output_tokens')}, "
+            f"reasoning_tokens={_field(_field(_field(response, 'usage'), 'output_tokens_details'), 'reasoning_tokens')}, "
+            f"requested_model={request['model']}, returned_model={_field(response, 'model')}, "
+            f"reasoning_effort={request.get('reasoning', {}).get('effort', 'auto')}, "
+            f"output_types={[_field(item, 'type') for item in (_field(response, 'output', []) or [])]}, "
+            f"error_code={_field(_field(response, 'error'), 'code')}"
         )
         if not refused and status in (None, "completed") and text.strip():
             payload = parse_llm_json(text)
@@ -208,10 +219,13 @@ def generate_structured_payload(
         empty = status in (None, "completed") and not text.strip()
         if not refused and attempt < 2 and (exhausted or empty):
             if exhausted:
-                # The API budget includes reasoning. Grow only after confirmed
-                # exhaustion, bounded to 32K (or the caller's larger budget).
+                # The API budget includes reasoning. Give small metadata calls
+                # meaningful headroom and reach the ceiling on the final try.
+                # Simple doubling left a 512-token call at just 4096 on try 3.
+                ceiling = max(max_output_tokens, 32768)
                 request["max_output_tokens"] = min(
-                    max(max_output_tokens, 32768), max(2048, request["max_output_tokens"] * 2)
+                    ceiling,
+                    ceiling if attempt == 1 else max(8192, request["max_output_tokens"] * 2),
                 )
             LOGGER.warning("Retrying structured generation (%s), attempt %s/3", diagnostic, attempt + 2)
             continue

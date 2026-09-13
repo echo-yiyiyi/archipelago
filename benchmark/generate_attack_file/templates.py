@@ -6,6 +6,9 @@ import html
 import json
 import re
 import stat
+import shutil
+import subprocess
+import tempfile
 from email.message import EmailMessage
 from email.policy import default
 from email.utils import parsedate_to_datetime
@@ -498,7 +501,63 @@ def _render_elf(
     return _render_empty(payload, root, None)
 
 
+def _write_docx(path: Path, text: str) -> None:
+    ns = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
+    ET.register_namespace('w', ns)
+    document = ET.Element(f'{{{ns}}}document')
+    body = ET.SubElement(document, f'{{{ns}}}body')
+    for line in text.split('\n'):
+        p = ET.SubElement(body, f'{{{ns}}}p')
+        run = ET.SubElement(p, f'{{{ns}}}r')
+        node = ET.SubElement(run, f'{{{ns}}}t', {'{http://www.w3.org/XML/1998/namespace}space': 'preserve'})
+        node.text = line
+    with ZipFile(path, 'x', ZIP_DEFLATED) as z:
+        z.writestr('[Content_Types].xml', '<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>')
+        z.writestr('_rels/.rels', '<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>')
+        z.writestr('word/document.xml', ET.tostring(document, encoding='utf-8', xml_declaration=True))
+
+def _document_text(payload: Payload, injection_content: str | None) -> str:
+    _require_exact_fields(payload, {"file_name", "title", "keyword_line", "reference_note"})
+    parts = [_text(payload, "title"), "Keywords: " + _text(payload, "keyword_line"),
+             _text(payload, "reference_note")]
+    injection = _think_block(injection_content)
+    if injection is not None:
+        parts.append(injection)
+    return "\n\n".join(parts)
+
+
+def _render_word(payload: Payload, root: Path, injection_content: str | None) -> Path:
+    text = _document_text(payload, injection_content)
+    path = _new_path(root / _safe_filename(payload, ".docx"))
+    _write_docx(path, text)
+    return path
+
+
+def _render_pdf(payload: Payload, root: Path, injection_content: str | None) -> Path:
+    text = _document_text(payload, injection_content)
+    path = _new_path(root / _safe_filename(payload, ".pdf"))
+    office = shutil.which("libreoffice")
+    if office is None:
+        raise RuntimeError("PDF generation requires LibreOffice (libreoffice on PATH)")
+    # Isolate each conversion's input, output and office profile for parallel runs.
+    with tempfile.TemporaryDirectory(prefix="attack-file-pdf-") as temporary:
+        work = Path(temporary)
+        source = work / "document.docx"
+        _write_docx(source, text)
+        subprocess.run([office, f"-env:UserInstallation={(work / 'profile').as_uri()}",
+                        "--headless", "--convert-to", "pdf", "--outdir", str(work),
+                        str(source)], check=True, timeout=60, capture_output=True, text=True)
+        result = work / "document.pdf"
+        if not result.is_file() or not result.read_bytes().startswith(b"%PDF-"):
+            raise RuntimeError("LibreOffice did not produce a valid PDF")
+        with path.open("xb") as target, result.open("rb") as document:
+            shutil.copyfileobj(document, target)
+    return path
+
+
 RENDERERS: dict[str, Callable[[Payload, Path, str | None], Path]] = {
+    "word": _render_word,
+    "pdf": _render_pdf,
     "html": _render_html,
     "md": _render_md,
     "xlsx": _render_xlsx,

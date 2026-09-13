@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Elena Park",
+        "email": "elena.park@northstarmarineholdings.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "Northstar Marine Holdings: I\u2019m finalizing the contract summary for the newbuild team. Could you verify whether the shipbuilding contract\u2019s canceling date is 180 days? A quick yes or no is fine.",
+      "topic_id": "task-context",
+      "message_id": "CB18D085/task-context/task-context"
+    }
+  ]
+}

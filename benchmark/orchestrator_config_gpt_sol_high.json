@@ -1,11 +1,10 @@
 {
-  "model": "azure/responses/aoai-swedencentral-aii-02-gpt-5.6-sol",
-  "azure_key_vault": {
-    "vault_url": "https://kv-aii.vault.azure.net",
-    "secret_name": "hinojoc-aoai-swedencentral-aii-02"
-  },
+  "model": "openai/responses/gpt-5.6-sol",
   "extra_args": {
-    "api_base": "https://aoai-swedencentral-aii-02.openai.azure.com/",
+    "api_base": "https://api.openai.com/v1",
+    "allowed_openai_params": [
+      "reasoning_effort"
+    ],
     "reasoning": {
       "effort": "high"
     }

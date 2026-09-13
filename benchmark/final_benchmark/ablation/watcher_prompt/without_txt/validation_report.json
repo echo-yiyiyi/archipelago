@@ -1,0 +1,23 @@
+{
+  "status": "passed",
+  "records": 10,
+  "checks": [
+    "10 task IDs and goal IDs aligned with with",
+    "task JSONs unchanged",
+    "only specified watcher methods changed",
+    "PDF font encoding explicitly set; all remaining artifacts and instruction templates byte-identical"
+  ],
+  "evaluations_run": false,
+  "behavior_tests": {
+    "passed": 3,
+    "checks": [
+      "all 10 goal prompts extracted intact from PDF",
+      "no instruction TXT creation",
+      "PDF-only scope",
+      "first prompt PDF read restores siblings byte-for-byte",
+      "goal activity restores selected PDF without deleting it",
+      "real inotify read lifecycle"
+    ]
+  },
+  "subset_manifest": "../subset_manifest.json"
+}

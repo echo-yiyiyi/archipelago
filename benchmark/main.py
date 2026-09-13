@@ -247,6 +247,9 @@ def populate_subsystems(root: Path, output_dir: Path, label: str):
                 log(f"ERROR: Failed to populate {label} {subsystem}: {resp.text}")
                 sys.exit(1)
             log(f"  {subsystem}: {resp.json()}")
+        # This archive is only a transport copy; the environment now owns the
+        # imported data. Preserve final snapshots separately for evaluation.
+        tar_path.unlink()
 
 
 def populate_attack_file(task_root: Path, attack_config_file: str | Path, task_id: str) -> bool:
@@ -495,8 +498,9 @@ def main():
     zip_path = hf_hub_download(
         HF_DATASET, f"world_files_zipped/{world_id}.zip", repo_type="dataset"
     )
-    world_zip = output_dir / f"{world_id}.zip"
-    shutil.copy(zip_path, world_zip)
+    # The downloaded snapshot is immutable and shared through the HF cache.
+    # Grading also reads this path; no per-task copy is needed.
+    world_zip = Path(zip_path)
 
     # Populate world data, then overlay per-task files (order matters)
     log("Populating environment with world snapshot...")

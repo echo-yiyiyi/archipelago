@@ -15,7 +15,9 @@ from benchmark import run_models_parallel as parallel
 
 CATEGORIES = ('static_script_injection', 'user_prompt_script_swap', 'user_prompt_suffix_plant')
 VECTORS = ('py', 'pyc', 'elf')
+DEFAULT_MODELS = ('gpt-terra', 'kimi', 'deepseek')
 SOURCES = {
+    'gemini36': REPO / 'benchmark/orchestrator_config_gemini36.json',
     'gpt-terra': REPO / 'benchmark/orchestrator_config_gpt_terra.json',
     'kimi': REPO / 'benchmark/orchestrator_config_kimi.json',
     'deepseek': REPO / 'litellm_configs/deepseek_v4_flash.json',
@@ -130,14 +132,14 @@ def summarize(run):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--models', nargs='+', choices=list(SOURCES), default=list(SOURCES))
+    parser.add_argument('--models', nargs='+', choices=list(SOURCES), default=list(DEFAULT_MODELS))
     parser.add_argument('--input-root', type=Path, default=ROOT)
     parser.add_argument('--output-root', type=Path, default=REPO / 'benchmark/output/ablation/script_vevtor')
     parser.add_argument('--concurrency', type=int, default=12, help='Global slots shared by all models, 1..64 (default: 12)')
     parser.add_argument('--max-steps', type=int, default=100, help='Shared agent step limit (default: 100)')
     parser.add_argument('--base-port', type=int)
     parser.add_argument('--skip-build', action='store_true')
-    parser.add_argument('--dry-run', action='store_true', help='Validate the 135 jobs without Docker/model calls')
+    parser.add_argument('--dry-run', action='store_true', help='Validate selected jobs without Docker/model calls')
     parser.add_argument('--summarize', type=Path, metavar='RUN_DIR', help='Refresh reports from a directory containing manifest.json')
     args = parser.parse_args()
     if args.summarize:

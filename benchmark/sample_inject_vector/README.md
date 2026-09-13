@@ -56,3 +56,45 @@ adjacent:
 ```bash
 python3 archipelago/benchmark/sample_inject_vector/merge_inject_vector_tasks.py
 ```
+
+## Re-rank final-benchmark task/goal pairs with PDF and Word
+
+`rerank_task_goal_vectors.py` ranks nine vectors using the full task prompt,
+keywords, and the goal description. It treats `(task_id, inject_goal)` as the
+identity, so multiple goals for one original task receive independent rankings.
+The old seven-vector ranking entry point is unchanged.
+
+```bash
+python -m benchmark.sample_inject_vector.rerank_task_goal_vectors \
+  --input benchmark/final_benchmark/static_prompt_injection/selected_30_tasks_with_inject_goals.json \
+  --output-dir benchmark/final_benchmark/static_prompt_injection_regenerated
+```
+
+The default balanced assignment uses exact min-cost flow, prioritizing balanced
+counts, then top-three inclusion, then rank costs. Thirty rows across nine
+vectors yield six counts of three and three counts of four. `--strategy first`
+selects the first choice without balancing. `--rank-only` saves just rankings;
+`--assign-only` reuses complete rankings without API calls. Rankings are cached
+with an input hash. Generated inputs retain original task IDs and goals, rebuild
+harmful task IDs for the assigned vector, and omit old attack configs/artifacts.
+
+Generate the new bundle (PDF requires LibreOffice):
+
+```bash
+python -m benchmark.generate_attack_config.generate \
+  benchmark/final_benchmark/static_prompt_injection_regenerated/selected_30_tasks_with_inject_goals.json \
+  --output benchmark/final_benchmark/static_prompt_injection_regenerated/selected_30_tasks_with_attack_config.json
+```
+
+For an authorized OpenAI project, export `OPENAI_API_KEY` in the launching
+terminal and run:
+
+```bash
+bash benchmark/final_benchmark/regenerate_static_prompt_openai.sh
+```
+
+This uses the public OpenAI Responses endpoint for both ranking and generation,
+with `gpt-5.6-sol` by default (`OPENAI_GENERATION_MODEL` overrides it). Results go
+to `final_benchmark/static_prompt_injection_openai`; Azure partial rankings are
+not mixed into this run. Both Python entry points accept `--provider openai`
+and `--model MODEL`. No API key is written into generated configuration files.

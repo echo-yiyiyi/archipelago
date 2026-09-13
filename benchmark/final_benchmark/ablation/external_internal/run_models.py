@@ -6,6 +6,7 @@ from dataclasses import replace
 import hashlib
 import json
 import os
+import shutil
 from pathlib import Path
 import sys
 import tempfile
@@ -152,7 +153,9 @@ def main():
     parser.add_argument('--mode',choices=['both','static','dynamic'],default='both')
     parser.add_argument('--input-root',type=Path,default=ROOT)
     parser.add_argument('--output-root',type=Path,default=REPO/'benchmark/output/ablation/external_internal')
-    parser.add_argument('--concurrency',type=int,default=12,help='Global shared slots, 1..64 (default: 12)')
+    parser.add_argument('--concurrency',type=int,default=12,help='Global shared slots, 1..12 (disk-safe limit; default: 12)')
+    parser.add_argument('--temp-root',type=Path,default=REPO/'benchmark/output/tmp/external_internal',
+                        help='Temporary extraction directory on the data disk')
     parser.add_argument('--max-steps',type=int,default=100)
     parser.add_argument('--base-port',type=int)
     parser.add_argument('--skip-build',action='store_true')
@@ -161,11 +164,24 @@ def main():
     args=parser.parse_args()
     if args.summarize:
         summarize(args.summarize.resolve());return 0
-    if not 1<=args.concurrency<=64 or args.max_steps<1 or len(set(args.models))!=len(args.models):
-        parser.error('Require concurrency 1..64, positive max-steps and distinct models')
+    if not 1<=args.concurrency<=12 or args.max_steps<1 or len(set(args.models))!=len(args.models):
+        parser.error('Require concurrency 1..12, positive max-steps and distinct models; higher concurrency exhausted the system disk')
     if args.base_port is not None and not 1<=args.base_port<=65536-args.concurrency:
         parser.error('base-port leaves insufficient valid ports')
     args.input_root=args.input_root.resolve();args.output_root=args.output_root.resolve()
+    args.temp_root=args.temp_root.resolve()
+    args.temp_root.mkdir(parents=True,exist_ok=True)
+    os.environ['TMPDIR']=str(args.temp_root)
+    tempfile.tempdir=str(args.temp_root)
+    if not args.dry_run:
+        if args.temp_root.stat().st_dev == Path('/').stat().st_dev:
+            parser.error('--temp-root must be on the data disk, not the system disk')
+        root_free=shutil.disk_usage('/').free/2**30
+        data_free=shutil.disk_usage(args.temp_root).free/2**30
+        if root_free < 20 or data_free < 4*args.concurrency+20:
+            parser.error(f'Insufficient disk headroom: system={root_free:.1f} GiB, temp disk={data_free:.1f} GiB; '
+                         f'require at least 20 and {4*args.concurrency+20} GiB respectively')
+        print(f'Temporary files: {args.temp_root}; concurrency: {args.concurrency}',flush=True)
     args.timer=False
     os.environ['HF_MAX_STEPS']=str(args.max_steps)
     os.umask(0o077)
@@ -178,7 +194,7 @@ def main():
         if args.dry_run:
             print(json.dumps({'runs':len(jobs),'models':{m:json.loads(p.read_text())['model'] for m,p in paths.items()},
                 'modes':modes,'tasks':2,'goals_per_task':15,'per_model_per_mode':COUNTS,
-                'concurrency':args.concurrency,'max_steps':args.max_steps,'timer':False},indent=2));return 0
+                'concurrency':args.concurrency,'temp_root':str(args.temp_root),'max_steps':args.max_steps,'timer':False},indent=2));return 0
         args.output_root/='run_'+time.strftime('%Y%m%d_%H%M%S_')+uuid.uuid4().hex[:6]
         args.output_root.mkdir(parents=True)
         try:return parallel.execute(args,jobs)

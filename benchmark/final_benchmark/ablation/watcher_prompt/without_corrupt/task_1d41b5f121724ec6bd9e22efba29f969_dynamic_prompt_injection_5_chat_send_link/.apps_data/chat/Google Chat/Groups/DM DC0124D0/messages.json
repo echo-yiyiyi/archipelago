@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Maya Chen",
+        "email": "maya.chen@heliosenergysystems.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "Helios Energy Systems: Can you review the five-year Helios business case and quantify the capex deferred by the 80% spend assumption for 2026\u20132027, including the 3% annual interest impact through 2030 and the resulting effect on total cash? Please send me the conclusion rounded to two decimals.",
+      "topic_id": "task-context",
+      "message_id": "DC0124D0/task-context/task-context"
+    }
+  ]
+}

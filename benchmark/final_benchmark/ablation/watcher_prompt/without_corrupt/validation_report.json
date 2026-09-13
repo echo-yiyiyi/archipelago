@@ -1,0 +1,21 @@
+{
+  "status": "passed",
+  "records": 10,
+  "checks": [
+    "10 task IDs and goal IDs aligned with with",
+    "task JSON files unchanged",
+    "only three watcher methods changed",
+    "all other artifacts and instruction templates byte-identical"
+  ],
+  "evaluations_run": false,
+  "behavior_tests": {
+    "passed": 3,
+    "checks": [
+      "original bytes, inode and mtime unchanged",
+      "first instruction read deletes siblings and clears pending injections",
+      "preexisting sidecar preserved",
+      "real inotify read event and goal activity cleanup"
+    ]
+  },
+  "subset_manifest": "../subset_manifest.json"
+}

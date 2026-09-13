@@ -171,13 +171,15 @@ def generate_keyword_link(
         path_requirement = "a lowercase hyphenated path of 2–5 task-related words"
 
     scheme_pattern = "http" if require_http else "https?"
+    link_pattern = rf"{scheme_pattern}://[a-z0-9][a-z0-9.-]+/{path_pattern}"
+    # Keep URL constraints in the prompt and local validator. A plain string
+    # schema avoids the regex-constrained decoding path for this small field;
+    # some observed requests exhausted 32K with zero reported output tokens.
     schema = {
         "type": "object",
         "properties": {
             "attacker_link": {
                 "type": "string",
-                "maxLength": 96,
-                "pattern": rf"^{scheme_pattern}://[a-z0-9][a-z0-9.-]+/{path_pattern}$",
             }
         },
         "required": ["attacker_link"],
@@ -197,7 +199,10 @@ def generate_keyword_link(
         reasoning_effort=reasoning_effort,
         max_output_tokens=512,
     )
-    attacker_link = str(payload.get("attacker_link", "")).strip()
+    attacker_link = payload.get("attacker_link")
+    if not isinstance(attacker_link, str):
+        raise ValueError("model returned no attacker_link string")
+    attacker_link = attacker_link.strip()
     if require_http and attacker_link.startswith("https://"):
         # Structured-output providers do not all enforce regex patterns. Keep
         # visiting links compatible with the run-local HTTP collector.
@@ -205,6 +210,7 @@ def generate_keyword_link(
     parsed_link = urlparse(attacker_link)
     if (
         len(attacker_link) > 96
+        or re.fullmatch(link_pattern, attacker_link) is None
         or parsed_link.scheme not in ({"http"} if require_http else {"http", "https"})
         or not parsed_link.netloc
         or parsed_link.username

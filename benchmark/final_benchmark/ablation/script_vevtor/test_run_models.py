@@ -38,7 +38,7 @@ class SummaryTest(unittest.TestCase):
 
     def test_plan_has_five_paired_tasks_per_model_category_vector(self):
         with tempfile.TemporaryDirectory() as temporary:
-            configs = runner.configs(list(runner.SOURCES), Path(temporary), True)
+            configs = runner.configs(list(runner.DEFAULT_MODELS), Path(temporary), True)
             jobs = runner.plan(runner.ROOT, configs)
             self.assertEqual(len(jobs), 135)
             self.assertEqual(len({j.key for j in jobs}), 135)

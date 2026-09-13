@@ -90,3 +90,60 @@ rates. These replace the earlier unrelated-model proxy estimates.
 For Opus, average base uncached input after removing cache hits and cache
 writes is 84,149 tokens. For the other models, uncached input is total input
 minus cached input.
+
+## All-category sample: estimated costs
+
+Updated September 11, 2026. Gemini and Sonnet estimates apply the previously
+used Kimi rates to recorded token usage: ordinary input $3.00, cached input
+$0.30, and output $15.00 per million tokens. Cache writes are charged as
+ordinary input, including Sonnet's recorded cache-write tokens. Astra instead
+uses the user-reported OpenAI balance decrease of $43.13 ($50.00 - $6.87),
+allocated across 24 tasks. These two cost bases are not directly comparable.
+
+```text
+Kimi-equivalent cost = ((total input - cached input) × 3.00
+                     + cached input × 0.30
+                     + output × 15.00) / 1,000,000
+Estimated cost for 180 tasks = mean cost per completed task × 180
+```
+
+| Model | Completed sample tasks | Mean cost/task (USD) | Estimated cost for 180 tasks (USD) |
+|---|---:|---:|---:|
+| Gemini 3.6 Flash | 24 | $1.941 | $349.45 |
+| Gemini 3.7 Flash | 24 | $1.350 | $243.04 |
+| Gemini 3.8 Flash | 24 | $2.097 | $377.47 |
+| Claude Sonnet 5 | 24 | $1.653 | $297.48 |
+| GPT-6 Astra, low reasoning (account spend) | 24 | $1.797 | $323.48 |
+| **All five models, 180 tasks each (900 total; mixed cost bases)** | | | **$1,590.93** |
+
+The four complete 24-task samples come from
+`output/all_category_test/parallel_20260911_132704_ac9ccf25/`.
+Astra uses the completed 24-task rerun in
+`output/all_category_test/parallel_20260911_150005_fbe71eca/`; its earlier
+failed run is excluded. The Astra estimate assumes the entire $43.13 balance
+decrease belongs to these 24 tasks, including any retry charges. This has not
+been reconciled against billing records. Its average is $43.13 / 24 =
+$1.79708333 per task, and its 180-task projection is $323.475 before rounding.
+The initial balance was $50.00, not $100.00.
+
+The 180-task estimates extrapolate sample means, not measured full-run costs.
+Totals are calculated before rounding. The combined total mixes Kimi-normalized
+Gemini/Sonnet costs with balance-based Astra spending; it is not a forecast of
+all providers' actual bills.
+
+Average recorded tokens per completed task (Astra token statistics below retain
+the earlier 22-task snapshot and are not the basis of its revised cost row):
+
+| Model | Uncached input, excluding cache writes | Cached input | Cache writes | Output |
+|---|---:|---:|---:|---:|
+| Gemini 3.6 Flash | 434,370.21 | 906,230.08 | 0 | 24,427.29 |
+| Gemini 3.7 Flash | 204,511.25 | 1,337,801.54 | 0 | 22,357.33 |
+| Gemini 3.8 Flash | 323,554.08 | 2,029,645.79 | 0 | 34,501.54 |
+| Claude Sonnet 5 | 192,958.58 | 544,889.62 | 127,033.00 | 35,283.12 |
+| GPT-6 Astra, low reasoning | 22,185.41 | 69,034.77 | 0 | 1,527.55 |
+
+Each trajectory's aggregate usage was checked against its per-call usage sum.
+The token-based Gemini/Sonnet estimates include only recorded main-agent calls;
+grading, security judging, unrecorded or timed-out requests, and infrastructure
+costs are excluded. Astra uses the account-spend assumption described above.
+The token samples report zero context compactions.

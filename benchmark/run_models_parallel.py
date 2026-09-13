@@ -45,7 +45,7 @@ class Job:
         return f'{self.model}/{self.category}/{self.selector}'
 
 
-def plan_jobs(input_root: Path, models: list[str]) -> list[Job]:
+def plan_jobs(input_root: Path, models: list[str], categories: list[str] | None = None) -> list[Job]:
     if not models or len(set(models)) != len(models):
         raise ValueError('provide distinct model config names')
     configs = {}
@@ -58,7 +58,11 @@ def plan_jobs(input_root: Path, models: list[str]) -> list[Job]:
             raise ValueError(f'{path}: missing model')
         configs[model] = path
     batches = []
-    for category, path, _ in discover('all', root=input_root):
+    discovered = {}
+    for selection in categories or ['all']:
+        for category, path, count in discover(selection, root=input_root):
+            discovered[category] = (category, path, count)
+    for category, path, _ in discovered.values():
         rows = json.loads(path.read_text())
         hosts = runtime.link_hosts_from_attack_config(path)
         batches.append((category, path, rows, hosts))
@@ -250,6 +254,7 @@ def execute(args, jobs):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--models', nargs='+', default=DEFAULT_MODELS)
+    parser.add_argument('--categories', nargs='+', help='Only run the specified categories (default: all)')
     parser.add_argument('--input-root', type=Path, default=BENCHMARK / 'all_category_test')
     parser.add_argument('--output-root', type=Path, default=BENCHMARK / 'output/all_category_test')
     parser.add_argument('--concurrency', type=int, default=64)
@@ -263,7 +268,7 @@ def main(argv=None):
     if args.base_port is not None and not 1 <= args.base_port <= 65536 - args.concurrency:
         parser.error('--base-port leaves insufficient valid ports')
     try:
-        jobs = plan_jobs(args.input_root.resolve(), args.models)
+        jobs = plan_jobs(args.input_root.resolve(), args.models, args.categories)
         if args.dry_run:
             print(json.dumps({'task_count': len(jobs), 'global_concurrency': min(args.concurrency, len(jobs)),
                               'jobs': [job.key for job in jobs]}, indent=2))

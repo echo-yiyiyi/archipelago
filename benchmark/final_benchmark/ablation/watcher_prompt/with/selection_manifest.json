@@ -1,0 +1,114 @@
+{
+  "seed": 42,
+  "source": "/data/ziyi/archipelago/benchmark/final_benchmark/dynamic_prompt_injection/selected_30_tasks_with_attack_config.json",
+  "source_sha256": "8121bd0c3e3a60339317700cbb7253a672b5bc12b9c4ffd9b4a48762a16f150c",
+  "selection": "One record per goal, maximizing distinct source task IDs",
+  "task_count": 10,
+  "goal_count": 10,
+  "tasks": [
+    {
+      "task_id": "task_583c24a9cc6d432c9159b6e4380fe428",
+      "inject_goal": "1_email_send_file",
+      "harmful_task_id": "task_583c24a9cc6d432c9159b6e4380fe428_dynamic_prompt_injection_1_email_send_file",
+      "artifact_sha256": {
+        "task_583c24a9cc6d432c9159b6e4380fe428_dynamic_prompt_injection_1_email_send_file/dynamic_watcher_config.json": "3823953c08b5c6ea8e3149986fbd0b3b9d686399d3ee4d8643dc439bb307b31e",
+        "task_583c24a9cc6d432c9159b6e4380fe428_dynamic_prompt_injection_1_email_send_file/dynamic_document_formats.py": "174435eac2ec56d5890b337a60679919812eb1577ae4574528bdf7173dbb9d24",
+        "task_583c24a9cc6d432c9159b6e4380fe428_dynamic_prompt_injection_1_email_send_file/dynamic_watcher.py": "763459f31ddf4c560401763af5660fb244b7437f535d808642d9b3f4dc0cddb0"
+      }
+    },
+    {
+      "task_id": "task_943b6b1f7cc3442f91957583369004eb",
+      "inject_goal": "4_email_broadcast_link",
+      "harmful_task_id": "task_943b6b1f7cc3442f91957583369004eb_dynamic_prompt_injection_4_email_broadcast_link",
+      "artifact_sha256": {
+        "task_943b6b1f7cc3442f91957583369004eb_dynamic_prompt_injection_4_email_broadcast_link/dynamic_watcher_config.json": "dcc0f82fb701c3091e51e9bb90113dd9c42c26c1557f4977aa3289fa74cf3bde",
+        "task_943b6b1f7cc3442f91957583369004eb_dynamic_prompt_injection_4_email_broadcast_link/.apps_data/calendar/Calendar/project-update-meeting.ics": "a0df0fe26644d41164595f7ebd9f0a1945cfe7ab1cd34688a1a5acb2544703ad",
+        "task_943b6b1f7cc3442f91957583369004eb_dynamic_prompt_injection_4_email_broadcast_link/dynamic_watcher.py": "763459f31ddf4c560401763af5660fb244b7437f535d808642d9b3f4dc0cddb0",
+        "task_943b6b1f7cc3442f91957583369004eb_dynamic_prompt_injection_4_email_broadcast_link/dynamic_document_formats.py": "174435eac2ec56d5890b337a60679919812eb1577ae4574528bdf7173dbb9d24"
+      }
+    },
+    {
+      "task_id": "task_1d41b5f121724ec6bd9e22efba29f969",
+      "inject_goal": "5_chat_send_link",
+      "harmful_task_id": "task_1d41b5f121724ec6bd9e22efba29f969_dynamic_prompt_injection_5_chat_send_link",
+      "artifact_sha256": {
+        "task_1d41b5f121724ec6bd9e22efba29f969_dynamic_prompt_injection_5_chat_send_link/dynamic_watcher_config.json": "2763ceea777720957b5d67c502e181c45cea77483eb01a19f78beb85bebc90c6",
+        "task_1d41b5f121724ec6bd9e22efba29f969_dynamic_prompt_injection_5_chat_send_link/dynamic_document_formats.py": "174435eac2ec56d5890b337a60679919812eb1577ae4574528bdf7173dbb9d24",
+        "task_1d41b5f121724ec6bd9e22efba29f969_dynamic_prompt_injection_5_chat_send_link/dynamic_watcher.py": "763459f31ddf4c560401763af5660fb244b7437f535d808642d9b3f4dc0cddb0",
+        "task_1d41b5f121724ec6bd9e22efba29f969_dynamic_prompt_injection_5_chat_send_link/.apps_data/chat/Google Chat/Groups/DM DC0124D0/messages.json": "f7611cf1c6dcd2c283a8043f37d3fc7a0c4a62bc3156b1b69650a85dbc59f502"
+      }
+    },
+    {
+      "task_id": "task_c50984179bb64d288e409c0f1370fdda",
+      "inject_goal": "6_chat_to_achieve_url",
+      "harmful_task_id": "task_c50984179bb64d288e409c0f1370fdda_dynamic_prompt_injection_6_chat_to_achieve_url",
+      "artifact_sha256": {
+        "task_c50984179bb64d288e409c0f1370fdda_dynamic_prompt_injection_6_chat_to_achieve_url/.apps_data/chat/Google Chat/Groups/DM 0C47CB9C/messages.json": "d5beb2b0a004c7996218182da74c9c7ee474203a2e6e1793abafeec1cb9902bc",
+        "task_c50984179bb64d288e409c0f1370fdda_dynamic_prompt_injection_6_chat_to_achieve_url/dynamic_watcher.py": "763459f31ddf4c560401763af5660fb244b7437f535d808642d9b3f4dc0cddb0",
+        "task_c50984179bb64d288e409c0f1370fdda_dynamic_prompt_injection_6_chat_to_achieve_url/dynamic_watcher_config.json": "c020b761778cb1bbcde27e9169a3679af23a0d4411ac8d0c29d9e21ed589c3a2",
+        "task_c50984179bb64d288e409c0f1370fdda_dynamic_prompt_injection_6_chat_to_achieve_url/dynamic_document_formats.py": "174435eac2ec56d5890b337a60679919812eb1577ae4574528bdf7173dbb9d24"
+      }
+    },
+    {
+      "task_id": "task_ae92292a5cfb4594ae8746ee31ce498b",
+      "inject_goal": "7_calendar_create_event",
+      "harmful_task_id": "task_ae92292a5cfb4594ae8746ee31ce498b_dynamic_prompt_injection_7_calendar_create_event",
+      "artifact_sha256": {
+        "task_ae92292a5cfb4594ae8746ee31ce498b_dynamic_prompt_injection_7_calendar_create_event/dynamic_document_formats.py": "174435eac2ec56d5890b337a60679919812eb1577ae4574528bdf7173dbb9d24",
+        "task_ae92292a5cfb4594ae8746ee31ce498b_dynamic_prompt_injection_7_calendar_create_event/dynamic_watcher_config.json": "1d631b996e0184d8d3a734a04eed1bed6b3572153180196681b73597c82f45da",
+        "task_ae92292a5cfb4594ae8746ee31ce498b_dynamic_prompt_injection_7_calendar_create_event/dynamic_watcher.py": "763459f31ddf4c560401763af5660fb244b7437f535d808642d9b3f4dc0cddb0"
+      }
+    },
+    {
+      "task_id": "task_800767f48d7e42cfaa74ca8057364512",
+      "inject_goal": "8_fetch_external_link",
+      "harmful_task_id": "task_800767f48d7e42cfaa74ca8057364512_dynamic_prompt_injection_8_fetch_external_link",
+      "artifact_sha256": {
+        "task_800767f48d7e42cfaa74ca8057364512_dynamic_prompt_injection_8_fetch_external_link/dynamic_watcher.py": "763459f31ddf4c560401763af5660fb244b7437f535d808642d9b3f4dc0cddb0",
+        "task_800767f48d7e42cfaa74ca8057364512_dynamic_prompt_injection_8_fetch_external_link/dynamic_document_formats.py": "174435eac2ec56d5890b337a60679919812eb1577ae4574528bdf7173dbb9d24",
+        "task_800767f48d7e42cfaa74ca8057364512_dynamic_prompt_injection_8_fetch_external_link/dynamic_watcher_config.json": "9e55d1dc0242fdf59c0cd58b3a6eb82448f205b05a54c02b3abdffe5aa4ad917"
+      }
+    },
+    {
+      "task_id": "task_4e38ae1e886d46979130923154324782",
+      "inject_goal": "18_copy_file",
+      "harmful_task_id": "task_4e38ae1e886d46979130923154324782_dynamic_prompt_injection_18_copy_file",
+      "artifact_sha256": {
+        "task_4e38ae1e886d46979130923154324782_dynamic_prompt_injection_18_copy_file/dynamic_watcher_config.json": "836d698b413121db92585ac517869c972c46c41d82c04762367eedeffc2ef742",
+        "task_4e38ae1e886d46979130923154324782_dynamic_prompt_injection_18_copy_file/dynamic_document_formats.py": "174435eac2ec56d5890b337a60679919812eb1577ae4574528bdf7173dbb9d24",
+        "task_4e38ae1e886d46979130923154324782_dynamic_prompt_injection_18_copy_file/dynamic_watcher.py": "763459f31ddf4c560401763af5660fb244b7437f535d808642d9b3f4dc0cddb0"
+      }
+    },
+    {
+      "task_id": "task_f525769ab6a748e6855e03c95e4b4bd7",
+      "inject_goal": "22_save_client_code",
+      "harmful_task_id": "task_f525769ab6a748e6855e03c95e4b4bd7_dynamic_prompt_injection_22_save_client_code",
+      "artifact_sha256": {
+        "task_f525769ab6a748e6855e03c95e4b4bd7_dynamic_prompt_injection_22_save_client_code/dynamic_watcher_config.json": "59bcf21a0b5181df063c3e93746cb0218ad111733cc2d43ca282701a8c6b1094",
+        "task_f525769ab6a748e6855e03c95e4b4bd7_dynamic_prompt_injection_22_save_client_code/dynamic_watcher.py": "763459f31ddf4c560401763af5660fb244b7437f535d808642d9b3f4dc0cddb0",
+        "task_f525769ab6a748e6855e03c95e4b4bd7_dynamic_prompt_injection_22_save_client_code/dynamic_document_formats.py": "174435eac2ec56d5890b337a60679919812eb1577ae4574528bdf7173dbb9d24"
+      }
+    },
+    {
+      "task_id": "task_7b0900ec821f4aafa9d1d1f02fa5c330",
+      "inject_goal": "23_save_passphrase",
+      "harmful_task_id": "task_7b0900ec821f4aafa9d1d1f02fa5c330_dynamic_prompt_injection_23_save_passphrase",
+      "artifact_sha256": {
+        "task_7b0900ec821f4aafa9d1d1f02fa5c330_dynamic_prompt_injection_23_save_passphrase/dynamic_watcher_config.json": "e089c839d970fbb77212e44b931caa21675579acf88348e491803e22b54631f8",
+        "task_7b0900ec821f4aafa9d1d1f02fa5c330_dynamic_prompt_injection_23_save_passphrase/dynamic_watcher.py": "763459f31ddf4c560401763af5660fb244b7437f535d808642d9b3f4dc0cddb0",
+        "task_7b0900ec821f4aafa9d1d1f02fa5c330_dynamic_prompt_injection_23_save_passphrase/dynamic_document_formats.py": "174435eac2ec56d5890b337a60679919812eb1577ae4574528bdf7173dbb9d24"
+      }
+    },
+    {
+      "task_id": "task_fe573b8ce38d4a9f9642fbe7b8f11358",
+      "inject_goal": "24_save_final_answer",
+      "harmful_task_id": "task_fe573b8ce38d4a9f9642fbe7b8f11358_dynamic_prompt_injection_24_save_final_answer",
+      "artifact_sha256": {
+        "task_fe573b8ce38d4a9f9642fbe7b8f11358_dynamic_prompt_injection_24_save_final_answer/dynamic_watcher_config.json": "44957362da5703e78f89c59be32665c4f6a3a5f6747b11c95364af16ed195f21",
+        "task_fe573b8ce38d4a9f9642fbe7b8f11358_dynamic_prompt_injection_24_save_final_answer/dynamic_document_formats.py": "174435eac2ec56d5890b337a60679919812eb1577ae4574528bdf7173dbb9d24",
+        "task_fe573b8ce38d4a9f9642fbe7b8f11358_dynamic_prompt_injection_24_save_final_answer/dynamic_watcher.py": "763459f31ddf4c560401763af5660fb244b7437f535d808642d9b3f4dc0cddb0"
+      }
+    }
+  ],
+  "subset_manifest": "../subset_manifest.json"
+}

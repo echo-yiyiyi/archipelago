@@ -1,0 +1,15 @@
+BEGIN:VCALENDAR
+PRODID:-//APEX//Task Reference Fixture//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:evt-2c86e5f7
+DTSTART:20260901T150000Z
+DTEND:20260901T160000Z
+SUMMARY:Review EV Unit Price Analysis: 2022 vs. 2025
+DESCRIPTION:Collaborative review of extracted euro unit price points from the ten 2022 expert call summaries and the 2025 expert synthesis file for “Vehicle electronics sensors and controls” and “EV charging and onboard power.” Verify source coverage\, family classification\, yearly average calculations\, percent-change methodology\, and the completeness of the final written response. This meeting is for reviewing the work and does not presume any analytical findings.
+LOCATION:Virtual meeting — EV Price Analysis project workspace
+ATTENDEE:mailto:expert-call-analyst@ev-price-analysis.org
+ATTENDEE:mailto:synthesis-reviewer@ev-price-analysis.org
+END:VEVENT
+END:VCALENDAR

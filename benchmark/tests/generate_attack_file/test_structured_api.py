@@ -27,12 +27,23 @@ class StructuredApiTests(unittest.TestCase):
                 response(text, 'incomplete', 'max_output_tokens'), response('{"value": 5}')
             ], max_output_tokens=128, reasoning_effort='low')
             self.assertEqual(result, {'value': 5})
-            self.assertEqual([c.kwargs['max_output_tokens'] for c in create.call_args_list], [128, 2048])
+            self.assertEqual([c.kwargs['max_output_tokens'] for c in create.call_args_list], [128, 8192])
             self.assertEqual(create.call_args.kwargs['reasoning'], {'effort': 'low'})
 
     def test_empty_completed_response_retries_without_budget_increase(self):
         _, create = self.call([response('  '), response('{"value": 5}')], max_output_tokens=2048)
         self.assertEqual([c.kwargs['max_output_tokens'] for c in create.call_args_list], [2048, 2048])
+
+    def test_small_metadata_request_reaches_reasoning_budget_on_last_try(self):
+        for initial, expected in [(512, [512, 8192, 32768]),
+                                  (65536, [65536, 65536, 65536])]:
+            result, create = self.call([
+                response('', 'incomplete', 'max_output_tokens'),
+                response('', 'incomplete', 'max_output_tokens'),
+                response('{"value": 5}'),
+            ], max_output_tokens=initial)
+            self.assertEqual(result, {'value': 5})
+            self.assertEqual([c.kwargs['max_output_tokens'] for c in create.call_args_list], expected)
 
     def test_retry_limit_preserves_diagnostics(self):
         create = Mock(return_value=response('', 'incomplete', 'max_output_tokens', id='resp_test'))

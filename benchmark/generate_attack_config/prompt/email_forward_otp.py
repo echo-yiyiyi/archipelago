@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import re
+import tempfile
 from email.utils import format_datetime
 from datetime import datetime, timezone
 from pathlib import Path
@@ -213,4 +214,20 @@ def generate_otp_artifact(
             "message_id": _otp_mail_id(task_id),
         }
     )
-    return generate_file("email", payload, output_dir)
+    target = Path(output_dir) / OTP_EMAIL_PATH
+    if not target.exists():
+        return generate_file("email", payload, output_dir)
+    # An email injection carrier already occupies the standard mailbox. Render
+    # the auxiliary OTP independently, then append its mbox entry, preserving
+    # the injection email. Keep the general renderer's no-overwrite safeguard.
+    with tempfile.TemporaryDirectory(prefix='.otp-', dir=output_dir) as temporary:
+        otp = generate_file("email", payload, temporary)
+        previous = target.read_bytes()
+        if previous and not previous.startswith(b'From '):
+            raise ValueError(f'Existing OTP destination is not an mbox: {target}')
+        separator = b'\n' * (2 - min(2, len(previous) - len(previous.rstrip(b'\n')))) if previous else b''
+        combined = Path(temporary) / 'combined.mbox'
+        combined.write_bytes(previous + separator + otp.read_bytes())
+        combined.chmod(target.stat().st_mode & 0o777)
+        combined.replace(target)
+    return target

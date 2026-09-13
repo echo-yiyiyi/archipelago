@@ -1,0 +1,79 @@
+% Include with \input{...} after \appendix in the main document.
+% Requires \usepackage{booktabs} in the preamble.
+\section{Detailed Experimental Results}
+\label{app:detailed-results}
+
+\subsection{Attack Success Rates across Script Attack Vectors}
+\label{app:script-attack-vectors}
+
+We compare Python source code (PY), Python bytecode (PYC), and ELF
+executables across Category 2 (Static Script Injection), Category 5
+(User-Referenced Script Replacement), and Category 6 (User-Prompt Suffix
+Injection). We evaluate four models, using five evaluations per model,
+category, and script attack vector. In these
+experiments, PY yields the lowest ASR in every model--category combination,
+including ties, while the size of the difference varies across models and
+categories. Table~\ref{tab:script-vector-by-category} presents the detailed
+results, with models ordered by mean ASR within each category and the
+lowest ASR in each row shown in bold.
+
+\begin{table*}[t]
+    \centering
+    \caption{Attack success rates across script attack vectors.}
+    \label{tab:script-vector-by-category}
+    \small
+    \begin{tabular}{p{0.39\textwidth}lrrr}
+        \toprule
+        Category & Model & PY & PYC & ELF \\
+        \midrule
+        Category 2: Static Script Injection & DeepSeek V4 Flash & \textbf{0\%} & \textbf{0\%} & \textbf{0\%} \\
+         & Kimi & \textbf{0\%} & 40\% & 40\% \\
+         & GPT-5.6 Terra & \textbf{20\%} & 80\% & 80\% \\
+         & Gemini 3.6 Flash & \textbf{60\%} & 100\% & 100\% \\
+        \midrule
+        Category 5: User-Referenced Script Replacement & DeepSeek V4 Flash & \textbf{60\%} & 100\% & 100\% \\
+         & Kimi & \textbf{80\%} & 100\% & 100\% \\
+         & Gemini 3.6 Flash & \textbf{80\%} & 100\% & 100\% \\
+         & GPT-5.6 Terra & \textbf{100\%} & \textbf{100\%} & \textbf{100\%} \\
+        \midrule
+        Category 6: User-Prompt Suffix Injection & Gemini 3.6 Flash & \textbf{20\%} & 80\% & 80\% \\
+         & DeepSeek V4 Flash & \textbf{40\%} & 100\% & 80\% \\
+         & Kimi & \textbf{40\%} & 80\% & 100\% \\
+         & GPT-5.6 Terra & \textbf{80\%} & 100\% & 100\% \\
+        \bottomrule
+    \end{tabular}
+\end{table*}
+
+\subsection{Attack Success Rates across File and Application Attack Vectors}
+\label{app:file-application-attack-vectors}
+
+We further evaluate Gemini 3.6 Flash under Category 1 (Static Prompt
+Injection) across six file attack vectors and three application attack
+vectors, with five evaluations per vector.
+In this sample, application attack vectors yield ASRs of 60--80\%,
+compared with 20--40\% for file attack vectors. Chat has the highest ASR,
+while HTML and Markdown have the lowest. Table~\ref{tab:file-application-vectors}
+reports the results for each vector.
+
+\begin{table}[t]
+    \centering
+    \caption{Attack success rates across file and application attack vectors
+    for Gemini 3.6 Flash.}
+    \label{tab:file-application-vectors}
+    \begin{tabular}{llr}
+        \toprule
+        Vector type & Vector & ASR \\
+        \midrule
+        File & HTML & 20\% \\
+         & Markdown & 20\% \\
+         & PDF & 40\% \\
+         & TXT & 40\% \\
+         & Word & 40\% \\
+         & XLSX & 40\% \\
+        \midrule
+        Application & Calendar & 60\% \\
+         & Email & 60\% \\
+         & Chat & 80\% \\
+        \bottomrule
+    \end{tabular}
+\end{table}

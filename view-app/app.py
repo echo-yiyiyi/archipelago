@@ -18,6 +18,8 @@ SCRIPTS_DIR = APP_DIR / "scripts"
 DEFAULT_RUNS_DIRS = (
     ARCHIPELAGO_ROOT / "benchmark" / "output" / "concurrent",
     HF_DIR / "output" / "concurrent",
+    ARCHIPELAGO_ROOT / "benchmark" / "output" / "final_benchmark",
+    ARCHIPELAGO_ROOT / "benchmark" / "output" / "ablation",
 )
 _configured_runs_dir = os.environ.get("ARCHIPELAGO_RUNS_DIR")
 RUNS_DIRS = (
@@ -46,13 +48,42 @@ def safe_child(parent: Path, name: str) -> Path:
     return path
 
 
+def discover_runs():
+    """Keep legacy IDs and discover nested final-benchmark batches.
+
+    Stop at each run so task snapshots and input bundles are never traversed.
+    Nested IDs remain a single URL segment and include their parent directories.
+    """
+    seen = set()
+    for root in RUNS_DIRS:
+        if not root.is_dir():
+            continue
+        pending = list(sorted(root.iterdir()))
+        while pending:
+            path = pending.pop()
+            resolved = path.resolve()
+            if (not path.is_dir() or path.is_symlink()
+                    or not resolved.is_relative_to(root.resolve())):
+                continue
+            relative = path.relative_to(root)
+            is_run = (path / "tasks").is_dir() or (path / "variants").is_dir()
+            if is_run:
+                run_id = (path.name if len(relative.parts) == 1
+                          else "::".join((root.name, *relative.parts)))
+                if run_id not in seen:
+                    seen.add(run_id)
+                    yield run_id, resolved
+                continue
+            if path.name not in {"input", "logs", "environments", "summaries", "__pycache__"}:
+                pending.extend(sorted(path.iterdir()))
+
+
 def run_dir(run_id: str) -> Path:
     if not run_id or Path(run_id).name != run_id:
         abort(400, description="Invalid directory name")
-    for root in RUNS_DIRS:
-        candidate = (root / run_id).resolve()
-        if candidate.parent == root and candidate.is_dir():
-            return candidate
+    for identifier, path in discover_runs():
+        if identifier == run_id:
+            return path
     abort(404)
 
 
@@ -252,16 +283,7 @@ def index():
 
 @app.get("/api/runs")
 def runs():
-    items = []
-    seen = set()
-    for root in RUNS_DIRS:
-        if not root.is_dir():
-            continue
-        for path in sorted(root.iterdir(), reverse=True):
-            if not path.is_dir() or path.name in seen:
-                continue
-            seen.add(path.name)
-            items.append({"id": path.name})
+    items = [{"id": identifier} for identifier, _ in discover_runs()]
     return jsonify({"runs": items, "roots": [str(root) for root in RUNS_DIRS]})
 
 

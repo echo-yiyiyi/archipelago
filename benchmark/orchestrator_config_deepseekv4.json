@@ -1,0 +1,17 @@
+{
+  "model": "deepseek/deepseek-v4-flash",
+  "extra_args": {
+    "api_base": "https://api.deepseek.com",
+    "allowed_openai_params": [
+      "reasoning_effort"
+    ],
+    "reasoning_effort": "max",
+    "max_tokens": 262144,
+    "stream": false,
+    "extra_body": {
+      "thinking": {
+        "type": "enabled"
+      }
+    }
+  }
+}

@@ -1,0 +1,166 @@
+{
+  "strategy": "balanced",
+  "counts": {
+    "email": 3,
+    "calendar": 3,
+    "xlsx": 4,
+    "html": 3,
+    "pdf": 3,
+    "md": 4,
+    "chat": 4,
+    "word": 3,
+    "txt": 3
+  },
+  "assignments": [
+    {
+      "pair": "task_4e38ae1e886d46979130923154324782/2_email_send_prompt",
+      "vector": "email",
+      "rank": 1
+    },
+    {
+      "pair": "task_4e38ae1e886d46979130923154324782/4_email_broadcast_link",
+      "vector": "calendar",
+      "rank": 1
+    },
+    {
+      "pair": "task_943b6b1f7cc3442f91957583369004eb/5_chat_send_link",
+      "vector": "xlsx",
+      "rank": 1
+    },
+    {
+      "pair": "task_943b6b1f7cc3442f91957583369004eb/1_email_send_file",
+      "vector": "xlsx",
+      "rank": 1
+    },
+    {
+      "pair": "task_583c24a9cc6d432c9159b6e4380fe428/21_save_credit_score",
+      "vector": "xlsx",
+      "rank": 1
+    },
+    {
+      "pair": "task_583c24a9cc6d432c9159b6e4380fe428/20_save_employee_number",
+      "vector": "xlsx",
+      "rank": 1
+    },
+    {
+      "pair": "task_800767f48d7e42cfaa74ca8057364512/1_email_send_file",
+      "vector": "html",
+      "rank": 3
+    },
+    {
+      "pair": "task_800767f48d7e42cfaa74ca8057364512/20_save_employee_number",
+      "vector": "pdf",
+      "rank": 2
+    },
+    {
+      "pair": "task_ae92292a5cfb4594ae8746ee31ce498b/24_save_final_answer",
+      "vector": "md",
+      "rank": 1
+    },
+    {
+      "pair": "task_ae92292a5cfb4594ae8746ee31ce498b/3_email_forward_otp",
+      "vector": "email",
+      "rank": 1
+    },
+    {
+      "pair": "task_4b3c2dfc4d164a25831e8787397766c3/7_calendar_create_event",
+      "vector": "calendar",
+      "rank": 2
+    },
+    {
+      "pair": "task_4b3c2dfc4d164a25831e8787397766c3/8_fetch_external_link",
+      "vector": "html",
+      "rank": 3
+    },
+    {
+      "pair": "task_c50984179bb64d288e409c0f1370fdda/5_chat_send_link",
+      "vector": "chat",
+      "rank": 1
+    },
+    {
+      "pair": "task_c50984179bb64d288e409c0f1370fdda/4_email_broadcast_link",
+      "vector": "word",
+      "rank": 2
+    },
+    {
+      "pair": "task_1d41b5f121724ec6bd9e22efba29f969/23_save_passphrase",
+      "vector": "chat",
+      "rank": 2
+    },
+    {
+      "pair": "task_1d41b5f121724ec6bd9e22efba29f969/24_save_final_answer",
+      "vector": "md",
+      "rank": 1
+    },
+    {
+      "pair": "task_c0476484bd64414f87f46f1868cde2f1/18_copy_file",
+      "vector": "txt",
+      "rank": 4
+    },
+    {
+      "pair": "task_c0476484bd64414f87f46f1868cde2f1/23_save_passphrase",
+      "vector": "txt",
+      "rank": 4
+    },
+    {
+      "pair": "task_f525769ab6a748e6855e03c95e4b4bd7/22_save_client_code",
+      "vector": "md",
+      "rank": 1
+    },
+    {
+      "pair": "task_f525769ab6a748e6855e03c95e4b4bd7/6_chat_to_achieve_url",
+      "vector": "chat",
+      "rank": 1
+    },
+    {
+      "pair": "task_fe573b8ce38d4a9f9642fbe7b8f11358/19_save_country",
+      "vector": "word",
+      "rank": 2
+    },
+    {
+      "pair": "task_fe573b8ce38d4a9f9642fbe7b8f11358/22_save_client_code",
+      "vector": "word",
+      "rank": 2
+    },
+    {
+      "pair": "task_3bb0664007a140a981193fb43ba1be7b/3_email_forward_otp",
+      "vector": "email",
+      "rank": 1
+    },
+    {
+      "pair": "task_3bb0664007a140a981193fb43ba1be7b/6_chat_to_achieve_url",
+      "vector": "chat",
+      "rank": 1
+    },
+    {
+      "pair": "task_2b5df2b5a0eb423e998099a9fcd8e262/18_copy_file",
+      "vector": "txt",
+      "rank": 5
+    },
+    {
+      "pair": "task_2b5df2b5a0eb423e998099a9fcd8e262/2_email_send_prompt",
+      "vector": "html",
+      "rank": 2
+    },
+    {
+      "pair": "task_ccd303088b344ea8b81c13dc04309142/7_calendar_create_event",
+      "vector": "calendar",
+      "rank": 1
+    },
+    {
+      "pair": "task_ccd303088b344ea8b81c13dc04309142/8_fetch_external_link",
+      "vector": "pdf",
+      "rank": 1
+    },
+    {
+      "pair": "task_7b0900ec821f4aafa9d1d1f02fa5c330/21_save_credit_score",
+      "vector": "md",
+      "rank": 1
+    },
+    {
+      "pair": "task_7b0900ec821f4aafa9d1d1f02fa5c330/19_save_country",
+      "vector": "pdf",
+      "rank": 2
+    }
+  ]
+}
