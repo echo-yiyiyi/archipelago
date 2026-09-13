@@ -1,0 +1,25 @@
+{
+  "status": "passed",
+  "records": 45,
+  "distinct_task_goal_pairs": 5,
+  "vectors": [
+    "email",
+    "txt",
+    "xlsx",
+    "word",
+    "md",
+    "chat",
+    "html",
+    "pdf",
+    "calendar"
+  ],
+  "checks": [
+    "unique task IDs and goals",
+    "same task/goal pairs across all carriers",
+    "source attack configs retained with path updates only",
+    "decoded injection text matches across all nine formats (ignoring whitespace)",
+    "supporting fixtures byte-identical or preserved as prefix of merged carrier",
+    "all populate files exist inside bundle"
+  ],
+  "evaluations_run": false
+}

@@ -1,0 +1,49 @@
+{
+  "seed": 42,
+  "source": "final_benchmark/static_prompt_injection/selected_30_tasks_with_attack_config.json",
+  "source_sha256": "4f99e23ad71131ebb94e9715e835923a1e68e393fc84209fb5d7c23931c92088",
+  "vectors": [
+    "email",
+    "txt",
+    "xlsx",
+    "word",
+    "md",
+    "chat",
+    "html",
+    "pdf",
+    "calendar"
+  ],
+  "carrier_policy": "Identical keyword-based reference header and original attack_config.cot across all carriers; neutral fixed app metadata; word means docx.",
+  "tasks": [
+    {
+      "task_id": "task_f525769ab6a748e6855e03c95e4b4bd7",
+      "inject_goal": "6_chat_to_achieve_url",
+      "source_harmful_task_id": "task_f525769ab6a748e6855e03c95e4b4bd7_chat_6_chat_to_achieve_url",
+      "text_sha256": "11a2ea0435681fd9dfaac5cf8a2b5eece056d071409103c78cf94e4d5b13b65b"
+    },
+    {
+      "task_id": "task_1d41b5f121724ec6bd9e22efba29f969",
+      "inject_goal": "23_save_passphrase",
+      "source_harmful_task_id": "task_1d41b5f121724ec6bd9e22efba29f969_email_23_save_passphrase",
+      "text_sha256": "aeefa112e18f93f663896bb9f5ebbfc9987b8a175f5c4d605bf0fb5fd066b337"
+    },
+    {
+      "task_id": "task_4b3c2dfc4d164a25831e8787397766c3",
+      "inject_goal": "7_calendar_create_event",
+      "source_harmful_task_id": "task_4b3c2dfc4d164a25831e8787397766c3_calendar_7_calendar_create_event",
+      "text_sha256": "1f660295db7a04df01d2c702fee5a4162911eb4e9fca83418a3aacad4e4763e6"
+    },
+    {
+      "task_id": "task_3bb0664007a140a981193fb43ba1be7b",
+      "inject_goal": "3_email_forward_otp",
+      "source_harmful_task_id": "task_3bb0664007a140a981193fb43ba1be7b_txt_3_email_forward_otp",
+      "text_sha256": "5874d3befe035567d49b6feedef24547a00d90c0b4e85567a70990abe3b22dad"
+    },
+    {
+      "task_id": "task_800767f48d7e42cfaa74ca8057364512",
+      "inject_goal": "1_email_send_file",
+      "source_harmful_task_id": "task_800767f48d7e42cfaa74ca8057364512_html_1_email_send_file",
+      "text_sha256": "2ec7519a2109793350511ef624ec21d8a468caffba7cbf54d7f1269d17160ecc"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "command": [
+    "/data/ziyi/.venv/bin/python",
+    "-m",
+    "benchmark.generate_attack_config.generate",
+    "/data/ziyi/archipelago/benchmark/final_benchmark/ablation/external_internal/internal/static_prompt_injection/selected_16_tasks_with_inject_goals.json",
+    "--output",
+    "/data/ziyi/archipelago/benchmark/final_benchmark/ablation/external_internal/internal/static_prompt_injection/selected_16_tasks_with_attack_config.json"
+  ],
+  "input_sha256": "bc77e29c8e63a1df35e1053bd275f0c2ce5839f948be9914b86b07746780210e",
+  "output_sha256": {
+    "selected_16_tasks_with_attack_config.json": "fd0478d3c86c6ebe7106cd4b716abc04f303307bb51710da948c76b586c01e18",
+    "task_800767f48d7e42cfaa74ca8057364512_txt_7_calendar_create_event/BBDC_TPVG_Business_Services_Additional_Task_Instructions.txt": "98667cff2b51f04312500d68b785f8ce2887ec1e4dba95e949ee60305ba42c12",
+    "task_f525769ab6a748e6855e03c95e4b4bd7_txt_7_calendar_create_event/Impact_Spend_Reduction_Additional_Task_Instructions.txt": "fe39ac95e2e6ea95dfff0fde4c76d7bd24a9a78b7bc96e1f329349b2c532c557",
+    "task_800767f48d7e42cfaa74ca8057364512_txt_18_copy_file/BBDC_TPVG_Business_Services_Exposure_Additional_Task_Instructions.txt": "62a84ba487eab9de5281e5fb8fab15aaefa48d6e82ea0dbe2dd7696a2ad028cb",
+    "task_f525769ab6a748e6855e03c95e4b4bd7_txt_18_copy_file/Impact_Spend_Reduction_Additional_Task_Instructions.txt": "62cb9231b1a836c1a340657381f1d22a175d53209baa2b0d4a7c90cf3c87d7f1",
+    "task_800767f48d7e42cfaa74ca8057364512_txt_19_save_country/BBDC_TPVG_Business_Services_Exposure_Additional_Task_Instructions.txt": "39a85a5971add32978221af5c1da22daedf8c18425e2718cce0fb860adb8ac6d",
+    "task_f525769ab6a748e6855e03c95e4b4bd7_txt_19_save_country/Impact_Spend_Reduction_Additional_Task_Instructions.txt": "ed397cda50e424e4bb0a1675793a1eae0f0838d5da29c84943f67f8382a83098",
+    "task_800767f48d7e42cfaa74ca8057364512_txt_20_save_employee_number/BBDC_TPVG_Business_Services_Exposure_Additional_Task_Instructions.txt": "d043712deac027e91816bc55835b969430acb18ceeeb380dfa98a792106e07e2",
+    "task_f525769ab6a748e6855e03c95e4b4bd7_txt_20_save_employee_number/Impact_Spend_Reduction_Additional_Task_Instructions.txt": "bd09fbdacc92c7dfdae10da0e0f7ea1f4e874fa96e1e06beda8ae571dd7914d4",
+    "task_800767f48d7e42cfaa74ca8057364512_txt_21_save_credit_score/BBDC_TPVG_Business_Services_Exposure_Additional_Task_Instructions.txt": "c82678a5526fe890996c3d80198d4164bd75cbbe9e7c82644c05e8f2e3e694b3",
+    "task_f525769ab6a748e6855e03c95e4b4bd7_txt_21_save_credit_score/Impact_Spend_Reduction_Additional_Task_Instructions.txt": "0e295a92edb278a1073075a2843dcdf416cfe2fa2ddba04155305bd8e32d6f78",
+    "task_800767f48d7e42cfaa74ca8057364512_txt_22_save_client_code/BBDC_TPVG_Business_Services_Exposure_Additional_Task_Instructions.txt": "cfeda875236d1d779b97afe5ba6b9c8a9bde499fcf21a626a5a8592875a29c97",
+    "task_f525769ab6a748e6855e03c95e4b4bd7_txt_22_save_client_code/Impact_Spend_Reduction_Additional_Task_Instructions.txt": "2aded92dfc04aeeff96e8474b6602d8a8f86f5a78c7fdf2fac839cfa2aa91d50",
+    "task_800767f48d7e42cfaa74ca8057364512_txt_23_save_passphrase/BBDC_TPVG_Business_Services_Exposure_Additional_Task_Instructions.txt": "92e4e09da2b4000f17fba267336a9cea687bf56b36489657688b2f89808cf309",
+    "task_f525769ab6a748e6855e03c95e4b4bd7_txt_23_save_passphrase/Impact_Spend_Reduction_Additional_Task_Instructions.txt": "e38693b2cc3817a42f09d5a82018d790c95caedc42974f305267d5c32994e040",
+    "task_800767f48d7e42cfaa74ca8057364512_txt_24_save_final_answer/BBDC_TPVG_Business_Services_Additional_Task_Instructions.txt": "01a6d675987f29895608a5a7d055e6647e1985bd82373b52c379316bb153a024",
+    "task_f525769ab6a748e6855e03c95e4b4bd7_txt_24_save_final_answer/Impact_Spend_Reduction_Additional_Task_Instructions.txt": "76c2110e444b9cd7052e6fa7a7450a53ef51a7e3dd83ee36c5075333daffd4fb"
+  }
+}

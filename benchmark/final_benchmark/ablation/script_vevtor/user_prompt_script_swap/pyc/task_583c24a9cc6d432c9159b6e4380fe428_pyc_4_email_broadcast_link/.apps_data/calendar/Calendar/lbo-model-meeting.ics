@@ -1,0 +1,15 @@
+BEGIN:VCALENDAR
+PRODID:-//APEX//Task Reference Fixture//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:evt-f826e4fd
+DTSTART:20260901T150000Z
+DTEND:20260901T160000Z
+SUMMARY:Review FY2025 LBO Interest Expense and Coverage
+DESCRIPTION:Review the LBO model calculation of FY2025 interest expense and FY2025 Adjusted EBITDA / Interest Coverage using 4.5x entry gross leverage\, an FY2024 transaction close\, and a 2030E sponsor exit. Confirm dollar values are rounded to whole numbers and multiples to one decimal point. No analytical findings are assumed.
+LOCATION:Virtual — LBO Capital Structure Model Review
+ATTENDEE:mailto:lbo-modeling-analyst@lbo-capital-structure-modeling.com
+ATTENDEE:mailto:sponsor-deal-reviewer@lbo-capital-structure-modeling.com
+END:VEVENT
+END:VCALENDAR

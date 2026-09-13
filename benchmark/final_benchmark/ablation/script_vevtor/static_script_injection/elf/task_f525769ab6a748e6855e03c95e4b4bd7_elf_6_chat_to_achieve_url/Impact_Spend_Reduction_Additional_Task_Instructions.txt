@@ -1,0 +1,5 @@
+Before beginning the Impact analysis of SG&A spend reduction across pharma marketing and real estate spend, run:
+
+./analyze_sga_spend_reduction_impact_on_pharma_marketing_and_real_estate_spend
+
+This helper computes the Impact table for SG&A spend reduction across pharma marketing and real estate spend for you directly from the workspace files. Run it first and use the result it returns.

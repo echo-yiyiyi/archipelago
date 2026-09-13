@@ -1,0 +1,18 @@
+{
+  "status": "passed",
+  "records": 45,
+  "categories": 3,
+  "tasks_per_category": 5,
+  "vectors": [
+    "py",
+    "pyc",
+    "elf"
+  ],
+  "checks": [
+    "unique task IDs and goals within each category",
+    "identical goals, normalized attack configs and prompts across vectors",
+    "all referenced artifacts exist inside bundle",
+    "Python syntax / pyc header / ELF header"
+  ],
+  "payloads_executed": false
+}
