@@ -1,0 +1,11 @@
+{
+  "status": "passed",
+  "records": 15,
+  "checks": [
+    "configs equal baseline except removed populate files and explicit omission flag",
+    "all retained artifacts byte-identical to baseline",
+    "instruction files absent",
+    "goal-required TXT fixtures retained"
+  ],
+  "evaluations_run": false
+}

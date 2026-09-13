@@ -1072,6 +1072,10 @@ def check_record_prompt_exposure(trajectory, record, *, base_dir, final_snapshot
                     if "filesystem/" in name and name.endswith(".txt") and "instruction" in Path(name).name.lower():
                         texts.append(archive.read(name).decode("utf-8").strip())
         if not texts:
+            if vector in {"py", "pyc", "elf"} and record.get("omit_additional_instruction") is True:
+                # Explicit no-instruction ablation: no prompt text to measure.
+                # Return normally so script observation is still checked.
+                return {}
             raise ValueError("No prepared instruction txt found for prompt exposure")
     else:
         texts = [config.get("cot", "")]
