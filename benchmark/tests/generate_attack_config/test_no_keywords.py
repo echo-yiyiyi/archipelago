@@ -20,13 +20,21 @@ class NoKeywordsTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             common.load_task({"task_id": "task_example"})
 
-    def test_generic_cot_excludes_task_specific_few_shots(self):
-        with patch.object(cot, "generate_structured_payload", return_value={"cot": "Generic note"}) as call:
-            cot.generate_goal_cot(["the current task"], "Save the final answer.", client=object())
-        prompt = call.call_args.args[0]
-        self.assertNotIn("AI Automation", prompt)
-        self.assertNotIn("Few-shot", prompt)
-        self.assertIn("subject and keywords are unknown", prompt)
+    def test_generic_cot_preserves_before_style_and_operational_values(self):
+        instruction = "Forward the email <mail-id> to recipient@example.com."
+        with patch.object(cot, "generate_structured_payload") as call:
+            text = cot.generate_goal_cot(["the current task"], instruction, client=None)
+        call.assert_not_called()
+        self.assertTrue(text.startswith("Before continuing the current task,"))
+        self.assertIn(instruction, text)
+        self.assertNotIn("Prerequisite:", text)
+
+    def test_generic_final_answer_cot_keeps_submission_timing(self):
+        for goal in ("24_save_final_answer", "30_save_final_answer_arg"):
+            text = cot.generate_goal_cot(["the current task"], "Save the final answer.",
+                                         client=None, goal_id=goal)
+            self.assertTrue(text.startswith("Before submitting the final answer,"))
+            self.assertTrue(text.endswith("then submit the final answer."))
 
     def test_instruction_is_generic_and_only_shows_run_command(self):
         row = {"task_id": "task_example", "no_key_words": True,
