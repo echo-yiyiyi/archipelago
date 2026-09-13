@@ -175,6 +175,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--reasoning-effort")
     parser.add_argument("--model", help="Azure OpenAI deployment name (or set AZURE_OPENAI_MODEL).")
     parser.add_argument("--add-user-prompt", action="store_true")
+    parser.add_argument("--no-keywords", "--no-key-words", dest="no_key_words", action="store_true",
+                        help="Generate generic wording and identifiers without task keywords")
     parser.add_argument("--reuse-existing-attack-config", action="store_true",
                         help="do not regenerate a record's existing attack_config")
     return parser.parse_args()
@@ -198,6 +200,12 @@ def _generate(args) -> int:
     data = json.loads(input_path.read_text(encoding="utf-8"))
     if not isinstance(data, list):
         raise ValueError("input JSON must contain an array of task records")
+
+    if getattr(args, "no_key_words", False):
+        data = [{**item, "no_key_words": True} if isinstance(item, dict) else item for item in data]
+        effective_input = args.output.parent / ".no-keywords-input.json"
+        effective_input.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+        input_path = effective_input
 
     # Check dataset inputs before spending model calls on any record in this
     # batch. Goals 1 and 13 select an existing world/task file.
@@ -243,6 +251,8 @@ def _generate(args) -> int:
         if not isinstance(item, dict):
             raise ValueError("every input record must be a JSON object")
         record = dict(item)
+        if getattr(args, "no_key_words", False):
+            record["no_key_words"] = True
         if args.add_user_prompt:
             record["add_user_prompt"] = True
         generator = generators.get(base_goal(record.get("inject_goal")))
@@ -257,6 +267,7 @@ def _generate(args) -> int:
         # A prepared input may already contain the goal-specific config. Reuse
         # it so executable args variants do not need API generation again.
         if generator is not None and not isinstance(record.get("attack_config"), dict):
+            print(f"Generating config: {record.get('harmful_task_id', record.get('task_id'))}", flush=True)
             record["attack_config"] = generator(
                 record,
                 input_path,
@@ -300,6 +311,7 @@ def _generate(args) -> int:
             or harmful_task_id in {".", ".."}
         ):
             raise ValueError("every record with inject_vector needs harmful_task_id or task_id")
+        print(f"Generating artifacts: {harmful_task_id}", flush=True)
         artifact_dir = output.parent / harmful_task_id
         artifact_dir.mkdir(parents=True, exist_ok=True)
         vector = str(record.get("inject_vector", "")).lower().lstrip(".")
@@ -323,10 +335,11 @@ def _generate(args) -> int:
         if uses_generic_identifiers(record) and vector in {"py", "pyc", "elf"}:
             suffix = ".py" if vector == "py" else ".pyc" if vector == "pyc" else ""
             generic_path = artifact_dir / f"{GENERIC_SCRIPT_BASENAME}{suffix}"
-            if generic_path.exists():
-                raise FileExistsError(f"refusing to overwrite existing file: {generic_path}")
-            attack_path.rename(generic_path)
-            attack_path = generic_path
+            if attack_path != generic_path:
+                if generic_path.exists():
+                    raise FileExistsError(f"refusing to overwrite existing file: {generic_path}")
+                attack_path.rename(generic_path)
+                attack_path = generic_path
         # ``attack_file`` identifies the primary injected artifact, while
         # ``populate_files`` includes it plus any supporting app fixtures.
         # The old plural ``attack_files`` field is no longer emitted.
@@ -483,6 +496,8 @@ def _generate(args) -> int:
                                                'dynamic_script_watcher.py', 'recover_corrupted_file'))
         record["populate_files"] = populate_files
 
+    if getattr(args, "no_key_words", False):
+        effective_input.unlink()
     json_output = output
     temporary = json_output.with_suffix(json_output.suffix + ".tmp")
     # Keep the same top-level array shape as selected_15_tasks_with_keywords.json.

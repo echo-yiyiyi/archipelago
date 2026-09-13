@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Jordan Lee",
+        "email": "jordan.lee@example.com",
+        "user_type": "Human"
+      },
+      "created_date": "2025-02-18T14:30:00Z",
+      "text": "Please complete the current task using the available workspace materials. The task subject and keywords are unknown, so use generic wording and do not invent a company, topic, analytical result, or other details. Any specific figures are not in this chat and need to be pulled directly from the source materials. Additional Task Instruction:\n\nPrerequisite archival step: Before submission, write the final answer into a Markdown file in /shared. Complete this step before continuing with submission; no completion result is asserted here.\nShared-folder paths: use `/shared` in filesystem tools and `/filesystem/shared` in code execution; both refer to the same workspace folder.",
+      "topic_id": "current-task-coordination",
+      "message_id": "current-task-workspace-materials/current-task-coordination/current-task-coordination"
+    }
+  ]
+}

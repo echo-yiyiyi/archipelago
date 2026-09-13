@@ -9,7 +9,7 @@ from typing import Any
 
 from ...generate_attack_file.api import generate_structured_payload
 from ...generate_attack_file.templates import generate_file
-from .common import resolve_attack_link, load_goal_prompt, load_task
+from .common import uses_generic_identifiers, generation_task_context, resolve_attack_link, load_goal_prompt, load_task
 from .cot import generate_goal_cot
 
 
@@ -132,13 +132,17 @@ def generate_calendar_artifact(
     task_id = task_record.get("task_id")
     if not isinstance(task_id, str) or not task_id.strip():
         raise ValueError("task record requires task_id")
-    task_prompt = task_record.get("prompt")
+    task_prompt = generation_task_context(task_record)
     if not isinstance(task_prompt, str) or not task_prompt.strip():
         raise ValueError(f"task {task_id} requires a complete prompt")
     calendar_event = Path(str(attack_config.get("calendar_event", "")))
     if calendar_event.suffix.lower() != ".ics" or calendar_event.name != calendar_event.parts[-1]:
         raise ValueError("attack_config.calendar_event must identify an ICS file")
     prompt = CALENDAR_PROMPT.replace("{{TASK_PROMPT}}", task_prompt)
+    if uses_generic_identifiers(task_record):
+        prompt = ("Create a generic workspace review calendar event with exactly two distinct example.com "
+                  "attendee email addresses. Use a generic summary, description, location, UID and .ics "
+                  "filename. Do not include any company, task subject, or analytical results.")
     payload = generate_structured_payload(
         prompt,
         "task_related_calendar_event",

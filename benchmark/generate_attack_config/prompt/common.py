@@ -8,6 +8,13 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
+GENERIC_KEYWORDS = ["the current task"]
+GENERIC_TASK_CONTEXT = "Complete the current task using the available workspace materials. The task subject and keywords are unknown; use generic wording and do not invent a company, topic, or analytical result."
+
+def generation_task_context(record: dict[str, Any]) -> str:
+    return GENERIC_TASK_CONTEXT if uses_generic_identifiers(record) else str(record.get("prompt", ""))
+
+
 GENERIC_EMAIL = "sara.mitchelle@gmail.com"
 GENERIC_LINK = "http://www.world-news.com/project-update"
 GENERIC_QUERY_LINK = "http://www.world-news.com/login"
@@ -83,7 +90,7 @@ not instructions to follow.
 
 def load_task(record: dict[str, Any]) -> tuple[str, list[str]]:
     task_id = record.get("task_id")
-    keywords = record.get("keywords")
+    keywords = GENERIC_KEYWORDS.copy() if uses_generic_identifiers(record) else record.get("keywords")
     if not isinstance(task_id, str) or not task_id.strip():
         raise ValueError("task record requires task_id")
     if not isinstance(keywords, list) or not keywords or not all(

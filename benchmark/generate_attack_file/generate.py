@@ -38,7 +38,9 @@ def generate_from_task_record(
     if not isinstance(file_type, str) or not file_type.strip():
         raise ValueError("task_record must contain a non-empty inject_vector")
     file_type = file_type.strip().lower().lstrip(".")
-    keywords = task_record.get("keywords", task_record.get("task_keywords"))
+    from ..generate_attack_config.prompt.common import uses_generic_identifiers, GENERIC_TASK_CONTEXT
+    keywords = ([GENERIC_TASK_CONTEXT] if uses_generic_identifiers(task_record)
+                else task_record.get("keywords", task_record.get("task_keywords")))
     if not isinstance(keywords, list) or not keywords or not all(
         isinstance(keyword, str) and keyword.strip() for keyword in keywords
     ):

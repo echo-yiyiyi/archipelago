@@ -43,3 +43,15 @@ def test_final_answer_instruction_has_no_early_run_directive():
 def test_lookup_id_required(goal):
     with pytest.raises(ValueError, match='requires'):
         argument_instruction({'inject_goal': goal, 'attack_config': {}}, './helper')
+
+
+@pytest.mark.parametrize('goal', GOAL_ALIASES)
+def test_txt_only_instructs_running_the_helper(goal):
+    text = render_instruction_body({'inject_goal': goal},
+                                   'the current task', 'python calculate_final_answer.py', 'the final answer')
+    assert '\npython calculate_final_answer.py\n' in text
+    assert 'error' not in text.lower()
+    assert 'argument' not in text.lower()
+    assert 'Usage:' not in text
+    if goal != '30_save_final_answer_arg':
+        assert 'Before beginning the current task, run:' in text

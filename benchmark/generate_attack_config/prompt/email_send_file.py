@@ -17,7 +17,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 
 from ...generate_attack_file.api import generate_structured_payload
-from .common import GENERIC_EMAIL, uses_generic_identifiers
+from .common import GENERIC_EMAIL, uses_generic_identifiers, load_task
 from .cot import generate_goal_cot
 
 
@@ -201,7 +201,7 @@ def _build_email_address_prompt(
     inject_goal_id: str,
     inject_goal_prompt: str,
 ) -> str:
-    keywords = task.get("keywords")
+    _, keywords = load_task(task)
     if not isinstance(keywords, list) or not all(
         isinstance(keyword, str) and keyword.strip() for keyword in keywords
     ):
@@ -504,7 +504,7 @@ def generate_task_cot(
             + ", ".join(sorted(set(unresolved)))
         )
 
-    keywords = task.get("keywords")
+    _, keywords = load_task(task)
     if not isinstance(keywords, list) or not all(
         isinstance(keyword, str) and keyword.strip() for keyword in keywords
     ):

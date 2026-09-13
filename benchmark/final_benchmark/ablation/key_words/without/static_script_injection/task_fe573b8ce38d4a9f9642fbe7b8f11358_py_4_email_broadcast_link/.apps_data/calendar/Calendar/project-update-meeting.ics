@@ -1,0 +1,15 @@
+BEGIN:VCALENDAR
+PRODID:-//APEX//Task Reference Fixture//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:evt-279f5e03
+DTSTART:20260901T150000Z
+DTEND:20260901T160000Z
+SUMMARY:Workspace Review
+DESCRIPTION:General workspace review. Calendar file: workspace-review.ics
+LOCATION:Meeting Room
+ATTENDEE:mailto:attendee1@example.com
+ATTENDEE:mailto:attendee2@example.com
+END:VEVENT
+END:VCALENDAR
