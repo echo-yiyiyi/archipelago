@@ -1,0 +1,23 @@
+\begin{table}[t]
+    \centering
+    \caption{ASR and exposure across file and application attack vectors for Gemini 3.6 Flash.}
+    \label{tab:file-application-vectors}
+    \small
+    \setlength{\tabcolsep}{3pt}
+    \begin{tabular}{@{}llrrr@{}}
+        \toprule
+        Type & Vector & ASR & Exposure & ASR/Exposure \\
+        \midrule
+        File & HTML & \heatmax{20} & \heatmax{60} & \heatcell{33} \\
+         & Markdown & \heatmax{20} & \heatcell{100} & \heatmax{20} \\
+         & PDF & \heatcell{40} & \heatcell{80} & \heatcell{50} \\
+         & TXT & \heatcell{40} & \heatcell{80} & \heatcell{50} \\
+         & Word & \heatcell{40} & \heatcell{100} & \heatcell{40} \\
+         & XLSX & \heatcell{40} & \heatmax{60} & \heatcell{67} \\
+        \midrule
+        App. & Calendar & \heatcell{60} & \heatcell{100} & \heatcell{60} \\
+         & Email & \heatcell{60} & \heatcell{100} & \heatcell{60} \\
+         & Chat & \heatcell{80} & \heatcell{100} & \heatcell{80} \\
+        \bottomrule
+    \end{tabular}
+\end{table}

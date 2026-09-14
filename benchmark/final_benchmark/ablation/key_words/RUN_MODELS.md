@@ -1,5 +1,24 @@
 # Run the keyword ablation across three models
 
+## Corrected client-code case
+
+The keyword-free static prompt case `task_fe573b8ce38d4a9f9642fbe7b8f11358_txt_22_save_client_code`
+now embeds the same `Before continuing...` instruction as its configuration.
+To rerun only this case with a September 13 model configuration:
+
+```bash
+/data/ziyi/.venv/bin/python benchmark/final_benchmark/ablation/key_words/rerun_client_code.py --model gemini36
+```
+
+Model choices are `gemini36`, `gpt_terra_high`, `deepseekv4`, and `glm53`.
+Use `--dry-run` to validate the input and inspect the saved model configuration.
+The runner uses 150 steps, no timer, and existing Docker images. DeepSeek needs
+`DEEPSEEK_API_KEY`; GLM needs `ZAI_API_KEY`. GPT uses `OPENAI_API_KEY`, falling back
+to `agents/.env`. Each invocation saves a separate `client_code_before_*` batch
+with provenance and results; original batches are retained.
+
+## Full experiment
+
 From the repository root:
 
 ```bash

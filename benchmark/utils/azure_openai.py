@@ -85,8 +85,21 @@ def responses_json(
     }
     if reasoning_effort and reasoning_effort.lower() != "auto":
         request["reasoning"] = {"effort": reasoning_effort}
-    response = client.responses.create(**request)
-    output_text = getattr(response, "output_text", None)
-    if not output_text:
-        raise RuntimeError("Responses API returned no output_text")
-    return parse_json_text(output_text)
+    from .judge_trace import record_judge
+    trace_request = {"prompt": prompt, "model": request["model"],
+                     "schema_name": schema_name, "schema": schema,
+                     "max_output_tokens": max_output_tokens,
+                     "reasoning_effort": reasoning_effort}
+    output_text = None
+    try:
+        response = client.responses.create(**request)
+        output_text = getattr(response, "output_text", None)
+        if not output_text:
+            raise RuntimeError("Responses API returned no output_text")
+        parsed = parse_json_text(output_text)
+    except Exception as error:
+        record_judge(trace_request, raw_output=output_text,
+                     error=f"{type(error).__name__}: {error}")
+        raise
+    record_judge(trace_request, response=parsed, raw_output=output_text)
+    return parsed

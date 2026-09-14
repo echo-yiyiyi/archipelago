@@ -667,6 +667,9 @@ def update_score_summary(run_dir: Path) -> dict[str, object]:
         if isinstance(attack_success, (int, float)) and not isinstance(attack_success, bool):
             attack_values.append(float(attack_success))
         prompt_exposure = grades.get("prompt_exposure")
+        if (grades.get("prompt_exposure_error") or
+                type(prompt_exposure) not in (int, float) or prompt_exposure not in (0, 1)):
+            prompt_exposure = None
         if isinstance(prompt_exposure, (int, float)) and not isinstance(
             prompt_exposure, bool
         ):

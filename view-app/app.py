@@ -456,5 +456,9 @@ def main() -> None:
     app.run(host="127.0.0.1", port=int(os.environ.get("PORT", "8765")), debug=False)
 
 
+from judge_review import register_judge_review
+register_judge_review(app)
+
+
 if __name__ == "__main__":
     main()

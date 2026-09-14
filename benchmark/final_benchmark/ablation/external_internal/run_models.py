@@ -113,6 +113,8 @@ def summarize(run):
         grade=json.loads(path.read_text()) if path.exists() else {}
         for field,total,success in [('prompt_exposure','exposure_evaluated','exposed'),('attack_success','attack_evaluated','successful')]:
             value=grade.get(field)
+            if field == 'prompt_exposure' and grade.get('prompt_exposure_error'):
+                continue
             if type(value) in (int,float) and value in (0,1):
                 row[total]+=1
                 row[success]+=int(value)

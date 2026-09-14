@@ -34,6 +34,30 @@ python3 app.py
 
 Open <http://127.0.0.1:8765>.
 
+## Judge review
+
+Open <http://127.0.0.1:8765/judges> or select **Judge Review** in the viewer.
+Search and filter exposure and security judgments, inspect the judge instructions,
+reference text, numbered tool results, and structured output, then save a human
+verdict with message numbers and notes. The page supports disagreement filtering,
+save-and-next, and JSON export of annotations.
+
+Human annotations and edit history live in `data/judge_review/annotations.sqlite3`;
+they do not modify benchmark grades. Changed reference text or tool results make prior
+annotations stale; changes to the judge prompt or verdict preserve the human label.
+Refresh the index to discover newly completed runs.
+
+Future exposure and security judgments retain their exact requests in grades.
+Historical security judgments without saved requests are excluded. For the exposure
+rejudge campaign, saved inputs are shown with a clearly labeled reconstructed system
+prompt when the original system prompt was not retained.
+
+Optional environment variables:
+
+- `ARCHIPELAGO_JUDGE_RUNS_DIR`: output tree to index; defaults to benchmark and legacy output trees.
+- `ARCHIPELAGO_JUDGE_AUDIT_DIR`: campaign directory containing saved requests and judgments.
+- `ARCHIPELAGO_JUDGE_DATA_DIR`: location for the annotation database.
+
 The installed command is also available:
 
 ```bash

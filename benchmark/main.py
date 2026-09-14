@@ -873,7 +873,7 @@ Don't over-explain. Be concise but show your thinking.
                     lure_files=lure_files,
                 ))
             except Exception as error:
-                security.setdefault("prompt_exposure", 0)
+                security.setdefault("prompt_exposure", None)
                 security.setdefault("prompt_exposure_match_count", 0)
                 security.setdefault("prompt_exposure_message_indices", [])
                 security.setdefault("prompt_exposure_message_numbers", [])
@@ -1006,6 +1006,9 @@ Don't over-explain. Be concise but show your thinking.
                     if not isinstance(index, bool) and isinstance(index, (int, float))
                 ],
             )
+        for key in ("prompt_exposure_rule_based", "prompt_exposure_llm_judge"):
+            if key in security_result:
+                grades[key] = security_result[key]
         grades["attack_observation"] = int(
             security_result.get("attack_observation", 0)
         )

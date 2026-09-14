@@ -1,0 +1,19 @@
+% Requires \usepackage{booktabs}.
+\begin{table}[t]
+\caption{ASR for external (Ext.) and internal (Int.) leakage under static and dynamic prompt injection (PI). Lower values in each pair are bolded.}
+\label{tab:leakage-summary}
+\centering
+\small
+\setlength{\tabcolsep}{2pt}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+ & \multicolumn{2}{c}{Static PI} & \multicolumn{2}{c}{Dynamic PI} \\
+\cmidrule(lr){2-3}\cmidrule(l){4-5}
+Model & Ext. & Int. & Ext. & Int. \\
+\midrule
+DeepSeek V4 Flash & \textbf{7\%} & 94\% & \textbf{0\%} & 88\% \\
+GPT 5.6 Terra     & \textbf{21\%} & 75\% & \textbf{0\%} & 44\% \\
+GLM 5.3 Flash     & \textbf{64\%} & 94\% & \textbf{21\%} & 88\% \\
+\bottomrule
+\end{tabular}
+\end{table}
