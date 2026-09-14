@@ -1,6 +1,6 @@
 {
   "model": "openai/kimi-k3",
-  "max_steps": 50,
+  "max_steps": 150,
   "extra_args": {
     "api_base": "https://api.moonshot.ai/v1",
     "api_key": "os.environ/KIMI_API_KEY",

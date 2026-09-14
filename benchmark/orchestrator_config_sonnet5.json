@@ -1,4 +1,5 @@
 {
+  "max_steps": 150,
   "model": "anthropic/claude-sonnet-5",
   "extra_args": {
     "reasoning_effort": "max",

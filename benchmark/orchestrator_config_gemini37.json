@@ -1,4 +1,5 @@
 {
+  "max_steps": 150,
   "model": "vertex_ai/gemini-3.7-flash",
   "extra_args": {
     "reasoning_effort": "high",

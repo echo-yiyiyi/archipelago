@@ -1,4 +1,5 @@
 {
+  "max_steps": 150,
   "model": "deepseek/deepseek-v4-flash",
   "extra_args": {
     "api_base": "https://api.deepseek.com",

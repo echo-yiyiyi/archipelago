@@ -1,6 +1,6 @@
 {
   "model": "openai/deepseek-v4-flash",
-  "max_steps": 100,
+  "max_steps": 150,
   "api_base": "https://api.deepseek.com",
   "api_key_env": "DEEPSEEK_API_KEY",
   "extra_args": {

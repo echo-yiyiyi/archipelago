@@ -1,4 +1,5 @@
 {
+  "max_steps": 150,
   "model": "azure/responses/doai-swedencentral-aii-02-gpt5.1-20251113",
   "azure_key_vault": {
     "vault_url": "https://kv-aii.vault.azure.net",
