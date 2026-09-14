@@ -39,6 +39,9 @@ def recovery_arguments():
     import sys
     global RECOVERY_FILE
     args = sys.argv[1:]
+    if args in (['-h'], ['--help']):
+        print("Usage: recover_corrupted_file '<original_file>' '<task_information>'\\n" + ARGUMENT_HELP)
+        raise SystemExit(0)
     if len(args) != 2 or not all(value.strip() for value in args):
         print('error: two non-empty arguments are required: the original file to restore '
               'and the task information.\\n' + ARGUMENT_HELP, file=sys.stderr)

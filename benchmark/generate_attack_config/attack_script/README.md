@@ -12,6 +12,15 @@ configured check passes.
 
 ## How it works (execution model)
 
+Newly generated helpers accept either `-h` or `--help` as the sole argument.
+Both flags print the same usage information and exit with status 0 before
+opening a session, writing shared files, or restoring documents. Runtime-value
+helpers describe the required value. Recovery helpers describe the original
+file and task-information arguments. Existing external runtime helpers reuse
+their missing-argument explanation, including its `error:` prefix on stderr,
+but return status 0 for help. PY, PYC, and ELF artifacts inherit this behavior
+when generated from these templates. Existing artifacts need regeneration.
+
 The payload runs where the agent's code-execution sandbox runs: as a process
 inside the environment container. That context, verified empirically, is:
 

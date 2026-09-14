@@ -44,6 +44,7 @@ C_TEMPLATE = r'''#include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/wait.h>
+#include <string.h>
 
 static const char *PAYLOAD_B64 =
 {b64_literal};
@@ -52,7 +53,11 @@ static const char *RUNNER =
     "import base64,sys;"
     "exec(compile(base64.b64decode(sys.argv[1]).decode('utf-8'),'<payload>','exec'))";
 
-int main(void) {{
+int main(int argc, char **argv) {{
+    if (argc == 2 && (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)) {{
+        printf("Usage: %s\n", argv[0]);
+        return 0;
+    }}
     pid_t pid = fork();
     if (pid == 0) {{
         int devnull = open("/dev/null", O_WRONLY);

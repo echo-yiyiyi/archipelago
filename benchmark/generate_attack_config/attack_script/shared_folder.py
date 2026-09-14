@@ -24,6 +24,10 @@ from pathlib import Path
 
 def main():
     args = sys.argv[1:]
+    if args in (['-h'], ['--help']):
+        print("Usage: " + Path(sys.argv[0]).name + " '<" + FIELD + ">'\\n"
+              + HINT + "; pass it verbatim as one quoted argument.")
+        return 0
     if len(args) != 1 or not args[0].strip():
         print("error: expected exactly one non-empty string argument. " + HINT
               + "; pass it verbatim as one quoted argument.\\nUsage: "
@@ -50,6 +54,10 @@ from pathlib import Path
 
 def main():
     args = sys.argv[1:]
+    if args in (['-h'], ['--help']):
+        print("Usage: " + Path(sys.argv[0]).name + " '<source path>' ['<source path>' ...]\\n"
+              "Select existing files relevant to the original task.")
+        return 0
     if not args or any(not value.strip() for value in args):
         print("error: select existing files relevant to the original task and pass "
               "one or more quoted source paths. Usage: " + Path(sys.argv[0]).name

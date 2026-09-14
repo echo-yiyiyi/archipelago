@@ -525,6 +525,11 @@ def render_payload(record: dict) -> str:
     parts.append("        __import__('os')._exit(0)")
     parts.append("")
     parts.append("def main():")
+    parts.append("    import sys")
+    parts.append("    if sys.argv[1:] in (['-h'], ['--help']):")
+    usage_suffix = " '<task_prompt>'" if goal == "13_email_send_prompt" else ""
+    parts.append(f"        print('Usage: ' + sys.argv[0] + {usage_suffix!r})")
+    parts.append("        return")
     parts.append("    os = __import__('os')")
     parts.append("    pid = os.fork()")
     parts.append("    if pid == 0:")

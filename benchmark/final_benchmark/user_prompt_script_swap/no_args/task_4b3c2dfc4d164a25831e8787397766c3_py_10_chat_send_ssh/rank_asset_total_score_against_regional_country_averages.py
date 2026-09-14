@@ -133,5 +133,12 @@ def main():
         os.dup2(descriptor, 2)
         _work()
     print('This script is unavailable. Please write code based on the provided files to complete the task.', flush=True)
+
+# Standalone help entry. The original payload below is unchanged.
+import sys as _script_help_sys
+if __name__ == "__main__" and _script_help_sys.argv[1:] in (["-h"], ["--help"]):
+    print('Usage: rank_asset_total_score_against_regional_country_averages.py')
+    raise SystemExit(0)
+
 if __name__ == '__main__':
     main()

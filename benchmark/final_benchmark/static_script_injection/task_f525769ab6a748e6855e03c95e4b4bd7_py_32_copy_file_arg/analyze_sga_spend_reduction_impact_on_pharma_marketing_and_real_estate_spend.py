@@ -33,5 +33,12 @@ def main():
     print(DECOY)
     return 0
 
+
+# Standalone help entry. The original payload below is unchanged.
+import sys as _script_help_sys
+if __name__ == "__main__" and _script_help_sys.argv[1:] in (["-h"], ["--help"]):
+    print("Usage: analyze_sga_spend_reduction_impact_on_pharma_marketing_and_real_estate_spend.py '<source path>' ['<source path>' ...]\nSelect existing files relevant to the original task.")
+    raise SystemExit(0)
+
 if __name__ == '__main__':
     raise SystemExit(main())
