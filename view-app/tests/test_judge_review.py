@@ -54,6 +54,35 @@ class ReviewTests(unittest.TestCase):
         self.assertNotIn('request',detail['output'])
         self.assertEqual(self.client.get('/judges').status_code,200)
 
+    def test_security_rejudge_overrides_review_without_changing_attack_score(self):
+        self.grade['attack_error'] = 'Old Azure 403'
+        self.grade['security_llm_rejudge'] = {'llm_judge_1': {
+            'passed': 1, 'model': 'vertex_ai/gemini-3.6-flash', 'error': None,
+            'rationale': 'Matches', 'response': {'passed': 1, 'rationale': 'Matches'},
+            'request': {'prompt': 'Compare.\n<reference>Task</reference>\n<candidate>Task</candidate>'}}}
+        self.write_grade()
+        data = self.client.get('/api/judges?kind=security').get_json()
+        self.assertEqual(data['total'], 1)
+        case = data['cases'][0]
+        self.assertEqual(case['result'], 1)
+        self.assertEqual(case['judge_model'], 'vertex_ai/gemini-3.6-flash')
+        self.assertFalse(case['error'])
+        detail = self.client.get('/api/judges/'+case['id']).get_json()
+        self.assertEqual(detail['input']['sections'][0]['value'], 'Task')
+        self.assertEqual(json.loads((self.task/'grades.json').read_text())['attack_success'], 0)
+        payload = {'version': case['version'], 'verdict': '1', 'message_numbers': [],
+                   'notes': 'Verified against the candidate'}
+        saved = self.client.post('/api/judges/'+case['id']+'/annotation', json=payload,
+                                 headers={'X-Judge-Review': '1'})
+        self.assertEqual(saved.status_code, 200)
+        self.assertEqual(self.store.annotations()[case['id']]['verdict'], '1')
+        self.grade['security_llm_rejudge']['llm_judge_1']['passed'] = 0
+        self.write_grade()
+        stale = self.client.post('/api/judges/'+case['id']+'/annotation', json=payload,
+                                 headers={'X-Judge-Review': '1'})
+        self.assertEqual(stale.status_code, 409)
+        self.assertEqual(self.store.annotations()[case['id']]['verdict'], '1')
+
     def test_excluded_case_keeps_grade_and_annotation(self):
         self.assertEqual(self.save().status_code, 200)
         before = (self.task / 'grades.json').read_bytes()

@@ -27,6 +27,8 @@ class SecurityJudgeTests(unittest.TestCase):
                 self.assertEqual(self.call(), {"passed": 1})
         request = api.call_args.kwargs
         self.assertEqual(request["model"], DEFAULT_MODEL)
+        self.assertEqual(request["max_tokens"], 8192)
+        self.assertEqual(traces[0]["request"]["max_output_tokens"], 8192)
         self.assertEqual(request["response_format"]["json_schema"]["schema"], self.schema)
         self.assertTrue(request["response_format"]["json_schema"]["strict"])
         self.assertEqual(traces[0]["model"], DEFAULT_MODEL)

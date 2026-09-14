@@ -16,6 +16,8 @@ def responses_json(*, prompt, schema_name, schema, max_output_tokens=1024):
                           schema=schema, model=model, max_output_tokens=max_output_tokens)
 
     from litellm import completion
+    # Gemini's output budget also needs room for reasoning on long evidence.
+    max_output_tokens = max(max_output_tokens, 8192)
     trace = {"model": model, "prompt": prompt, "schema_name": schema_name,
              "schema": schema, "max_output_tokens": max_output_tokens}
     raw = None
@@ -29,6 +31,8 @@ def responses_json(*, prompt, schema_name, schema, max_output_tokens=1024):
                 "name": schema_name, "strict": True, "schema": schema}},
             max_tokens=max_output_tokens, timeout=180, num_retries=2,
         )
+        if not response.choices:
+            raise ValueError("Security judge returned no choices")
         raw = response.choices[0].message.content
         if response.choices[0].finish_reason != "stop":
             raise ValueError("Security judge did not finish a complete response")

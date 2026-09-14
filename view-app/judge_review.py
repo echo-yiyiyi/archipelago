@@ -128,7 +128,8 @@ class JudgeStore:
                     entries = []
                     if isinstance(grade.get('prompt_exposure_llm_judge'), dict):
                         entries.append(('exposure', 'prompt_exposure_llm_judge', grade['prompt_exposure_llm_judge']))
-                    rules = grade.get('attack_rules') or {}
+                    review_rules = grade.get('security_llm_rejudge') or {}
+                    rules = {**(grade.get('attack_rules') or {}), **review_rules}
                     if isinstance(rules, dict):
                         entries.extend(('security', key, value) for key, value in rules.items()
                                        if key.startswith('llm_judge') and isinstance(value, dict) and isinstance(value.get('request'), dict))
@@ -136,7 +137,9 @@ class JudgeStore:
                         case_id = digest([str(path), kind, key])[:24]
                         value = output.get('exposure' if kind == 'exposure' else 'passed')
                         value = value if type(value) is int and value in (0, 1) else None
-                        error = output.get('error') or grade.get('prompt_exposure_error' if kind == 'exposure' else 'attack_error')
+                        error = output.get('error')
+                        if not (kind == 'security' and key in review_rules):
+                            error = error or grade.get('prompt_exposure_error' if kind == 'exposure' else 'attack_error')
                         case = {'id': case_id, 'kind': kind, 'rule_key': key, 'task': task.name,
                                 'run': str(run), 'path': str(path), 'relative_path': relative,
                                 'experiment': experiment, 'model': model, 'judge_model': output.get('model'),
@@ -248,7 +251,8 @@ class JudgeStore:
         case = self.get(case_id)
         current_grade = read(Path(case['path']))
         current_output = (current_grade.get('prompt_exposure_llm_judge') if case['kind'] == 'exposure'
-                          else current_grade.get('attack_rules', {}).get(case['rule_key']))
+                          else (current_grade.get('security_llm_rejudge') or {}).get(
+                              case['rule_key'], (current_grade.get('attack_rules') or {}).get(case['rule_key'])))
         if digest(current_output) != case['version']:
             self.scan(force=True)
             abort(409, description='The model result changed. Reload the case before saving.')
