@@ -7,7 +7,7 @@ import tempfile
 import unittest
 
 ROOT=Path(__file__).resolve().parent
-ROWS=json.loads((ROOT/'without_restore_other_txt/selected_10_tasks_with_attack_config.json').read_text())
+ROWS=json.loads((ROOT/'without_restore_other_txt/selected_5_tasks_with_attack_config.json').read_text())
 WATCHER=ROOT/'without_restore_other_txt'/ROWS[0]['watcher_file']
 sys.path.insert(0,str(WATCHER.parent))
 spec=importlib.util.spec_from_file_location('keep_siblings_watcher',WATCHER)

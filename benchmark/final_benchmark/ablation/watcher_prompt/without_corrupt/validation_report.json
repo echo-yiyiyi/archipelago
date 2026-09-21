@@ -1,11 +1,12 @@
 {
   "status": "passed",
-  "records": 10,
+  "records": 5,
   "checks": [
-    "10 task IDs and goal IDs aligned with with",
+    "5 task IDs and goal IDs aligned with with",
     "task JSON files unchanged",
     "only three watcher methods changed",
-    "all other artifacts and instruction templates byte-identical"
+    "all other artifacts and instruction templates byte-identical",
+    "unselected instruction TXT retained with benign continuation text; selected prompt unchanged"
   ],
   "evaluations_run": false,
   "behavior_tests": {

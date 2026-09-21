@@ -23,7 +23,7 @@ from tools.send_mail import send_mail as _send_mail
 from utils.config import DEFAULT_LIST_LIMIT
 
 
-_MAIL_WRITE_QUEUE = asyncio.Lock()
+_MAIL_OPERATION_QUEUE = asyncio.Lock()
 
 
 # ============ Help Response ============
@@ -606,8 +606,25 @@ def _is_mail_error(result: str) -> bool:
     return result.startswith(error_prefixes)
 
 
-# ============ Meta-Tool Implementation ============
 async def mail(request: MailInput) -> MailOutput:
+    """Mail operations: send, read, list, search, reply, reply_all, forward, and soft-delete emails."""
+    if request.action == "help":
+        return await _dispatch_mail(request)
+    # Keep the queue held until the worker completes, even if its caller leaves.
+    async def queued():
+        async with _MAIL_OPERATION_QUEUE:
+            return await _dispatch_mail(request)
+    worker = asyncio.create_task(queued())
+    try:
+        return await asyncio.shield(worker)
+    except asyncio.CancelledError:
+        # Consume failures without releasing the queue before the thread finishes.
+        worker.add_done_callback(lambda task: task.exception() if not task.cancelled() else None)
+        raise
+
+
+# ============ Meta-Tool Implementation ============
+async def _dispatch_mail(request: MailInput) -> MailOutput:
     """Mail operations: send, read, list, search, reply, reply_all, forward, and soft-delete emails."""
     match request.action:
         case "help":
@@ -622,22 +639,21 @@ async def mail(request: MailInput) -> MailOutput:
                 return MailOutput(action="send", error="Required: body")
 
             try:
-                async with _MAIL_WRITE_QUEUE:
-                    result = await _send_mail(
-                        SendMailInput(
-                            from_email=request.from_email or "user@example.com",
-                            to_email=request.to_email,
-                            subject=request.subject,
-                            body=request.body,
-                            cc=request.cc,
-                            bcc=request.bcc,
-                            attachments=request.attachments,
-                            body_format=request.body_format or "plain",
-                            thread_id=request.thread_id,
-                            in_reply_to=request.in_reply_to,
-                            references=request.references,
-                        )
+                result = await _send_mail(
+                    SendMailInput(
+                        from_email=request.from_email or "user@example.com",
+                        to_email=request.to_email,
+                        subject=request.subject,
+                        body=request.body,
+                        cc=request.cc,
+                        bcc=request.bcc,
+                        attachments=request.attachments,
+                        body_format=request.body_format or "plain",
+                        thread_id=request.thread_id,
+                        in_reply_to=request.in_reply_to,
+                        references=request.references,
                     )
+                )
                 send_result = _parse_send_result(result)
                 if not send_result.success:
                     return MailOutput(
@@ -720,16 +736,14 @@ async def mail(request: MailInput) -> MailOutput:
                 return MailOutput(action="reply", error="Required: body")
 
             try:
-                async with _MAIL_WRITE_QUEUE:
-                    result = await _reply_mail(
-                        ReplyMailInput(
-                            original_mail_id=request.mail_id,
-                            body=request.body,
-                            attachments=request.attachments,
-                            body_format=request.body_format or "plain",
-                        )
+                result = await _reply_mail(
+                    ReplyMailInput(
+                        original_mail_id=request.mail_id,
+                        body=request.body,
+                        attachments=request.attachments,
+                        body_format=request.body_format or "plain",
                     )
-
+                )
                 if _is_mail_error(result):
                     return MailOutput(action="reply", error=result)
 
@@ -750,16 +764,14 @@ async def mail(request: MailInput) -> MailOutput:
                 return MailOutput(action="reply_all", error="Required: body")
 
             try:
-                async with _MAIL_WRITE_QUEUE:
-                    result = await _reply_all_mail(
-                        ReplyMailInput(
-                            original_mail_id=request.mail_id,
-                            body=request.body,
-                            attachments=request.attachments,
-                            body_format=request.body_format or "plain",
-                        )
+                result = await _reply_all_mail(
+                    ReplyMailInput(
+                        original_mail_id=request.mail_id,
+                        body=request.body,
+                        attachments=request.attachments,
+                        body_format=request.body_format or "plain",
                     )
-
+                )
                 if _is_mail_error(result):
                     return MailOutput(action="reply_all", error=result)
 
@@ -782,19 +794,17 @@ async def mail(request: MailInput) -> MailOutput:
                 return MailOutput(action="forward", error="Required: to_email")
 
             try:
-                async with _MAIL_WRITE_QUEUE:
-                    result = await _forward_mail(
-                        ForwardMailInput(
-                            original_mail_id=request.mail_id,
-                            to_email=request.to_email,
-                            body=request.body,
-                            cc=request.cc,
-                            bcc=request.bcc,
-                            attachments=request.attachments,
-                            body_format=request.body_format or "plain",
-                        )
+                result = await _forward_mail(
+                    ForwardMailInput(
+                        original_mail_id=request.mail_id,
+                        to_email=request.to_email,
+                        body=request.body,
+                        cc=request.cc,
+                        bcc=request.bcc,
+                        attachments=request.attachments,
+                        body_format=request.body_format or "plain",
                     )
-
+                )
                 if _is_mail_error(result):
                     return MailOutput(action="forward", error=result)
 

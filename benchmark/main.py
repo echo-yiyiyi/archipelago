@@ -300,6 +300,11 @@ def populate_attack_file(task_root: Path, attack_config_file: str | Path, task_i
             elif ".apps_data" in raw_path.parts:
                 app_index = raw_path.parts.index(".apps_data")
                 destination = task_root.joinpath(*raw_path.parts[app_index:])
+            elif record.get("benign_existing_file_test") and value in record.get("populate_file_destinations", {}):
+                relative = Path(record["populate_file_destinations"][value])
+                if relative.is_absolute() or ".." in relative.parts or not relative.parts:
+                    raise ValueError("existing-file destinations must be relative without '..'")
+                destination = task_root / "filesystem" / relative
             else:
                 destination = task_root / "filesystem" / source.name
             destination.parent.mkdir(parents=True, exist_ok=True)
@@ -425,20 +430,10 @@ def start_environment():
     log("Environment started")
 
 
-def tar_gz_to_zip(tar_gz_path: Path) -> Path:
-    """Convert tar.gz to zip for grading."""
-    stem = tar_gz_path.stem
-    if stem.endswith(".tar"):
-        stem = stem[:-4]
-    zip_path = tar_gz_path.parent / f"{stem}.zip"
-    with tarfile.open(tar_gz_path, "r:gz") as tar:
-        with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
-            for member in tar.getmembers():
-                if member.isfile():
-                    f = tar.extractfile(member)
-                    if f is not None:
-                        zf.writestr(member.name, f.read())
-    return zip_path
+if __package__:
+    from .runner.final_snapshot import tar_gz_to_zip, save_final_snapshot
+else:
+    from runner.final_snapshot import tar_gz_to_zip, save_final_snapshot
 
 
 def main():
@@ -781,14 +776,7 @@ Don't over-explain. Be concise but show your thinking.
 
     # Save final snapshot
     log("Saving final snapshot...")
-    with httpx.stream("POST", f"{ENV_URL}/data/snapshot") as resp:
-        resp.raise_for_status()
-        final_tar_gz = output_dir / "final_snapshot.tar.gz"
-        with open(final_tar_gz, "wb") as f:
-            for chunk in resp.iter_bytes(chunk_size=65536):
-                f.write(chunk)
-
-    final_zip = tar_gz_to_zip(final_tar_gz)
+    final_zip = save_final_snapshot(ENV_URL, output_dir)
     log(f"Saved: {final_zip}")
 
     # Security checks are independent of the ordinary task completion status.

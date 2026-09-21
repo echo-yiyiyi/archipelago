@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import fcntl
 import concurrent.futures as futures
 from dataclasses import asdict, dataclass
 import json
@@ -21,9 +22,14 @@ import uuid
 if __package__:
     from . import main_concurrency as runtime
     from .final_benchmark.run_experiments import discover, metrics
+    from .final_benchmark.runtime_storage import run_with_storage
 else:
+    # Direct script execution puts benchmark/, not the repository, on sys.path.
+    # Report generators use absolute benchmark imports as well.
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
     import main_concurrency as runtime
     from final_benchmark.run_experiments import discover, metrics
+    from final_benchmark.runtime_storage import run_with_storage
 
 BENCHMARK = Path(__file__).resolve().parent
 DEFAULT_MODELS = ['gemini36', 'gemini37', 'gemini38', 'gpt_astra_low', 'sonnet5']
@@ -39,6 +45,7 @@ class Job:
     model_config: Path
     goal: str
     link_host: str | None
+    asset_base: Path | None = None
 
     @property
     def key(self) -> str:
@@ -86,6 +93,43 @@ def write_json(path, value):
     temporary.replace(path)
 
 
+def plan_failed_batch(batch, include_unstarted=False):
+    path = Path(batch)
+    if not path.exists():
+        matches = list((BENCHMARK / 'output').glob(f'**/{path.name}/manifest.json'))
+        if len(matches) != 1:
+            raise ValueError('Batch ID must identify exactly one run; supply its full path')
+        path = matches[0]
+    if path.is_dir():
+        path = path / 'manifest.json'
+    path = path.resolve()
+    manifest = json.loads(path.read_text())
+    jobs = []
+    for key in manifest['jobs']:
+        result = manifest.get('results', {}).get(key)
+        if result is None:
+            if not include_unstarted:
+                continue
+        elif result.get('returncode') in (None, 0):
+            continue
+        model, category, selector = key.split('/', 1)[0], '/'.join(key.split('/')[1:-1]), key.split('/')[-1]
+        directory = path.parent / model / category
+        source = directory / 'attack_config.json'
+        rows = json.loads(source.read_text())
+        row = next(r for r in rows if r['harmful_task_id'] == selector)
+        bases = manifest.get('asset_bases', {})
+        base = Path(bases[key]) if key in bases else Path(manifest['input_root']) / category
+        if not base.is_dir() and '/repeat_' in category:
+            base = Path(manifest['input_root']) / category.split('/repeat_')[0]
+        for name in set(row.get('populate_files', [])) | {row[k] for k in ('attack_file', 'watcher_file', 'watcher_config') if row.get(k)}:
+            if not (base / name).is_file():
+                raise ValueError(f'Missing original task asset: {base / name}')
+        jobs.append(Job(model, category, selector, row['task_id'], source,
+                        directory / 'orchestrator_config.json', row['inject_goal'],
+                        runtime.link_hosts_from_attack_config(source).get(selector), base))
+    return path.parent, manifest, jobs
+
+
 def execute(args, jobs):
     worker_count = min(args.concurrency, len(jobs))
     base_port = args.base_port or runtime.choose_available_base_port(worker_count)
@@ -114,6 +158,9 @@ def execute(args, jobs):
               'worker_count': worker_count, 'requested_task_count': len(jobs),
               'models': args.models, 'input_root': str(args.input_root.resolve()),
               'timer': args.timer, 'jobs': [job.key for job in jobs]}
+    report['asset_bases'] = {job.key: str((job.asset_base or job.source.parent).resolve()) for job in jobs}
+    if getattr(args, 'retry_failed', None):
+        report['retry_of'] = str(args.retry_failed)
 
     def save_report():
         summaries = []
@@ -154,7 +201,7 @@ def execute(args, jobs):
         project = runtime.compose_project_name(f'{run_id}_{job.model}_{job.category}', slot.number)
         overrides = {'ORCHESTRATOR_CONFIG': str(model_config),
                      'ATTACK_CONFIG_FILE': str(attack_config),
-                     'ATTACK_CONFIG_BASE_DIR': str(job.source.parent),
+                     'ATTACK_CONFIG_BASE_DIR': str(job.asset_base or job.source.parent),
                      'COMPOSE_PROJECT_NAME': project}
         try:
             if stop.is_set():
@@ -186,6 +233,8 @@ def execute(args, jobs):
         results[job.key] = asdict(result)
         runtime.update_score_summary(batches[(job.model, job.category)][0])
         save_report()
+        if getattr(args, 'merge_into_original', False):
+            merge_retry_result(Path(args.retry_failed), root, job, results[job.key])
         runtime.log('Task finished', event='task_finished', task=job.key,
                     returncode=result.returncode, completed=len(results), total=len(jobs))
 
@@ -251,29 +300,125 @@ def execute(args, jobs):
     )
 
 
+def merge_retry_result(original, retry, job, result):
+    """Replace one failed task, retain its backup, and refresh original reports."""
+    manifest_path = original / 'manifest.json'
+    manifest = json.loads(manifest_path.read_text())
+    previous = manifest.get('results', {}).get(job.key)
+    if job.key not in manifest['jobs'] or (previous is not None and previous.get('returncode') in (None, 0)):
+        raise ValueError(f'Refusing to overwrite a nonfailed task: {job.key}')
+    relative = Path(job.model) / job.category / 'tasks' / job.selector
+    target, source = original / relative, retry / relative
+    backup = original / 'retry_backups' / retry.name
+    saved = backup / relative
+    saved.parent.mkdir(parents=True, exist_ok=True)
+    write_json(saved.parent / (job.selector + '.result.json'), previous)
+    if target.exists():
+        target.rename(saved)
+    if source.exists():
+        # Keep one physical copy of snapshots and trajectories.
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.symlink_to(source.resolve(), target_is_directory=True)
+    replacement = dict(result, retry_batch=str(retry))
+    log = Path(result.get('log_file') or '')
+    if log.is_file():
+        destination = original / job.model / job.category / 'logs' / (retry.name + '_' + log.name)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(log, destination)
+        replacement['log_file'] = str(destination)
+    manifest['results'][job.key] = replacement
+    for batch in manifest.get('batches', []):
+        if (batch['model'], batch['category']) != (job.model, job.category):
+            continue
+        directory = original / job.model / job.category
+        summary = runtime.update_score_summary(directory)
+        prefix = f'{job.model}/{job.category}/'
+        done = [v for k, v in manifest['results'].items() if k.startswith(prefix)]
+        batch.update(metrics(summary), finished_task_count=len(done),
+                     failed_task_count=sum(v['returncode'] != 0 for v in done))
+    manifest['finished_task_count'] = len(manifest['results'])
+    manifest['failed_task_count'] = sum(v['returncode'] != 0 for v in manifest['results'].values())
+    if manifest['finished_task_count'] == len(manifest['jobs']) and manifest['failed_task_count'] == 0:
+        manifest['interrupted'] = False
+    write_json(manifest_path, manifest)
+    if (original / 'setting_summary.json').exists():
+        from benchmark.final_benchmark.ablation.watcher_prompt import run_gemini36 as watcher
+        watcher.MODEL_LABEL = ', '.join(manifest['models'])
+        watcher.summarize(original)
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--models', nargs='+', default=DEFAULT_MODELS)
     parser.add_argument('--categories', nargs='+', help='Only run the specified categories (default: all)')
-    parser.add_argument('--input-root', type=Path, default=BENCHMARK / 'all_category_test')
-    parser.add_argument('--output-root', type=Path, default=BENCHMARK / 'output/all_category_test')
+    parser.add_argument('--input-root', type=Path, default=BENCHMARK / 'final_benchmark')
+    parser.add_argument('--output-root', type=Path, default=BENCHMARK / 'output/final_benchmark')
     parser.add_argument('--concurrency', type=int, default=64)
+    parser.add_argument('--temp-root', type=Path, default=BENCHMARK / 'output/tmp/full_benchmark')
+    parser.add_argument('--min-free-gb', type=float, default=30)
+    parser.add_argument('--min-system-free-gb', type=float, default=10)
+    parser.add_argument('--_storage-worker', action='store_true', help=argparse.SUPPRESS)
     parser.add_argument('--base-port', type=int)
     parser.add_argument('--skip-build', action='store_true')
     parser.add_argument('--timer', action='store_true')
     parser.add_argument('--dry-run', action='store_true')
-    args = parser.parse_args(argv)
+    parser.add_argument('--retry-failed', metavar='BATCH', help='Restart nonzero-exit tasks from a batch ID or run directory in a new batch')
+    parser.add_argument('--include-unstarted', action='store_true', help='Also restart queued tasks never started in an interrupted batch')
+    parser.add_argument('--merge-into-original', action='store_true', help='Back up and replace failed tasks in the original batch and refresh reports')
+    command_args = list(sys.argv[1:] if argv is None else argv)
+    args = parser.parse_args(command_args)
+    if args.include_unstarted and not args.retry_failed:
+        parser.error('--include-unstarted requires --retry-failed')
+    if args.merge_into_original and not args.retry_failed:
+        parser.error('--merge-into-original requires --retry-failed')
     if not 1 <= args.concurrency <= 64:
         parser.error('--concurrency must be between 1 and 64')
+    if not (0 < args.min_free_gb < float('inf') and 0 < args.min_system_free_gb < float('inf')):
+        parser.error('free-space thresholds must be positive finite numbers')
     if args.base_port is not None and not 1 <= args.base_port <= 65536 - args.concurrency:
         parser.error('--base-port leaves insufficient valid ports')
     try:
-        jobs = plan_jobs(args.input_root.resolve(), args.models, args.categories)
+        if args.retry_failed:
+            if '--models' in command_args or '--categories' in command_args or '--input-root' in command_args:
+                parser.error('--retry-failed uses the models and task settings saved in the old batch')
+            source_run, manifest, jobs = plan_failed_batch(args.retry_failed, include_unstarted=args.include_unstarted)
+            args.retry_failed = str(source_run)
+            args.models = list(dict.fromkeys(job.model for job in jobs))
+            args.input_root = Path(manifest['input_root'])
+            args.timer = manifest.get('timer', False)
+        else:
+            jobs = plan_jobs(args.input_root.resolve(), args.models, args.categories)
         if args.dry_run:
             print(json.dumps({'task_count': len(jobs), 'global_concurrency': min(args.concurrency, len(jobs)),
+                              'input_root': str(args.input_root.resolve()),
+                              'output_root': str(args.output_root.resolve()),
+                              'temp_root': str(args.temp_root.resolve()),
                               'jobs': [job.key for job in jobs]}, indent=2))
             return 0
-        return execute(args, jobs)
+        if not jobs:
+            print('No failed tasks to restart.')
+            return 0
+        if args._storage_worker:
+            if args.merge_into_original:
+                with (Path(args.retry_failed) / '.retry.lock').open('a') as lock:
+                    try:
+                        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    except BlockingIOError:
+                        parser.error('Another retry is already updating this batch')
+                    return execute(args, jobs)
+            return execute(args, jobs)
+        environment = os.environ.copy()
+        for key in ('ATTACK_CONFIG_FILE', 'ATTACK_CONFIG_BASE_DIR', 'ATTACK_TASK_SELECTOR',
+                    'EXAMPLE_DIR', 'ARCHIPELAGO_DIR', 'AGENTS_DIR', 'ENVIRONMENT_DIR',
+                    'TASK_OUTPUT_ROOT', 'SCORE_SUMMARY_FILENAME', 'AGENT_TIMER_SECONDS',
+                    'ORCHESTRATOR_CONFIG', 'USER_ALLOW_ADDITIONAL_INSTRUCTION'):
+            environment.pop(key, None)
+        # Re-exec the same entry point under the storage supervisor. The child
+        # owns the existing 64-slot pool and completes cleanup before scratch is removed.
+        command = [sys.executable, str(Path(__file__).resolve()), *command_args, '--_storage-worker']
+        return run_with_storage(command, cwd=Path.cwd(), env=environment,
+            temp_root=args.temp_root, output_root=args.output_root,
+            min_free_gb=args.min_free_gb, min_system_free_gb=args.min_system_free_gb).returncode
     except (ValueError, OSError) as error:
         parser.error(str(error))
 

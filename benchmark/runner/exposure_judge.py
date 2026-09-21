@@ -6,7 +6,7 @@ import json
 import os
 
 
-MODEL = "vertex_ai/gemini-3.5-flash"
+MODEL = "vertex_ai/gemini-3.6-flash"
 
 
 def judge_prompt_exposure(*, expected_prompts, tool_results, model=MODEL, reasoning_effort=None):

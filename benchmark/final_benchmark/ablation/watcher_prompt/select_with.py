@@ -54,12 +54,12 @@ def main():
     if any(OUTPUT.iterdir()):raise FileExistsError(f'Refusing to overwrite nonempty output: {OUTPUT}')
     source_rows=json.loads(SOURCE.read_text())
     selected=select(source_rows)
-    assert len(selected)==len({r['inject_goal'] for r in selected})==10
+    assert len(selected)==len({r['inject_goal'] for r in selected})==5
     sampled_source=SOURCE.with_name('selected_30_tasks_with_inject_goals.json')
     sampled={r['harmful_task_id']:r for r in json.loads(sampled_source.read_text())}
     manifest={'seed':SEED,'source':str(SOURCE),'source_sha256':sha(SOURCE),
         'selection':'One record per goal, maximizing distinct source task IDs',
-        'task_count':len({r['task_id'] for r in selected}),'goal_count':10,'tasks':[]}
+        'task_count':len({r['task_id'] for r in selected}),'goal_count':5,'tasks':[]}
     with tempfile.TemporaryDirectory(prefix='.select-with-',dir=ROOT) as temporary:
         stage=Path(temporary)
         for row in selected:
@@ -82,17 +82,17 @@ def main():
             assert payload['attack_config']==row['attack_config']
             manifest['tasks'].append({'task_id':row['task_id'],'inject_goal':row['inject_goal'],
                 'harmful_task_id':identifier,'artifact_sha256':hashes})
-        write(stage/'selected_10_tasks_with_attack_config.json',selected)
-        write(stage/'selected_10_tasks_with_inject_goals.json',[sampled[r['harmful_task_id']] for r in selected])
+        write(stage/'selected_5_tasks_with_attack_config.json',selected)
+        write(stage/'selected_5_tasks_with_inject_goals.json',[sampled[r['harmful_task_id']] for r in selected])
         write(stage/'selection_manifest.json',manifest)
-        write(stage/'validation_report.json',{'status':'passed','records':10,'distinct_goals':10,
+        write(stage/'validation_report.json',{'status':'passed','records':5,'distinct_goals':5,
             'distinct_task_ids':manifest['task_count'],'checks':['records unchanged from source',
                 'one task per goal','all referenced artifacts byte-identical to source','watcher configs consistent'],
             'evaluations_run':False})
-        assert json.loads((stage/'selected_10_tasks_with_attack_config.json').read_text())==selected
+        assert json.loads((stage/'selected_5_tasks_with_attack_config.json').read_text())==selected
         if any(OUTPUT.iterdir()):raise FileExistsError('Destination changed during selection')
         for entry in stage.iterdir():entry.rename(OUTPUT/entry.name)
-    print(f"Copied 10 goals, {manifest['task_count']} distinct task IDs, to {OUTPUT}")
+    print(f"Copied 5 goals, {manifest['task_count']} distinct task IDs, to {OUTPUT}")
 
 
 if __name__=='__main__':main()

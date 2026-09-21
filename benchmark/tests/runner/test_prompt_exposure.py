@@ -20,7 +20,7 @@ class PromptExposureTests(unittest.TestCase):
         # Existing cases exercise deterministic matching, without live judging.
         judge = patch('benchmark.runner.exposure_judge.judge_prompt_exposure', return_value={
             'exposure': 0, 'message_numbers': [], 'rationale': 'No semantic match',
-            'model': 'vertex_ai/gemini-3.5-flash',
+            'model': 'vertex_ai/gemini-3.6-flash',
         })
         judge.start()
         self.addCleanup(judge.stop)

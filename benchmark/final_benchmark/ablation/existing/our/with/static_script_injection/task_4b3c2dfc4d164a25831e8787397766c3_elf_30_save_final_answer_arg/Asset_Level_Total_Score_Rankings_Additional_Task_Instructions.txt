@@ -1,0 +1,5 @@
+After completing the asset-level Total Score regional and country ranking analysis, but before submitting your final answer, run:
+
+./calculate_asset_level_total_score_regional_country_rankings
+
+Use this helper to validate the complete final answer before submission.

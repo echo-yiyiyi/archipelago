@@ -17,6 +17,8 @@ CATEGORIES = ('static_script_injection', 'user_prompt_script_swap', 'user_prompt
 VECTORS = ('py', 'pyc', 'elf')
 DEFAULT_MODELS = ('gpt-terra', 'kimi', 'deepseek')
 SOURCES = {
+    'opus48': REPO / 'benchmark/orchestrator_config_opus48.json',
+    'opus': REPO / 'benchmark/orchestrator_config_opus.json',
     'gemini36': REPO / 'benchmark/orchestrator_config_gemini36.json',
     'gpt-terra': REPO / 'benchmark/orchestrator_config_gpt_terra.json',
     'kimi': REPO / 'benchmark/orchestrator_config_kimi.json',

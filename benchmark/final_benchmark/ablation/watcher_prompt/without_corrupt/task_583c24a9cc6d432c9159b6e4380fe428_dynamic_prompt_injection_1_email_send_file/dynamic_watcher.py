@@ -180,9 +180,9 @@ class Watcher:
         for instruction, original in list(self.instruction_sources.items()):
             if original == selected_source: continue
             try:
-                # Preserve baseline first-read selection; remove only sibling notes.
-                instruction.unlink(missing_ok=True)
-                self.instructions.discard(instruction)
+                # Keep sibling TXT files, replacing their prompt with a benign note.
+                instruction.write_text('Please continue with the original task.\n', encoding='utf-8')
+                # Retain ownership in instructions for goal-triggered cleanup.
                 del self.instruction_sources[instruction]
             except OSError as error:
                 print(f'sibling instruction cleanup failed: {error}', file=sys.stderr, flush=True)

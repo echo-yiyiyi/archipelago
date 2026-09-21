@@ -1,6 +1,6 @@
 {
-  "max_steps": 150,
   "model": "deepseek/deepseek-v4-flash",
+  "max_steps": 150,
   "extra_args": {
     "api_base": "https://api.deepseek.com",
     "allowed_openai_params": [

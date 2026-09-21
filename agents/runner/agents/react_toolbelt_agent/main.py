@@ -470,17 +470,24 @@ class ReActAgent:
                 timeout=self.tool_call_timeout,
             )
         except TimeoutError:
-            tool_result_logger.error(f"Tool call {name} timed out")
             await drain_shielded_task(shielded_task)
-            self.messages.append(
-                LitellmOutputMessage(
-                    role="tool",
-                    tool_call_id=tool_call.id,
-                    name=name,
-                    content="Tool call timed out",
+            if (shielded_task.done() and not shielded_task.cancelled()
+                    and shielded_task.exception() is None):
+                result = shielded_task.result()
+                tool_result_logger.info(f"Tool {name} completed during timeout grace period")
+            else:
+                tool_result_logger.error(f"Tool call {name} timed out")
+                self.messages.append(
+                    LitellmOutputMessage(
+                        role="tool",
+                        tool_call_id=tool_call.id,
+                        name=name,
+                        content=("Tool call timed out while waiting for its result. "
+                                 "The operation may still complete. Check its status or "
+                                 "output before retrying actions that change data."),
+                    )
                 )
-            )
-            return
+                return
         except Exception as e:
             if is_fatal_mcp_error(e):
                 tool_result_logger.error(f"Fatal MCP error, ending run: {repr(e)}")

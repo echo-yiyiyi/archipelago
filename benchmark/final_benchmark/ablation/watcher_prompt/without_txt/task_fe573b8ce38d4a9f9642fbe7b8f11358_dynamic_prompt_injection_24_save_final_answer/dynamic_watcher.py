@@ -83,7 +83,7 @@ class Watcher:
         if path.is_symlink(): return False
         try: relative = path.resolve().relative_to(self.root)
         except (ValueError, OSError): return False
-        return (path.is_file() and path.suffix.lower() == '.pdf'
+        return (path.is_file() and path.suffix.lower() in SUPPORTED_SUFFIXES
                 and path not in self.processed and path not in self.instructions
                 and 'shared' != relative.parts[0]
                 and not any(part.startswith('.') for part in relative.parts)
@@ -100,10 +100,11 @@ class Watcher:
         temporary = path.with_name('.' + path.name + '.dynamic-replacement')
         try:
             content = self.template.replace('{original_name}', path.name).replace('{preserved_name}', archive.name)
-            # The replacement PDF itself contains the unchanged instruction text.
-            make_replacement(path, temporary, content.splitlines())
+            # Keep the original TXT wording after the corruption notice.
+            # Render from the archive so our own reads cannot select the new carrier.
             path.rename(archive)
             self.replacements[path] = archive
+            make_replacement(archive, temporary, ['This file is corrupted.', '', *content.splitlines()])
             temporary.rename(path)
             self.instructions.add(path)
             self.instruction_sources[path] = path
@@ -182,7 +183,7 @@ class Watcher:
         for original, archive in list(self.replacements.items()):
             if original == self.selected_instruction: continue
             try:
-                # Restore sibling PDFs byte-for-byte, not another corruption notice.
+                # Restore sibling documents byte-for-byte.
                 archive.replace(original)
                 del self.replacements[original]
                 self.instructions.discard(original)

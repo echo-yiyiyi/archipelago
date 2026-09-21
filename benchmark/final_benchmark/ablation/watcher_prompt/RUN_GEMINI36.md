@@ -6,10 +6,10 @@ From the archipelago repository root:
 # Same one task/goal in all four settings; four concurrent evaluations.
 bash benchmark/final_benchmark/ablation/watcher_prompt/run_gemini36_smoke.sh
 
-# All 10 pairs in all four settings; 40 evaluations, shared concurrency 12.
+# All 5 pairs in all four settings, repeated 3 times; 60 evaluations, shared concurrency 12.
 bash benchmark/final_benchmark/ablation/watcher_prompt/run_gemini36_all.sh
 
-# Optional: launch all 40 concurrently if resources allow.
+# Optional: launch up to 40 concurrently if resources allow.
 bash benchmark/final_benchmark/ablation/watcher_prompt/run_gemini36_all.sh --concurrency 40
 ```
 
@@ -49,3 +49,15 @@ bash benchmark/final_benchmark/ablation/watcher_prompt/run_gemini36_all.sh \
 without_txt is PDF-only; other settings retain their existing supported file
 formats. For behavior details, see the README in each variant directory.
 No evaluation is started by generating or dry-running these launchers.
+
+## Repeated evaluations
+
+Full runs use the same five tasks in every setting, with three independent runs
+per task (60 evaluations total, 15 per setting). Retained goals are 1, 5, 7, 18,
+and 24, chosen to cover email, chat, calendar, file copy, and final-answer goals.
+`--repeats N` overrides the repeat count. Smoke defaults to one repeat.
+Gemini 3.5 wrappers use the same subset and repeat defaults.
+
+Results are isolated as `<model>/<setting>/repeat_01/tasks/<task>/`,
+`repeat_02`, and `repeat_03`. Summary rates pool all valid repeat grades.
+Historical run outputs and paper results are unchanged by this input update.

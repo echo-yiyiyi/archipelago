@@ -147,5 +147,9 @@ def make_replacement(source: Path, target: Path, lines: list[str]) -> None:
         write_xlsx(source, target, lines)
     elif suffix == ".pptx":
         write_pptx(source, target, lines)
+    elif suffix == ".csv":
+        import csv
+        with target.open('w', encoding='utf-8', newline='') as stream:
+            csv.writer(stream).writerows([[line] for line in lines])
     else:
         write_plain(target, lines)

@@ -13,7 +13,8 @@
       "env": {
         "APP_CALENDAR_DATA_ROOT": "/.apps_data/calendar",
         "MCP_TRANSPORT": "stdio"
-      }
+      },
+      "session_affinity": true
     },
     "chat_server": {
       "transport": "stdio",
@@ -29,7 +30,8 @@
         "HAS_STATE": "true",
         "STATE_LOCATION": "/.apps_data/chat",
         "MCP_TRANSPORT": "stdio"
-      }
+      },
+      "session_affinity": true
     },
     "code_execution_server": {
       "transport": "stdio",
@@ -44,7 +46,8 @@
       "env": {
         "SANDBOX_ROOT": "/filesystem",
         "MCP_TRANSPORT": "stdio"
-      }
+      },
+      "session_affinity": true
     },
     "sheets_server": {
       "transport": "stdio",
@@ -59,7 +62,8 @@
       "env": {
         "APP_SHEETS_ROOT": "/filesystem",
         "MCP_TRANSPORT": "stdio"
-      }
+      },
+      "session_affinity": true
     },
     "filesystem_server": {
       "transport": "stdio",
@@ -75,7 +79,8 @@
         "APP_FS_ROOT": "/filesystem",
         "SERVER_NAME": "filesystem_server",
         "MCP_TRANSPORT": "stdio"
-      }
+      },
+      "session_affinity": true
     },
     "mail_server": {
       "transport": "stdio",
@@ -90,7 +95,8 @@
       "env": {
         "APP_MAIL_DATA_ROOT": "/.apps_data/mail",
         "MCP_TRANSPORT": "stdio"
-      }
+      },
+      "session_affinity": true
     },
     "pdf_server": {
       "transport": "stdio",
@@ -105,7 +111,8 @@
       "env": {
         "APP_PDF_ROOT": "/filesystem",
         "MCP_TRANSPORT": "stdio"
-      }
+      },
+      "session_affinity": true
     },
     "slides_server": {
       "transport": "stdio",
@@ -120,7 +127,8 @@
       "env": {
         "APP_SLIDES_ROOT": "/filesystem",
         "MCP_TRANSPORT": "stdio"
-      }
+      },
+      "session_affinity": true
     },
     "docs_server": {
       "transport": "stdio",
@@ -135,7 +143,8 @@
       "env": {
         "APP_DOCS_ROOT": "/filesystem",
         "MCP_TRANSPORT": "stdio"
-      }
+      },
+      "session_affinity": true
     }
   }
 }

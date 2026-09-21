@@ -155,7 +155,7 @@ def main():
     parser.add_argument('--mode',choices=['both','static','dynamic'],default='both')
     parser.add_argument('--input-root',type=Path,default=ROOT)
     parser.add_argument('--output-root',type=Path,default=REPO/'benchmark/output/ablation/external_internal')
-    parser.add_argument('--concurrency',type=int,default=12,help='Global shared slots, 1..12 (disk-safe limit; default: 12)')
+    parser.add_argument('--concurrency',type=int,default=12,help='Global shared slots, 1..64 (default: 12)')
     parser.add_argument('--temp-root',type=Path,default=REPO/'benchmark/output/tmp/external_internal',
                         help='Temporary extraction directory on the data disk')
     parser.add_argument('--max-steps',type=int,default=100)
@@ -166,8 +166,8 @@ def main():
     args=parser.parse_args()
     if args.summarize:
         summarize(args.summarize.resolve());return 0
-    if not 1<=args.concurrency<=12 or args.max_steps<1 or len(set(args.models))!=len(args.models):
-        parser.error('Require concurrency 1..12, positive max-steps and distinct models; higher concurrency exhausted the system disk')
+    if not 1<=args.concurrency<=64 or args.max_steps<1 or len(set(args.models))!=len(args.models):
+        parser.error('Require concurrency 1..64, positive max-steps and distinct models')
     if args.base_port is not None and not 1<=args.base_port<=65536-args.concurrency:
         parser.error('base-port leaves insufficient valid ports')
     args.input_root=args.input_root.resolve();args.output_root=args.output_root.resolve()

@@ -8,7 +8,7 @@ import time
 import unittest
 
 ROOT=Path(__file__).resolve().parent
-ROWS=json.loads((ROOT/'without_corrupt/selected_10_tasks_with_attack_config.json').read_text())
+ROWS=json.loads((ROOT/'without_corrupt/selected_5_tasks_with_attack_config.json').read_text())
 WATCHER=ROOT/'without_corrupt'/ROWS[0]['watcher_file']
 sys.path.insert(0,str(WATCHER.parent))
 spec=importlib.util.spec_from_file_location('note_watcher',WATCHER)
@@ -17,7 +17,7 @@ CONFIG={'instruction_template':'Read {original_name}. Original archive: {preserv
 
 
 class WatcherTest(unittest.TestCase):
-    def test_first_instruction_read_removes_others_and_keeps_originals(self):
+    def test_first_instruction_read_neutralizes_others_and_keeps_originals(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp)/'files';root.mkdir()
             paths=[root/n for n in ['first.txt','second.pdf','third.xlsx']]
@@ -31,8 +31,13 @@ class WatcherTest(unittest.TestCase):
             self.assertIn(paths[2],watcher.pending)
             watcher.on_read(notes[0])
             self.assertEqual(watcher.selected_instruction,notes[0])
-            self.assertEqual(watcher.instructions,{notes[0]})
-            self.assertFalse(notes[1].exists())
+            self.assertEqual(watcher.instructions,set(notes[:2]))
+            self.assertEqual(notes[1].read_text(),'Please continue with the original task.\n')
+            selected_text=CONFIG['instruction_template'].format(original_name=paths[0].name,preserved_name='first_archive.txt')
+            self.assertEqual(notes[0].read_text(),selected_text)
+            watcher.on_read(notes[1]);watcher.tick()
+            self.assertEqual(watcher.selected_instruction,notes[0])
+            self.assertEqual(notes[0].read_text(),selected_text)
             self.assertEqual(watcher.pending,{})
             watcher.redirect(paths[2])
             self.assertFalse(notes[2].exists())
@@ -40,7 +45,7 @@ class WatcherTest(unittest.TestCase):
             self.assertFalse(list(root.glob('*_archive*')))
             self.assertEqual(watcher.replacements,{})
             self.assertTrue(watcher.restore())
-            self.assertFalse(notes[0].exists())
+            self.assertFalse(any(p.exists() for p in notes))
             for p,state in before.items():self.assertEqual((p.read_bytes(),p.stat().st_ino,p.stat().st_mtime_ns),state)
 
     def test_existing_sidecar_is_never_overwritten_or_deleted(self):

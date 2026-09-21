@@ -85,12 +85,17 @@ def main(argv=None):
     parser.add_argument('--input-root', type=Path, default=ROOT,
                         help='Task category root, e.g. benchmark/all_category_test')
     parser.add_argument('--output-root', type=Path, default=BENCHMARK / 'output/final_benchmark')
+    parser.add_argument('--temp-root', type=Path, help='Per-batch scratch parent on a separate data disk, automatically cleaned')
+    parser.add_argument('--min-free-gb', type=float, default=30, help='Minimum free GiB on scratch/output filesystems')
+    parser.add_argument('--min-system-free-gb', type=float, default=10, help='Minimum free GiB on system/Docker filesystem')
     parser.add_argument('--skip-build', action='store_true')
     parser.add_argument('--timer', action='store_true')
     parser.add_argument('--dry-run', action='store_true', help='Validate inputs and print commands without Docker or model calls')
     args = parser.parse_args(argv)
     if not re.fullmatch(r'[A-Za-z0-9_-]+', args.model) or args.concurrency < 1:
         parser.error('model must be a config suffix and concurrency must be positive')
+    if args.min_free_gb <= 0 or args.min_system_free_gb <= 0:
+        parser.error('free-space thresholds must be positive')
     model_config = BENCHMARK / f'orchestrator_config_{args.model}.json'
     if not model_config.is_file():
         parser.error(f'model config does not exist: {model_config}')
@@ -126,7 +131,19 @@ def main(argv=None):
         if args.dry_run:
             continue
         try:
-            result = subprocess.run(command, cwd=BENCHMARK.parent, env=environment)
+            if args.temp_root:
+                if __package__:
+                    from .runtime_storage import run_with_storage
+                else:
+                    from runtime_storage import run_with_storage
+                result = run_with_storage(command, cwd=BENCHMARK.parent, env=environment,
+                    temp_root=args.temp_root, output_root=output,
+                    min_free_gb=args.min_free_gb, min_system_free_gb=args.min_system_free_gb)
+            else:
+                result = subprocess.run(command, cwd=BENCHMARK.parent, env=environment)
+        except (OSError, ValueError) as error:
+            print(f'Cannot start batch: {error}', file=sys.stderr)
+            return 1
         except KeyboardInterrupt:
             print('Interrupted; stopping subsequent batches.', file=sys.stderr)
             return 130

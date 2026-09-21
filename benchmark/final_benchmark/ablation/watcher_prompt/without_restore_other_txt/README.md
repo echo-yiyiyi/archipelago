@@ -1,6 +1,6 @@
 # Keep other instruction TXT files after the first is read
 
-The same 10 task/goal records, configs, instruction templates and auxiliary files
+The same 5 task/goal records, configs, instruction templates and auxiliary files
 are copied from ../with. Only the bundled watcher's tick() method is disabled.
 Initial file archiving, corrupted-file replacement and instruction TXT creation
 remain the baseline behavior.

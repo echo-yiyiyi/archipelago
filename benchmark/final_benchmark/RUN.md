@@ -1,5 +1,60 @@
 # 启动 final benchmark 实验
 
+## 统一全量入口
+
+在仓库根目录执行。同一个接口支持任意已有模型配置，也支持多个模型：
+
+```bash
+# DeepSeek：180 个任务，全局并发 64
+/data/ziyi/.venv/bin/python benchmark/run_models_parallel.py --models deepseekv4
+
+# Gemini：180 个任务
+/data/ziyi/.venv/bin/python benchmark/run_models_parallel.py --models gemini36
+
+# 两个模型共 360 个任务，共用 64 个槽位
+/data/ziyi/.venv/bin/python benchmark/run_models_parallel.py --models deepseekv4 gemini36
+```
+
+`--models` 的名称对应 `benchmark/orchestrator_config_<名称>.json`。
+在终端配置所选模型的认证信息，以及 Gemini judge 的 Vertex 凭据。
+默认任务根目录为 `benchmark/final_benchmark`，包含 8 个 batch、每个模型 180 个任务。
+模型和类别交错进入统一队列，全局并发默认 64，不按 batch 串行等待。
+步数和推理强度使用各模型配置，默认不启用 timer。
+可以用 `--concurrency` 调整并发，`--categories` 选择类别，`--input-root` 切换任务集。
+`--dry-run` 仅检查配置并打印队列，`--skip-build` 复用已有镜像。
+
+临时空间保护内置在同一个入口，默认使用数据盘上的
+`benchmark/output/tmp/full_benchmark/final-batch-*`，也可传 `--temp-root`。
+临时目录必须位于独立数据盘，`TMPDIR`、`TMP`、`TEMP` 均指向本次运行的独立目录。
+每个任务正常结束时释放其 Python 临时文件。整个任务池结束或收到 Ctrl+C/SIGTERM 后，
+等待任务和 Docker 清理完成，再删除本次运行的临时目录。
+其他任务的临时目录、缓存和实验结果不会删除。SIGKILL 或主机断电无法执行退出清理。
+
+启动前及运行期间每 2 秒检查临时目录、输出目录和系统盘的空间。
+数据盘默认至少保留 30 GiB，系统盘默认至少保留 10 GiB。
+空间不足会停止任务池并取消待运行任务。这不是磁盘配额，其他进程仍可能同时消耗空间。
+
+结果默认保存在 `benchmark/output/final_benchmark/parallel_<时间>_<编号>/`，
+下面按模型和类别分目录，整体报告是根目录的 `manifest.json`。
+每次启动创建新实验，不自动续跑。
+
+只重跑旧 batch 中进程退出码非零的任务：
+
+```bash
+/data/ziyi/.venv/bin/python benchmark/run_models_parallel.py \
+  --retry-failed parallel_20260915_001732_e2bab06c --concurrency 6
+```
+
+也可传入旧 batch 的完整目录。添加 `--dry-run` 可先查看任务清单。
+任务从头执行，沿用旧 batch 保存的模型配置和任务 JSON，以及原任务资源目录。
+正常结束且 ASR 为零的任务不重跑，尚未启动或没有退出记录的任务也不在此参数范围内。
+结果写入新 batch，manifest 的 `retry_of` 记录来源，旧结果保留，不自动合并统计。
+
+添加 `--merge-into-original` 可将每个已结束的重跑任务覆盖回原 batch，
+自动刷新原 manifest、类别 score_summary 和已有的 watcher setting_summary.{md,csv,json}。
+旧任务文件和退出记录保存在原目录的 `retry_backups/<重跑 batch>/`，重跑日志也复制回原目录。
+重跑仍然失败时会更新失败记录，可以再次使用同一条命令重试。
+
 ## 跨模型、跨类别统一并行
 
 在 `archipelago` 目录执行：

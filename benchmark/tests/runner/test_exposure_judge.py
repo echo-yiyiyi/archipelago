@@ -100,7 +100,7 @@ class JudgeProtocolTests(unittest.TestCase):
         from litellm.llms.vertex_ai.gemini.vertex_and_google_ai_studio_gemini import VertexGeminiConfig
         native = {}
         VertexGeminiConfig().apply_response_schema_transformation(
-            request['response_format'], native, 'gemini-3.5-flash')
+            request['response_format'], native, 'gemini-3.6-flash')
         self.assertEqual(native['response_mime_type'], 'application/json')
         self.assertEqual(native['response_json_schema']['required'],
                          ['exposure', 'message_numbers', 'rationale'])

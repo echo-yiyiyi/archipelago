@@ -34,12 +34,12 @@ def patch(source):
 
 
 def validate():
-    config_name='selected_10_tasks_with_attack_config.json'
+    config_name='selected_5_tasks_with_attack_config.json'
     assert (OUTPUT/config_name).read_bytes()==(SOURCE/config_name).read_bytes()
-    sampled='selected_10_tasks_with_inject_goals.json'
+    sampled='selected_5_tasks_with_inject_goals.json'
     assert (OUTPUT/sampled).read_bytes()==(SOURCE/sampled).read_bytes()
     rows=json.loads((OUTPUT/config_name).read_text())
-    assert len(rows)==len({r['task_id'] for r in rows})==len({r['inject_goal'] for r in rows})==10
+    assert len(rows)==len({r['task_id'] for r in rows})==len({r['inject_goal'] for r in rows})==5
     for row in rows:
         for name in {row['attack_file'],row['watcher_file'],row['watcher_config'],*row['populate_files']}:
             path=(OUTPUT/name).resolve()
@@ -54,9 +54,9 @@ def validate():
 def main():
     OUTPUT.mkdir(parents=True,exist_ok=True)
     if any(OUTPUT.iterdir()):raise FileExistsError(f'Refusing to overwrite {OUTPUT}')
-    rows=json.loads((SOURCE/'selected_10_tasks_with_attack_config.json').read_text())
+    rows=json.loads((SOURCE/'selected_5_tasks_with_attack_config.json').read_text())
     manifest={'source':'../with','variant':'without_restore_other_txt','changed_watcher_methods':['tick'],
-        'source_config_sha256':sha(SOURCE/'selected_10_tasks_with_attack_config.json'),'tasks':[]}
+        'source_config_sha256':sha(SOURCE/'selected_5_tasks_with_attack_config.json'),'tasks':[]}
     with tempfile.TemporaryDirectory(prefix='.without-restore-other-',dir=ROOT) as temporary:
         stage=Path(temporary)
         for row in rows:
@@ -68,14 +68,14 @@ def main():
                 if name==row['watcher_file']:dest.write_text(patch(source.read_text()))
             manifest['tasks'].append({'task_id':row['task_id'],'inject_goal':row['inject_goal'],
                 'harmful_task_id':row['harmful_task_id'],'watcher_sha256':sha(stage/row['watcher_file'])})
-        for name in ('selected_10_tasks_with_attack_config.json','selected_10_tasks_with_inject_goals.json'):
+        for name in ('selected_5_tasks_with_attack_config.json','selected_5_tasks_with_inject_goals.json'):
             shutil.copy2(SOURCE/name,stage/name)
         write(stage/'selection_manifest.json',manifest)
         if any(OUTPUT.iterdir()):raise FileExistsError('Destination changed during generation')
         for entry in stage.iterdir():entry.rename(OUTPUT/entry.name)
     count=validate()
     write(OUTPUT/'validation_report.json',{'status':'passed','records':count,'checks':[
-        '10 task IDs and goal IDs aligned with with','task JSON files byte-identical',
+        '5 task IDs and goal IDs aligned with with','task JSON files byte-identical',
         'only watcher tick method changed','all other artifacts and templates byte-identical'],
         'evaluations_run':False})
     print(f'Validated {count} without_restore_other_txt records')
