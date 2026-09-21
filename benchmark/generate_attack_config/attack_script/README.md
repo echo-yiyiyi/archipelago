@@ -148,7 +148,7 @@ point if you want to drive it yourself.
   `archipelago-hf-runtime-proxy:concurrency`.
 - For the goal 2 / goal 7 LLM judge, the check runs under a Python with `openai` +
   `azure-identity`/`azure-keyvault-secrets` and Key Vault access
-  (`--check-python`, default `/data/ziyi/.venv/bin/python`).
+  (`--check-python`, default `python3`).
 
 ## Verified results
 

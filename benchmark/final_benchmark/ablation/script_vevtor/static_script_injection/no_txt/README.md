@@ -38,7 +38,7 @@ from the ASR denominator. Model execution has not been started by preparation.
 Validation / regeneration:
 
 ```bash
-/data/ziyi/.venv/bin/python benchmark/final_benchmark/ablation/script_vevtor/static_script_injection/no_txt/prepare.py --validate
+python3 benchmark/final_benchmark/ablation/script_vevtor/static_script_injection/no_txt/prepare.py --validate
 ```
 
 Running prepare.py without --validate regenerates this ablation from the parent

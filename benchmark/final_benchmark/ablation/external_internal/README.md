@@ -41,11 +41,11 @@ Validation checks these hashes without modifying generated files. A completed
 bundle is reused only if it has matching original-pipeline output hashes.
 
 ```bash
-/data/ziyi/.venv/bin/python benchmark/final_benchmark/ablation/external_internal/generate_static.py
-/data/ziyi/.venv/bin/python benchmark/final_benchmark/ablation/external_internal/generate_dynamic.py
+python3 benchmark/final_benchmark/ablation/external_internal/generate_static.py
+python3 benchmark/final_benchmark/ablation/external_internal/generate_dynamic.py
 # Verify existing outputs without model calls:
-/data/ziyi/.venv/bin/python benchmark/final_benchmark/ablation/external_internal/generate_static.py --validate-only
-/data/ziyi/.venv/bin/python benchmark/final_benchmark/ablation/external_internal/generate_dynamic.py --validate-only
+python3 benchmark/final_benchmark/ablation/external_internal/generate_static.py --validate-only
+python3 benchmark/final_benchmark/ablation/external_internal/generate_dynamic.py --validate-only
 ```
 
 Generation needs the repository's Azure credentials and network access. These
@@ -82,7 +82,7 @@ Options:
 - `--concurrency N` (1–64), `--max-steps N`, `--base-port N`, `--skip-build`.
 - `--output-root PATH`: choose a different output parent.
 - `--summarize RUN_DIR`: refresh results from a directory containing manifest.json.
-- `PY=/path/to/python`: override the default /data/ziyi/.venv/bin/python interpreter.
+- `PY=/path/to/python`: override the default python3 interpreter.
 
 Every launch creates a separate directory beneath:
 `benchmark/output/ablation/external_internal/run_*/parallel_*/`.

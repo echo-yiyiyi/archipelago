@@ -24,7 +24,7 @@ The input keeps one randomly selected format per goal, balanced across seven
 records (three ELF, two Python, two bytecode). From the repository root:
 
 ```bash
-/data/ziyi/.venv/bin/python -m benchmark.generate_attack_config.generate \
+python3 -m benchmark.generate_attack_config.generate \
   benchmark/generate_attack_config/input/shared_script_goals_18_25_to_30.json \
   --add-user-prompt \
   --output benchmark/generate_attack_config/output/shared_scripts_18_25_to_30_user_prompt/tasks_with_attack_config.json

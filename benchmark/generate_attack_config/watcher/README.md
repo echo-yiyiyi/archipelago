@@ -6,7 +6,7 @@ Supported prompt goals: 1–8 and 18–24. Args goals 13–17 and 25–30 are ma
 `dynamic_script_execution: true` in the goal catalog; see the script flow below.
 
 ```bash
-/data/ziyi/.venv/bin/python -m benchmark.generate_attack_config.generate \
+python3 -m benchmark.generate_attack_config.generate \
   benchmark/generate_attack_config/input/dynamic_prompt_8_tasks.json \
   --output benchmark/generate_attack_config/output/dynamic_prompt_8_tasks/tasks_with_attack_config.json
 
@@ -93,7 +93,7 @@ The prepared input is `input/dynamic_script_11_tasks.json`; generated output is
 Both user-prompt injection and keyword-based destinations are disabled in this input.
 
 ```bash
-/data/ziyi/.venv/bin/python -m benchmark.generate_attack_config.generate \
+python3 -m benchmark.generate_attack_config.generate \
   benchmark/generate_attack_config/input/dynamic_script_11_tasks.json \
   --output benchmark/generate_attack_config/output/dynamic_script_11_tasks/tasks_with_attack_config.json
 

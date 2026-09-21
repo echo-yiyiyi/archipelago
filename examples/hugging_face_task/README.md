@@ -136,7 +136,7 @@ every selected local task once for every configuration. The total number of
 containers is capped by `--concurrency`; each worker has its own port.
 
 ```bash
-cd /data/ziyi/archipelago/examples/hugging_face_task
+cd archipelago/examples/hugging_face_task
 ./run_inject.sh \
   inject_models_slrc.jsonl \
   inject_slrc_email_prompt.jsonl \
@@ -180,7 +180,7 @@ restore environment side effects and agent state, and then runs a fixed number
 of additional agent turns.
 
 ```bash
-cd /home/ziyi/projects/archipelago/examples/hugging_face_task
+cd archipelago/examples/hugging_face_task
 
 ./run_isolated.sh \
   output/concurrent/<old-run-id>/tasks/task_<task-id>/trajectory.json \

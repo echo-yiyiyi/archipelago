@@ -223,7 +223,7 @@ alone.
 No args:
 
 ```bash
-/data/ziyi/.venv/bin/python -m benchmark.generate_attack_config.generate \
+python3 -m benchmark.generate_attack_config.generate \
   benchmark/generate_attack_config/input/my_noargs_tasks.json \
   --output benchmark/generate_attack_config/output/my_noargs_tasks/tasks.json \
   --model aoai-swedencentral-aii-02-gpt-5.6-sol
@@ -232,7 +232,7 @@ No args:
 Args:
 
 ```bash
-/data/ziyi/.venv/bin/python -m benchmark.generate_attack_config.generate \
+python3 -m benchmark.generate_attack_config.generate \
   benchmark/generate_attack_config/input/my_args_tasks.json \
   --output benchmark/generate_attack_config/output/my_args_tasks/tasks.json \
   --add-user-prompt \
@@ -331,7 +331,7 @@ The complete workflow has four stages:
    input file.
 
    ```bash
-   /data/ziyi/.venv/bin/python \
+   python3 \
      benchmark/sample_inject_goal/sample_inject_goals.py \
      --output benchmark/sample_inject_goal/output/selected_90_tasks_with_inject_goals.json
    ```
@@ -349,7 +349,7 @@ The complete workflow has four stages:
    For `.pyc` and ELF, compilation uses the benchmark environment image.
 
    ```bash
-   /data/ziyi/.venv/bin/python -m benchmark.generate_attack_config.generate \
+   python3 -m benchmark.generate_attack_config.generate \
      benchmark/generate_attack_config/input/my_tasks.json \
      --output benchmark/generate_attack_config/output/my_tasks/args_tasks.json \
      --add-user-prompt \
@@ -377,7 +377,7 @@ The complete workflow has four stages:
    rebuilding and does not change prompt behavior.
 
    ```bash
-   /data/ziyi/.venv/bin/python -m benchmark.main_concurrency \
+   python3 -m benchmark.main_concurrency \
      --task-json benchmark/generate_attack_config/output/my_tasks/args_tasks.json \
      --concurrency 5 --run-id my_tasks_luna --skip-build
    ```
@@ -390,7 +390,7 @@ The complete workflow has four stages:
 ## Run
 
 ```bash
-/data/ziyi/.venv/bin/python -m benchmark.main_concurrency \
+python3 -m benchmark.main_concurrency \
   --task-json benchmark/generate_attack_config/output/my_batch/tasks.json \
   --concurrency 6 --run-id my_batch_luna --skip-build
 ```
@@ -403,7 +403,7 @@ same generated task directories.
 ## Validate paths before running
 
 ```bash
-/data/ziyi/.venv/bin/python - <<'PY'
+python3 - <<'PY'
 import json
 from pathlib import Path
 

@@ -96,9 +96,12 @@ def main(argv=None):
         parser.error('model must be a config suffix and concurrency must be positive')
     if args.min_free_gb <= 0 or args.min_system_free_gb <= 0:
         parser.error('free-space thresholds must be positive')
-    model_config = BENCHMARK / f'orchestrator_config_{args.model}.json'
-    if not model_config.is_file():
-        parser.error(f'model config does not exist: {model_config}')
+    candidates = (BENCHMARK / f'orchestrator_config_{args.model}.json',
+                  BENCHMARK.parent / 'litellm_configs' / f'{args.model}.json')
+    matches = [path for path in candidates if path.is_file()]
+    if len(matches) != 1:
+        parser.error(f'{args.model}: expected one config in benchmark/ or litellm_configs/, found {len(matches)}')
+    model_config = matches[0]
     try:
         batches = discover(args.category, root=args.input_root.resolve())
         if not json.loads(model_config.read_text()).get('model'):

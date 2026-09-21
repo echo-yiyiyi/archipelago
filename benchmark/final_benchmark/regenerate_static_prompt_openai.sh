@@ -4,7 +4,7 @@ set -euo pipefail
 umask 077
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 REPO=$(cd -- "$SCRIPT_DIR/../.." && pwd)
-PY=${PY:-/data/ziyi/.venv/bin/python}
+PY=${PY:-python3}
 SKIP_RANKING=0
 case "${1:-}" in
   --skip-ranking) SKIP_RANKING=1; shift ;;

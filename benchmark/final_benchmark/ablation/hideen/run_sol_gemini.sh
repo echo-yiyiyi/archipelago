@@ -4,7 +4,7 @@ set -euo pipefail
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 ROOT=$(cd -- "$SCRIPT_DIR/../../../.." && pwd)
-PY=${PY:-/data/ziyi/.venv/bin/python}
+PY=${PY:-python3}
 CONDITION=both
 CONCURRENCY=${CONCURRENCY:-20}
 MAX_STEPS=${MAX_STEPS:-50}

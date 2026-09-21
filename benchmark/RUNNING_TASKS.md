@@ -30,12 +30,12 @@ For generic filenames, run the existing preparation command first, then pass
 its generated JSON to the common runner:
 
 ```bash
-/data/ziyi/.venv/bin/python benchmark/prepare_args_5_generic_filename.py
+python3 benchmark/prepare_args_5_generic_filename.py
 bash benchmark/run_tasks_models.sh \
   --task-json benchmark/generate_attack_config/tmp/args_5_generic_filename/args_5_generic_filename.json \
   --models sol,luna
 
-/data/ziyi/.venv/bin/python benchmark/prepare_selected_6_generic_filename.py
+python3 benchmark/prepare_selected_6_generic_filename.py
 bash benchmark/run_tasks_models.sh \
   --task-json benchmark/generate_attack_config/tmp/selected_6_generic_filename/selected_6_generic_filename.json \
   --models sol,luna

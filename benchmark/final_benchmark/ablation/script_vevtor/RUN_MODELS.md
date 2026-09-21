@@ -12,7 +12,7 @@ Each model runs 3 categories × 3 formats × 5 tasks = 45 evaluations; 135 total
 The global concurrency is 12, the common agent step limit is 100, and the timer is off.
 Use `--max-steps N`, `--concurrency N` (1–64), `--base-port N`, or `--skip-build` as needed.
 Use `--models gpt-terra kimi deepseek` to select models, and `--output-root PATH` to change the results parent.
-The PY environment variable overrides the default `/data/ziyi/.venv/bin/python` interpreter.
+The PY environment variable overrides the default `python3` interpreter.
 
 Terra uses the existing Azure Key Vault configuration and requires its usual Azure credentials.
 Kimi uses the existing benchmark configuration; an exported KIMI_API_KEY overrides its key.

@@ -149,7 +149,14 @@ activemq-data/
 
 # Environments
 .env
+.env.*
+!.env.example
 .envrc
+*credentials*.json
+*service-account*.json
+*service_account*.json
+*api_keys*.json
+*api-key*.txt
 .venv
 env/
 venv/
@@ -218,6 +225,9 @@ __marimo__/
 # Archipelago specific
 output/
 outputs/
+examples/hugging_face_task/input/.isolated_batches/
+benchmark/cot_prompt_adjust/output*/
+benchmark/final_benchmark/static_script_injection/direct_script_security_results.json
 benchmark/generate_attack_config/tmp/
 *.tar.gz
 

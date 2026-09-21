@@ -28,7 +28,7 @@ selected task in each setting. Summaries use manifest-requested jobs only.
 
 Common options: --dry-run, --concurrency N (1–64), --max-steps N, --base-port N,
 --skip-build, --output-root PATH, --summarize RUN_DIR. The PY environment variable
-overrides the default /data/ziyi/.venv/bin/python interpreter.
+overrides the default python3 interpreter.
 
 Results are stored under:
 `benchmark/output/ablation/watcher_prompt/{smoke|all}_*/parallel_*/`.

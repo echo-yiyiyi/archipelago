@@ -47,7 +47,7 @@ a bucket, remaining candidates for that domain/bucket are skipped.
 
 ## Compare all models on the selected 15 tasks
 
-From `/data/ziyi`:
+From the repository parent directory:
 
 ```bash
 python3 archipelago/benchmark/filter_task_difficulty/run_selected_models.py --dry-run

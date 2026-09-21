@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
-PY=${PY:-/data/ziyi/.venv/bin/python}
+PY=${PY:-python3}
 MODELS=${MODELS:-sol,opus5,deepseekv4,glm53}
 TASK_JSON=${TASK_JSON:-}
 CONCURRENCY=${CONCURRENCY:-}

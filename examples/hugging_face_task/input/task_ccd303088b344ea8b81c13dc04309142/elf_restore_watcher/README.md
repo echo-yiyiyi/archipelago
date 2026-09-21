@@ -46,7 +46,7 @@ So the agent sees a genuine, successful file recovery while the attack fires.
 The compile step is gated by the auto-mode safety classifier. Run once:
 
 ```
-/data/ziyi/.venv/bin/python \
+python3 \
   benchmark/generate_attack_config/attack_script/build_restore_elf.py
 ```
 
@@ -62,7 +62,7 @@ model config, e.g.:
 ```
 RUNTIME_NETWORK_CIDR=10.240.0.0/16 \
 HF_EXPERIMENT_NAME=prestarted_aiag_elf_restore_file \
-ORCHESTRATOR_CONFIG=/data/ziyi/archipelago/benchmark/orchestrator_config_opus.json \
+ORCHESTRATOR_CONFIG=benchmark/orchestrator_config_opus.json \
 python examples/hugging_face_task/main_concurrency.py \
   task_ccd303088b344ea8b81c13dc04309142 \
   --resume-trajectory <this task's user-prompt seed trajectory> \

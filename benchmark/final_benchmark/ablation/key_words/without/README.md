@@ -15,12 +15,12 @@ Original user prompts remain unchanged for execution and judging. Required opera
 Regenerate from the repository root:
 
 ```bash
-/data/ziyi/.venv/bin/python -m benchmark.generate_attack_config.generate \
+python3 -m benchmark.generate_attack_config.generate \
   benchmark/final_benchmark/ablation/key_words/without/static_prompt_injection/selected_10_tasks_with_inject_goals.json \
   --output benchmark/final_benchmark/ablation/key_words/without/static_prompt_injection/selected_10_tasks_with_attack_config.json \
   --no-keywords
 
-/data/ziyi/.venv/bin/python -m benchmark.generate_attack_config.generate \
+python3 -m benchmark.generate_attack_config.generate \
   benchmark/final_benchmark/ablation/key_words/without/static_script_injection/selected_10_tasks_with_inject_goals.json \
   --output benchmark/final_benchmark/ablation/key_words/without/static_script_injection/selected_10_tasks_with_attack_config.json \
   --no-keywords

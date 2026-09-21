@@ -7,7 +7,7 @@ now embeds the same `Before continuing...` instruction as its configuration.
 To rerun only this case with a September 13 model configuration:
 
 ```bash
-/data/ziyi/.venv/bin/python benchmark/final_benchmark/ablation/key_words/rerun_client_code.py --model gemini36
+python3 benchmark/final_benchmark/ablation/key_words/rerun_client_code.py --model gemini36
 ```
 
 Model choices are `gemini36`, `gpt_terra_high`, `deepseekv4`, and `glm53`.
@@ -22,7 +22,7 @@ with provenance and results; original batches are retained.
 From the repository root:
 
 ```bash
-/data/ziyi/.venv/bin/python benchmark/final_benchmark/ablation/key_words/run_models.py --concurrency 64
+python3 benchmark/final_benchmark/ablation/key_words/run_models.py --concurrency 64
 ```
 
 The default runs both `with` and `without`, each containing the same 10 prompt and 10 script tasks. This schedules **120 task executions**: 20 tasks × 2 settings × 3 models. All models, settings and categories share one interleaved pool of 64 task slots. Change `--concurrency` to any value from 1 to 64. Script formats remain py/pyc/ELF = 3/3/4 in both settings.
@@ -42,7 +42,7 @@ Run in the existing benchmark environment with its dataset, Docker, Vertex crede
 Validate inputs without Docker or API calls:
 
 ```bash
-/data/ziyi/.venv/bin/python benchmark/final_benchmark/ablation/key_words/run_models.py --dry-run
+python3 benchmark/final_benchmark/ablation/key_words/run_models.py --dry-run
 ```
 
 If the existing Docker images are already built, add `--skip-build`. To select only one setting, add `--settings with` or `--settings without`. `--models` accepts benchmark orchestrator configuration suffixes.
@@ -74,7 +74,7 @@ Combined rows aggregate prompt and script using each metric's own sample count. 
 Individual task failures do not stop the remaining queue. The process returns nonzero for failed or interrupted runs, and writes summaries from available results when a manifest exists. To rebuild a summary later without running models:
 
 ```bash
-/data/ziyi/.venv/bin/python benchmark/final_benchmark/ablation/key_words/run_models.py \
+python3 benchmark/final_benchmark/ablation/key_words/run_models.py \
   --summarize-only benchmark/output/key_words/keyword_<timestamp>_<id>/parallel_<run-id>
 ```
 

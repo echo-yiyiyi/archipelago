@@ -22,14 +22,14 @@
 #
 set -uo pipefail
 
-REPO=/data/ziyi/archipelago
+REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$REPO"
-PY=/data/ziyi/.venv/bin/python
+PY=${PY:-python3}
 BM=benchmark
 LLC=litellm_configs
 OUT=$BM/generate_attack_config/output
 NEWCOT=$BM/generate_attack_config/output_newcot
-SC=/tmp/claude-1005/-data-ziyi/6800d4a4-f311-4c63-b09e-747ef69dce3e/scratchpad
+SC=${SC:-$REPO/benchmark/output/tmp/litellm_models_8_11}
 GEN=$SC/orch_configs                     # generated orchestrator configs (contain keys)
 mkdir -p "$SC" "$GEN"
 

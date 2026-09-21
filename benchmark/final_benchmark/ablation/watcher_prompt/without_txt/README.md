@@ -20,7 +20,7 @@ archived documents, and stops scheduling new replacements. Goal-category
 activity restores the selected original, as in the previous inline setting.
 
 The previous PDF-only settings are backed up in
-`/data/ziyi/ablation_backups/without_txt_pdf_only_20260913_224549`.
+a local `ablation_backups/without_txt_pdf_only_20260913_224549` directory.
 Existing experiment outputs still describe that previous version and have not
 been modified. New evaluations are required for the eight-format setting.
 

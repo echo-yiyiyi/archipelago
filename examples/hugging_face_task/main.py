@@ -991,10 +991,24 @@ def main():
     with open(args.orchestrator_config or EXAMPLE_DIR / "orchestrator_config.json") as f:
         orchestrator_config = json.load(f)
 
+    # LiteLLM configs keep credentials in the environment, never in run files.
+    api_key_env = orchestrator_config.get("api_key_env")
+    if api_key_env:
+        api_key = os.environ.get(api_key_env)
+        if not api_key:
+            raise RuntimeError(f"Missing model credential environment variable: {api_key_env}")
+        orchestrator_config["extra_args"] = {
+            **orchestrator_config.get("extra_args", {}),
+            "api_base": orchestrator_config["api_base"],
+        }
+        agent_env = os.environ.copy()
+        agent_env["OPENAI_API_KEY"] = api_key
+    else:
+        agent_env = None
+
     # Resolve Azure Key Vault credentials (when the orchestrator config uses one)
     # into the agent subprocess environment so Azure-hosted models authenticate.
     # Ported from benchmark/main.py; the secret is never persisted to disk.
-    agent_env = None
     azure_key_vault = orchestrator_config.get("azure_key_vault")
     if azure_key_vault:
         from azure.identity import DefaultAzureCredential

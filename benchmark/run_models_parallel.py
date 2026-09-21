@@ -35,6 +35,20 @@ BENCHMARK = Path(__file__).resolve().parent
 DEFAULT_MODELS = ['gemini36', 'gemini37', 'gemini38', 'gpt_astra_low', 'sonnet5']
 
 
+def resolve_model_config(model: str) -> Path:
+    if not re.fullmatch(r'[A-Za-z0-9_-]+', model):
+        raise ValueError(f'invalid model config name: {model}')
+    candidates = (BENCHMARK / f'orchestrator_config_{model}.json',
+                  BENCHMARK.parent / 'litellm_configs' / f'{model}.json')
+    matches = [path for path in candidates if path.is_file()]
+    if len(matches) != 1:
+        raise ValueError(f'{model}: expected one config in benchmark/ or litellm_configs/, found {len(matches)}')
+    config = json.loads(matches[0].read_text())
+    if not isinstance(config.get('model'), str) or not config['model']:
+        raise ValueError(f'{matches[0]}: missing model')
+    return matches[0]
+
+
 @dataclass(frozen=True)
 class Job:
     model: str
@@ -57,13 +71,7 @@ def plan_jobs(input_root: Path, models: list[str], categories: list[str] | None 
         raise ValueError('provide distinct model config names')
     configs = {}
     for model in models:
-        if not re.fullmatch(r'[A-Za-z0-9_-]+', model):
-            raise ValueError(f'invalid model config name: {model}')
-        path = BENCHMARK / f'orchestrator_config_{model}.json'
-        config = json.loads(path.read_text())
-        if not isinstance(config.get('model'), str) or not config['model']:
-            raise ValueError(f'{path}: missing model')
-        configs[model] = path
+        configs[model] = resolve_model_config(model)
     batches = []
     discovered = {}
     for selection in categories or ['all']:

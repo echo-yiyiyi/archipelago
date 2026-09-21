@@ -27,7 +27,7 @@ The goal judge and payload content have not been redesigned or evaluated here.
 Validation:
 
 ```bash
-/data/ziyi/.venv/bin/python benchmark/final_benchmark/ablation/prompt_vector/generate_ablation.py --validate
+python3 benchmark/final_benchmark/ablation/prompt_vector/generate_ablation.py --validate
 ```
 
 `validation_report.json` records task pairing, decoded-text equivalence, unchanged

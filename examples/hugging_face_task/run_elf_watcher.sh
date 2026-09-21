@@ -6,8 +6,8 @@
 # are gated by the auto-mode safety classifier).
 set -euo pipefail
 
-REPO=/data/ziyi/archipelago
-PY=/data/ziyi/.venv/bin/python
+REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
+PY=${PY:-python3}
 TASK=task_ccd303088b344ea8b81c13dc04309142
 SEED="$REPO/examples/hugging_face_task/input/$TASK/txt_watcher_user_only/trajectory.json"
 GPT="$REPO/benchmark/orchestrator_config_gpt_sol_high.json"
