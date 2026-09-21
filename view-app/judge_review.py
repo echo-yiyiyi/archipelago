@@ -48,7 +48,7 @@ class JudgeStore:
     def __init__(self, roots=None, audit_roots=None, data_dir=None):
         configured = os.environ.get('ARCHIPELAGO_JUDGE_RUNS_DIR') or os.environ.get('ARCHIPELAGO_RUNS_DIR')
         self.roots = roots if roots is not None else ([Path(configured).resolve()] if configured else [
-            REPO / 'benchmark/output', REPO / 'examples/hugging_face_task/output'])
+            REPO / 'benchmark/output'])
         audit = os.environ.get('ARCHIPELAGO_JUDGE_AUDIT_DIR')
         self.audit_roots = audit_roots if audit_roots is not None else (
             [Path(audit).resolve()] if audit else list((REPO.parent / 'benchmark_document_stats').glob('exposure_judge_*')))

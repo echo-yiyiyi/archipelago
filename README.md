@@ -55,6 +55,16 @@ The default input is `benchmark/final_benchmark`; output goes to `benchmark/outp
 
 The eight batches contain 30 static prompt, 30 static script, 15 script swap args, 15 script swap no args, 30 suffix plant, 30 dynamic prompt, 15 dynamic script with additional instructions, and 15 dynamic script without them.
 
+## View results locally
+
+The optional `view-app` displays completed runs and trajectories. Start it from the repository root, then open `http://127.0.0.1:8765`:
+
+```bash
+uv run --project view-app python view-app/app.py
+```
+
+It discovers runs under `benchmark/output/final_benchmark` and `benchmark/output/all_category_test`. Set `ARCHIPELAGO_RUNS_DIR` to another output directory if needed.
+
 For a sequential category runner, use `python3 benchmark/final_benchmark/run_experiments.py all --model deepseek_v4_flash --concurrency 3`. Run either launcher with `--help` for category selection and storage options. To retry failed tasks from a parallel run, use `python3 benchmark/run_models_parallel.py --retry-failed <run-directory> --concurrency 4`.
 
 ## Credentials and reproducibility

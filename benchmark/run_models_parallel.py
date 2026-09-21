@@ -349,10 +349,6 @@ def merge_retry_result(original, retry, job, result):
     if manifest['finished_task_count'] == len(manifest['jobs']) and manifest['failed_task_count'] == 0:
         manifest['interrupted'] = False
     write_json(manifest_path, manifest)
-    if (original / 'setting_summary.json').exists():
-        from benchmark.final_benchmark.ablation.watcher_prompt import run_gemini36 as watcher
-        watcher.MODEL_LABEL = ', '.join(manifest['models'])
-        watcher.summarize(original)
 
 
 def main(argv=None):

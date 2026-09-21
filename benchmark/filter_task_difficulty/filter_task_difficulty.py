@@ -29,10 +29,7 @@ from typing import Any
 SCRIPT_DIR = Path(__file__).resolve().parent
 BENCHMARK_DIR = SCRIPT_DIR.parent
 ARCHIPELAGO_DIR = BENCHMARK_DIR.parent
-DEFAULT_GEMINI_RUN = (
-    ARCHIPELAGO_DIR
-    / "examples/hugging_face_task/output/concurrent/merged-gemini-3-5-flash"
-)
+DEFAULT_GEMINI_RUN = BENCHMARK_DIR / "output/concurrent/merged-gemini-3-5-flash"
 DEFAULT_RUN_OUTPUT = BENCHMARK_DIR / "output/concurrent"
 DEFAULT_OUTPUT_DIR = SCRIPT_DIR / "output"
 

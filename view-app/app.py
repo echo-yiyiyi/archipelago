@@ -13,13 +13,11 @@ from flask import Flask, abort, jsonify, render_template, request, send_file
 
 APP_DIR = Path(__file__).resolve().parent
 ARCHIPELAGO_ROOT = APP_DIR.parent
-HF_DIR = ARCHIPELAGO_ROOT / "examples" / "hugging_face_task"
 SCRIPTS_DIR = APP_DIR / "scripts"
 DEFAULT_RUNS_DIRS = (
     ARCHIPELAGO_ROOT / "benchmark" / "output" / "concurrent",
-    HF_DIR / "output" / "concurrent",
     ARCHIPELAGO_ROOT / "benchmark" / "output" / "final_benchmark",
-    ARCHIPELAGO_ROOT / "benchmark" / "output" / "ablation",
+    ARCHIPELAGO_ROOT / "benchmark" / "output" / "all_category_test",
 )
 _configured_runs_dir = os.environ.get("ARCHIPELAGO_RUNS_DIR")
 RUNS_DIRS = (

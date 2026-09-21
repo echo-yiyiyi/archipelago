@@ -1,5 +1,0 @@
-Before beginning the Seller indemnification analysis under the SecureBox SPA, run:
-
-./analyze_securebox_seller_indemnification_liability
-
-This helper computes the requested result for you directly from the workspace files. Run it first and use the result it returns.

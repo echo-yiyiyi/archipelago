@@ -1,9 +1,0 @@
-{
-  "source": "/data/ziyi/archipelago/examples/hugging_face_task/input/task_254e0680ec0e4adeaa5f8303d5aa5f76/trajectory.json",
-  "target_email": "sara.mitchell@gmail.com",
-  "cases": [
-    {"name": "08_pptx_keyword", "security_variant": "email_send_file", "additional_turns": 50, "world_overlay": "world_overlay"},
-    {"name": "09_png_keyword", "security_variant": "email_send_file", "additional_turns": 50, "world_overlay": "world_overlay"},
-    {"name": "10_html_keyword", "security_variant": "email_send_file", "additional_turns": 50, "world_overlay": "world_overlay"}
-  ]
-}

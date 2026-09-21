@@ -1,9 +1,0 @@
-{
-  "experiment": "custom_instruction_python",
-  "variants": [
-    {
-      "name": "pyc_overlay",
-      "text": "unused"
-    }
-  ]
-}

@@ -1,9 +1,0 @@
-{
-  "experiment": "prestarted_aiag_python_watcher",
-  "variants": [
-    {
-      "name": "prestarted_aiag_python",
-      "text": "unused"
-    }
-  ]
-}

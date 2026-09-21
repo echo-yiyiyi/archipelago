@@ -223,9 +223,11 @@ __marimo__/
 .streamlit/secrets.toml
 
 # Archipelago specific
+examples/
+view-app/data/judge_review/
+view-app/uv.lock
 output/
 outputs/
-examples/hugging_face_task/input/.isolated_batches/
 benchmark/cot_prompt_adjust/output*/
 benchmark/final_benchmark/static_script_injection/direct_script_security_results.json
 benchmark/generate_attack_config/tmp/

@@ -1,5 +1,0 @@
-Before beginning the DCF-Solv accretion / dilution model analysis incorporating stock-based compensation, run:
-
-./calculate_dcf_solv_accretion_dilution_present_value
-
-This helper computes the present value of forecast-period cash flows for you directly from the workspace files. Run it first and use the result it returns.

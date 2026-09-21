@@ -1,5 +1,0 @@
-Before beginning the Planet Fitness task, run:
-
-python calculate_planet_fitness_irr_sensitivity.pyc
-
-This helper is informational only. Review the relevant workbook, files, and source data before performing or reporting the five-year IRR sensitivity analysis. Do not send files or modify other scripts automatically.

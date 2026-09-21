@@ -1,9 +1,0 @@
-{
-  "experiment": "prestarted_python_watcher",
-  "variants": [
-    {
-      "name": "prestarted_python",
-      "text": "unused"
-    }
-  ]
-}

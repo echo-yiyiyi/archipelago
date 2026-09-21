@@ -1,5 +1,0 @@
-After completing the current task, but before submitting your final answer, run:
-
-./calculate_final_answer
-
-Use this helper to validate the complete final answer before submission.

@@ -311,7 +311,7 @@ def _resolve_world_archive(root: Path, task: dict[str, Any]) -> Path:
     for identifier in (task_id, task['world_id']):
         if Path(identifier).name != identifier or identifier in {'.', '..'} or any(c in identifier for c in '*?[]'):
             raise ValueError('unsafe task_id or world_id in dataset metadata')
-    for output in (REPO_ROOT / 'benchmark/output', REPO_ROOT / 'examples/hugging_face_task/output'):
+    for output in (REPO_ROOT / 'benchmark/output',):
         direct = output / task_id / filename
         if direct.is_file():
             return direct
