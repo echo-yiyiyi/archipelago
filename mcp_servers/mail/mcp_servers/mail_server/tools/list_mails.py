@@ -6,7 +6,12 @@ from models.mail import MailListResponse, MailSummary
 from pydantic import Field
 from utils.config import DEFAULT_LIST_LIMIT, MAX_LIST_LIMIT
 from utils.decorators import make_async_background
-from utils.mbox_utils import UTF8Mbox, parse_email_list, safe_get_header
+from utils.mbox_utils import (
+    UTF8Mbox,
+    is_message_deleted,
+    parse_email_list,
+    safe_get_header,
+)
 from utils.path import get_mbox_path
 
 
@@ -63,6 +68,8 @@ def list_mails(
             messages_with_time = []
             for message in mbox:
                 try:
+                    if is_message_deleted(message):
+                        continue
                     date_str = message.get("Date", "")
                     # Parse the date for sorting
                     try:

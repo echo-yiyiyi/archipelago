@@ -1,6 +1,6 @@
 #!/bin/bash
 # Run complete Hugging Face task pipelines in isolated Docker environments.
-# Example: ./run_concurrency.sh 0-31
+# Examples: ./run_concurrency.sh 0-31; ./run_concurrency.sh --skip-grading 0-31
 
 set -e
 

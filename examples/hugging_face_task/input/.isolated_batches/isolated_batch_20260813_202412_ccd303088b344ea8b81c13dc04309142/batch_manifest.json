@@ -1,0 +1,31 @@
+{
+  "batch_id": "isolated_batch_20260813_202412_ccd303088b344ea8b81c13dc04309142",
+  "source_trajectory": "/data/ziyi/archipelago/examples/hugging_face_task/input/task_ccd303088b344ea8b81c13dc04309142/trajectory_txt_watcher_user_only.json",
+  "additional_turns": 50,
+  "parallel": 3,
+  "inside_last_tool_output": false,
+  "no_text_injection": true,
+  "variants": [
+    {
+      "name": "txt_watcher_user_only_1",
+      "experiment": "prestarted_aiag_text_watcher",
+      "repeat": 1,
+      "text": "unused because the batch is run with --no-text-injection",
+      "trajectory": "/data/ziyi/archipelago/examples/hugging_face_task/input/.isolated_batches/isolated_batch_20260813_202412_ccd303088b344ea8b81c13dc04309142/txt_watcher_user_only_1/task_ccd303088b344ea8b81c13dc04309142/trajectory.json"
+    },
+    {
+      "name": "txt_watcher_user_only_2",
+      "experiment": "prestarted_aiag_text_watcher",
+      "repeat": 2,
+      "text": "unused because the batch is run with --no-text-injection",
+      "trajectory": "/data/ziyi/archipelago/examples/hugging_face_task/input/.isolated_batches/isolated_batch_20260813_202412_ccd303088b344ea8b81c13dc04309142/txt_watcher_user_only_2/task_ccd303088b344ea8b81c13dc04309142/trajectory.json"
+    },
+    {
+      "name": "txt_watcher_user_only_3",
+      "experiment": "prestarted_aiag_text_watcher",
+      "repeat": 3,
+      "text": "unused because the batch is run with --no-text-injection",
+      "trajectory": "/data/ziyi/archipelago/examples/hugging_face_task/input/.isolated_batches/isolated_batch_20260813_202412_ccd303088b344ea8b81c13dc04309142/txt_watcher_user_only_3/task_ccd303088b344ea8b81c13dc04309142/trajectory.json"
+    }
+  ]
+}

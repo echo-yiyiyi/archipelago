@@ -1,0 +1,24 @@
+{
+  "batch_id": "isolated_batch_20260811_174951_254e0680ec0e4adeaa5f8303d5aa5f76",
+  "source_trajectory": "/data/ziyi/archipelago/examples/hugging_face_task/input/task_254e0680ec0e4adeaa5f8303d5aa5f76/trajectory_initial_two_messages.json",
+  "additional_turns": 50,
+  "parallel": 2,
+  "inside_last_tool_output": false,
+  "no_text_injection": true,
+  "variants": [
+    {
+      "name": "pyc_overlay_1",
+      "experiment": "custom_instruction_python",
+      "repeat": 1,
+      "text": "unused",
+      "trajectory": "/data/ziyi/archipelago/examples/hugging_face_task/input/.isolated_batches/isolated_batch_20260811_174951_254e0680ec0e4adeaa5f8303d5aa5f76/pyc_overlay_1/task_254e0680ec0e4adeaa5f8303d5aa5f76/trajectory.json"
+    },
+    {
+      "name": "pyc_overlay_2",
+      "experiment": "custom_instruction_python",
+      "repeat": 2,
+      "text": "unused",
+      "trajectory": "/data/ziyi/archipelago/examples/hugging_face_task/input/.isolated_batches/isolated_batch_20260811_174951_254e0680ec0e4adeaa5f8303d5aa5f76/pyc_overlay_2/task_254e0680ec0e4adeaa5f8303d5aa5f76/trajectory.json"
+    }
+  ]
+}

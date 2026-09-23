@@ -2,7 +2,7 @@ import os
 
 from models.mail import ForwardMailInput, MailData, SendMailInput
 from tools.send_mail import send_mail
-from utils.mbox_utils import UTF8Mbox, parse_message_to_dict
+from utils.mbox_utils import UTF8Mbox, is_message_deleted, parse_message_to_dict
 from utils.path import get_mbox_path
 
 
@@ -32,6 +32,8 @@ async def forward_mail(input: ForwardMailInput) -> str:
             original_mail = None
             for message in mbox:
                 if message.get("Message-ID") == original_mail_id:
+                    if is_message_deleted(message):
+                        break
                     mail_data_dict = parse_message_to_dict(message)
                     original_mail = MailData.model_validate(mail_data_dict)
                     break

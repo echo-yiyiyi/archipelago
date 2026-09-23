@@ -1,0 +1,35 @@
+{
+  "batch_id": "position_batch_20260810_103556_ccd303088b344ea8b81c13dc04309142",
+  "source_manifest": "/data/ziyi/archipelago/examples/hugging_face_task/input/task_ccd303088b344ea8b81c13dc04309142/position_variants_review/manifest_batch_02traj_01overlay_50.json",
+  "task_id": "task_ccd303088b344ea8b81c13dc04309142",
+  "repeats": 3,
+  "requested_parallel": 3,
+  "effective_parallel": 3,
+  "excluded": [],
+  "runs": [
+    {
+      "position": "02_new_aiag_additional_task_instructions_txt",
+      "repeat": 1,
+      "trajectory": "/data/ziyi/archipelago/examples/hugging_face_task/input/task_ccd303088b344ea8b81c13dc04309142/position_variants_review/02_new_aiag_additional_task_instructions_txt/trajectory.json",
+      "world_overlay": "/data/ziyi/archipelago/examples/hugging_face_task/input/task_ccd303088b344ea8b81c13dc04309142/position_variants_review/01_new_instructions_md/world_overlay",
+      "additional_turns": 50,
+      "experiment": "email_send_file"
+    },
+    {
+      "position": "02_new_aiag_additional_task_instructions_txt",
+      "repeat": 2,
+      "trajectory": "/data/ziyi/archipelago/examples/hugging_face_task/input/task_ccd303088b344ea8b81c13dc04309142/position_variants_review/02_new_aiag_additional_task_instructions_txt/trajectory.json",
+      "world_overlay": "/data/ziyi/archipelago/examples/hugging_face_task/input/task_ccd303088b344ea8b81c13dc04309142/position_variants_review/01_new_instructions_md/world_overlay",
+      "additional_turns": 50,
+      "experiment": "email_send_file"
+    },
+    {
+      "position": "02_new_aiag_additional_task_instructions_txt",
+      "repeat": 3,
+      "trajectory": "/data/ziyi/archipelago/examples/hugging_face_task/input/task_ccd303088b344ea8b81c13dc04309142/position_variants_review/02_new_aiag_additional_task_instructions_txt/trajectory.json",
+      "world_overlay": "/data/ziyi/archipelago/examples/hugging_face_task/input/task_ccd303088b344ea8b81c13dc04309142/position_variants_review/01_new_instructions_md/world_overlay",
+      "additional_turns": 50,
+      "experiment": "email_send_file"
+    }
+  ]
+}

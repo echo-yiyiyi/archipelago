@@ -10,6 +10,7 @@ from models.mail import ForwardMailInput, ReplyMailInput, SearchMailInput, SendM
 from pydantic import BaseModel, ConfigDict, Field
 
 # Import existing tools for delegation
+from tools.delete_mail import delete_mail as _delete_mail
 from tools.forward_mail import forward_mail as _forward_mail
 from tools.list_mails import list_mails as _list_mails
 from tools.read_mail import read_mail as _read_mail
@@ -131,6 +132,15 @@ class MailListResult(BaseModel):
     )
 
 
+class DeleteResult(BaseModel):
+    """Result from soft-deleting a mail."""
+
+    model_config = ConfigDict(extra="forbid")
+    success: bool = Field(..., description="Whether the mail was soft-deleted.")
+    mail_id: str = Field(..., description="Message-ID of the deleted email.")
+    message: str = Field(..., description="Human-readable deletion status.")
+
+
 # ============ Input Model ============
 class MailInput(GeminiBaseModel):
     """Input for mail meta-tool."""
@@ -146,15 +156,16 @@ class MailInput(GeminiBaseModel):
         "reply",
         "reply_all",
         "forward",
+        "delete",
     ] = Field(
         ...,
-        description="The operation to perform. REQUIRED. Valid values: 'help', 'send', 'read', 'list', 'search', 'reply', 'reply_all', 'forward'. Call with action='help' to see required/optional params for each action.",
+        description="The operation to perform. REQUIRED. Valid values: 'help', 'send', 'read', 'list', 'search', 'reply', 'reply_all', 'forward', 'delete'. Call with action='help' to see required/optional params for each action.",
     )
 
     # Mail identification (for read/reply/reply_all/forward)
     mail_id: str | None = Field(
         None,
-        description="Message-ID for read/reply/reply_all/forward actions. Format: '<unique-id@domain.com>'. Required for: read, reply, reply_all, forward. Obtain from action='list' or action='search' results.",
+        description="Message-ID for read/reply/reply_all/forward/delete actions. Format: '<unique-id@domain.com>'. Required for: read, reply, reply_all, forward, delete. Obtain from action='list' or action='search' results.",
     )
 
     # Send/reply/forward fields
@@ -300,12 +311,16 @@ class MailOutput(BaseModel):
         None,
         description="Forward result when action='forward'. Same structure as send result.",
     )
+    delete: DeleteResult | None = Field(
+        None,
+        description="Soft-delete result when action='delete'. The email content remains stored but is hidden from mail operations.",
+    )
 
 
 # ============ Help Definition ============
 MAIL_HELP = HelpResponse(
     tool_name="mail",
-    description="Mail operations: send, read, list, search, reply, reply_all, and forward emails.",
+    description="Mail operations: send, read, list, search, reply, reply_all, forward, and soft-delete emails.",
     actions={
         "help": ActionInfo(
             description="List all available actions",
@@ -363,6 +378,11 @@ MAIL_HELP = HelpResponse(
             description="Forward an email to new recipients",
             required_params=["mail_id", "to_email"],
             optional_params=["body", "cc", "bcc", "attachments", "body_format"],
+        ),
+        "delete": ActionInfo(
+            description="Soft-delete an email while retaining an audit record",
+            required_params=["mail_id"],
+            optional_params=[],
         ),
     },
 )
@@ -583,7 +603,7 @@ def _is_mail_error(result: str) -> bool:
 
 # ============ Meta-Tool Implementation ============
 async def mail(request: MailInput) -> MailOutput:
-    """Mail operations: send, read, list, search, reply, reply_all, and forward emails."""
+    """Mail operations: send, read, list, search, reply, reply_all, forward, and soft-delete emails."""
     match request.action:
         case "help":
             return MailOutput(action="help", error=None, help=MAIL_HELP)
@@ -779,6 +799,25 @@ async def mail(request: MailInput) -> MailOutput:
             except Exception as exc:
                 return MailOutput(action="forward", error=str(exc))
 
+        case "delete":
+            if not request.mail_id:
+                return MailOutput(action="delete", error="Required: mail_id")
+            try:
+                result = await _delete_mail(mail_id=request.mail_id)
+                if not result.startswith("Mail deleted successfully"):
+                    return MailOutput(action="delete", error=result)
+                return MailOutput(
+                    action="delete",
+                    error=None,
+                    delete=DeleteResult(
+                        success=True,
+                        mail_id=request.mail_id,
+                        message="Mail soft-deleted successfully",
+                    ),
+                )
+            except Exception as exc:
+                return MailOutput(action="delete", error=str(exc))
+
         case _:
             return MailOutput(
                 action=request.action, error=f"Unknown action: {request.action}"
@@ -792,7 +831,7 @@ class SchemaInput(GeminiBaseModel):
     model_config = ConfigDict(extra="forbid")
     model: str = Field(
         ...,
-        description="Model name to get JSON schema for. Valid values: 'input' (MailInput), 'output' (MailOutput), 'SendResult', 'MailDetailsResult', 'MailListResult', 'MailSummaryItem'.",
+        description="Model name to get JSON schema for. Valid values: 'input' (MailInput), 'output' (MailOutput), 'SendResult', 'MailDetailsResult', 'MailListResult', 'MailSummaryItem', 'DeleteResult'.",
     )
 
 
@@ -817,6 +856,7 @@ SCHEMAS: dict[str, type[GeminiBaseModel | BaseModel]] = {
     "MailDetailsResult": MailDetailsResult,
     "MailListResult": MailListResult,
     "MailSummaryItem": MailSummaryItem,
+    "DeleteResult": DeleteResult,
 }
 
 

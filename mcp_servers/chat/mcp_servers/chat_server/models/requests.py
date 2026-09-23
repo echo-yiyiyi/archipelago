@@ -1,3 +1,5 @@
+from typing import Literal
+
 from mcp_schema import FlatBaseModel as BaseModel
 from pydantic import ConfigDict, Field
 
@@ -148,4 +150,21 @@ class GetUsersRequest(BaseModel):
         default=0,
         ge=0,
         description="Page number for pagination, starting at 0 (e.g., 0 for first page, 1 for second page). Default: 0.",
+    )
+
+
+class AddUserRequest(BaseModel):
+    """Request model for adding a user, optionally to a channel."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(..., min_length=1, description="Full display name of the user.")
+    email: str = Field(..., min_length=3, description="Unique email address for the user.")
+    user_type: Literal["Human", "Bot"] = Field(
+        default="Human",
+        description="Type of user account. Either 'Human' or 'Bot'. Default: 'Human'.",
+    )
+    channel_id: str | None = Field(
+        default=None,
+        description="Optional channel ID to add the new user to.",
     )

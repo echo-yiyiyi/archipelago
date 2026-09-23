@@ -480,6 +480,31 @@ class UsersListResponse(BaseModel):
         return "\n".join(lines).strip()
 
 
+class AddUserResponse(BaseModel):
+    """Response for adding a user."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    user_id: str = Field(..., description="Unique ID assigned to the new user.")
+    name: str = Field(..., description="Display name of the new user.")
+    email: str = Field(..., description="Normalized email address of the new user.")
+    user_type: str = Field(..., description="User account type: Human or Bot.")
+    channel_id: str | None = Field(
+        default=None,
+        description="Channel the user was added to, or null if none was requested.",
+    )
+
+    def __str__(self) -> str:
+        channel = f"\nChannel: {self.channel_id}" if self.channel_id else ""
+        return (
+            f"User added successfully!\n"
+            f"User ID: {self.user_id}\n"
+            f"Name: {self.name}\n"
+            f"Email: {self.email}\n"
+            f"Type: {self.user_type}{channel}"
+        )
+
+
 class UserProfileResponse(BaseModel):
     """Response for user profile"""
 

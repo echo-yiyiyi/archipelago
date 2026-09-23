@@ -5,6 +5,8 @@ from email.utils import parseaddr
 
 # Module-level linesep, same as mailbox module uses internally
 _linesep = os.linesep.encode("ascii")
+SOFT_DELETED_HEADER = "X-Soft-Deleted"
+SOFT_DELETED_AT_HEADER = "X-Soft-Deleted-At"
 
 
 class UTF8Mbox(mailbox.mbox):
@@ -29,6 +31,11 @@ class UTF8Mbox(mailbox.mbox):
         msg.set_unixfrom(from_line)
         msg.set_from(from_line[5:])
         return msg
+
+
+def is_message_deleted(message) -> bool:
+    """Return whether a message has been soft-deleted."""
+    return message.get(SOFT_DELETED_HEADER, "").strip().lower() == "true"
 
 
 def safe_get_header(message, name: str, default: str = "") -> str:

@@ -4,10 +4,12 @@ from typing import Any, Literal
 
 from mcp_schema import FlatBaseModel, OutputBaseModel
 from pydantic import ConfigDict, Field
-
-# Import existing tools for delegation
 from tools.add_reaction import AddReactionRequest
 from tools.add_reaction import add_reaction as _add_reaction
+
+# Import existing tools for delegation
+from tools.add_user import AddUserRequest
+from tools.add_user import add_user as _add_user
 from tools.delete_post import DeletePostRequest
 from tools.delete_post import delete_post as _delete_post
 from tools.get_channel_history import (
@@ -192,6 +194,17 @@ class ProfileResult(OutputBaseModel):
     )
 
 
+class AddUserResult(OutputBaseModel):
+    """Result from adding a user."""
+
+    model_config = ConfigDict(extra="forbid")
+    user_id: str
+    name: str
+    email: str
+    user_type: str
+    channel_id: str | None = None
+
+
 class DeleteResult(OutputBaseModel):
     """Result from deleting a post."""
 
@@ -222,10 +235,11 @@ class ChatInput(FlatBaseModel):
         "get_replies",
         "list_users",
         "get_profile",
+        "add_user",
         "delete",
     ] = Field(
         ...,
-        description="Action to perform. REQUIRED. Valid values: 'help', 'list_channels', 'get_history', 'post', 'reply', 'react', 'get_replies', 'list_users', 'get_profile', 'delete'. Use 'help' to see required parameters for each action.",
+        description="Action to perform. REQUIRED. Valid values: 'help', 'list_channels', 'get_history', 'post', 'reply', 'react', 'get_replies', 'list_users', 'get_profile', 'add_user', 'delete'. Use 'help' to see required parameters for each action.",
     )
 
     # Channel operations
@@ -252,6 +266,18 @@ class ChatInput(FlatBaseModel):
     user_id: str | None = Field(
         None,
         description="Unique identifier of the user (e.g., 'user123'). Required for: get_profile. Obtain from list_users.",
+    )
+    name: str | None = Field(
+        None,
+        description="Display name. Required for: add_user.",
+    )
+    email: str | None = Field(
+        None,
+        description="Unique email address. Required for: add_user.",
+    )
+    user_type: Literal["Human", "Bot"] | None = Field(
+        None,
+        description="Account type for add_user. Default: Human.",
     )
 
     # Pagination
@@ -319,6 +345,10 @@ class ChatOutput(OutputBaseModel):
         None,
         description="User profile results. Only populated when action='get_profile'.",
     )
+    add_user: AddUserResult | None = Field(
+        None,
+        description="New user details. Only populated when action='add_user'.",
+    )
     delete: DeleteResult | None = Field(
         None,
         description="Deletion results. Only populated when action='delete'.",
@@ -374,6 +404,11 @@ CHAT_HELP = HelpResponse(
             description="Get a user's profile",
             required_params=["user_id"],
             optional_params=[],
+        ),
+        "add_user": ActionInfo(
+            description="Add a user to the workspace and optionally to a channel",
+            required_params=["name", "email"],
+            optional_params=["user_type", "channel_id"],
         ),
         "delete": ActionInfo(
             description="Delete a message (soft delete)",
@@ -555,6 +590,30 @@ async def chat(request: ChatInput) -> ChatOutput:
             except Exception as exc:
                 return ChatOutput(action="get_profile", error=str(exc))
 
+        case "add_user":
+            if not request.name or not request.email:
+                return ChatOutput(action="add_user", error="Required: name, email")
+            try:
+                req = AddUserRequest(
+                    name=request.name,
+                    email=request.email,
+                    user_type=request.user_type or "Human",
+                    channel_id=request.channel_id,
+                )
+                result = await _add_user(req)
+                return ChatOutput(
+                    action="add_user",
+                    add_user=AddUserResult(
+                        user_id=result.user_id,
+                        name=result.name,
+                        email=result.email,
+                        user_type=result.user_type,
+                        channel_id=result.channel_id,
+                    ),
+                )
+            except Exception as exc:
+                return ChatOutput(action="add_user", error=str(exc))
+
         case "delete":
             if not request.channel_id or not request.post_id:
                 return ChatOutput(
@@ -589,7 +648,7 @@ class SchemaInput(FlatBaseModel):
     model_config = ConfigDict(extra="forbid")
     model: str = Field(
         ...,
-        description="Model name to get schema for. Valid values: 'input', 'output', 'ChannelsResult', 'HistoryResult', 'MessageResult', 'ReactionResult', 'RepliesResult', 'UsersResult', 'ProfileResult', 'DeleteResult'.",
+        description="Model name to get schema for. Valid values: 'input', 'output', 'ChannelsResult', 'HistoryResult', 'MessageResult', 'ReactionResult', 'RepliesResult', 'UsersResult', 'ProfileResult', 'AddUserResult', 'DeleteResult'.",
     )
 
 
@@ -617,6 +676,7 @@ SCHEMAS: dict[str, type[FlatBaseModel | OutputBaseModel]] = {
     "RepliesResult": RepliesResult,
     "UsersResult": UsersResult,
     "ProfileResult": ProfileResult,
+    "AddUserResult": AddUserResult,
     "DeleteResult": DeleteResult,
 }
 
