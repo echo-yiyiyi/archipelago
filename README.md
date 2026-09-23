@@ -65,6 +65,8 @@ uv run --project view-app python view-app/app.py
 
 It discovers runs under `benchmark/output/final_benchmark` and `benchmark/output/all_category_test`. Set `ARCHIPELAGO_RUNS_DIR` to another output directory if needed.
 
+For runs with exposure grading, the task list marks tasks where the reference prompt was exposed and gives the corresponding one-based message numbers. Opening a trajectory highlights those messages with a `Prompt exposure` badge. The run-level `Prompt exposure` metric is shown as `exposed tasks / tasks with an exposure result`; it counts affected tasks, not the number of exposed messages.
+
 For a sequential category runner, use `python3 benchmark/final_benchmark/run_experiments.py all --model deepseek_v4_flash --concurrency 3`. Run either launcher with `--help` for category selection and storage options. To retry failed tasks from a parallel run, use `python3 benchmark/run_models_parallel.py --retry-failed <run-directory> --concurrency 4`.
 
 ## Credentials and reproducibility
