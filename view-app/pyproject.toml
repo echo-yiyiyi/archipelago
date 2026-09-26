@@ -17,4 +17,4 @@ requires = ["setuptools>=69"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-py-modules = ["app", "judge_review", "judge_capture"]
+py-modules = ["app", "judge_review", "judge_capture", "judge_blind"]

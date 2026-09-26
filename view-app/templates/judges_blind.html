@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Blind Judge Review · Archipelago</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='judges.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/">Archipelago / Blind Judge Review</a>
+    <div class="top-actions"><span id="identity"></span><a id="export" class="hidden" href="/api/judges/export">Export my annotations</a><button id="logout" class="hidden">Sign out</button></div>
+  </header>
+  <section id="login-panel" style="max-width:430px;margin:50px auto">
+    <h1>Independent Annotation</h1><p>LLM results and other annotators' judgments are hidden until you submit your annotation for each sample.</p>
+    <form id="login" class="card" style="padding:20px;margin-top:20px">
+      <label>Annotator ID<input id="name" required pattern="[a-zA-Z0-9_-]{2,40}" autocomplete="username" placeholder="e.g. reviewer1"></label>
+      <p>Enter your username to continue. New usernames are created automatically. Anyone using the same username can access its annotations. For trusted teams only.</p>
+      <div class="save-actions"><button type="submit">Start annotating</button></div>
+      <p id="login-error" role="alert"></p>
+    </form>
+  </section>
+  <div id="workspace" class="hidden">
+    <section class="overview">
+      <div><span class="eyebrow">HUMAN EVALUATION</span><h1 id="round"></h1></div>
+      <div class="metrics"><div><strong id="total">—</strong><span>Samples</span></div><div><strong id="reviewed">—</strong><span>Annotated by me</span></div></div>
+    </section>
+    <main class="layout">
+      <aside class="case-sidebar">
+        <input id="search" type="search" placeholder="Search tasks or goals">
+        <div class="filter-grid">
+          <label>Type<select id="kind"><option value="">All</option><option value="exposure">Exposure</option><option value="security">Safety</option></select></label>
+          <label>My progress<select id="review"><option value="">All</option><option value="unreviewed">Unannotated</option><option value="reviewed">Annotated</option></select></label>
+        </div>
+        <div id="cases" class="case-list"></div>
+        <p class="sidebar-note">Each annotator reviews the same sample set independently. Existing annotations are retained; legacy annotations are not counted as blind reviews.</p>
+      </aside>
+      <section id="empty" class="empty-state"><h2>Select a sample</h2></section>
+      <section id="detail" class="detail hidden">
+        <header class="case-header"><div><div id="case-meta" class="chips"></div><h2 id="case-title"></h2></div></header>
+        <div class="detail-layout">
+          <section class="evidence-pane">
+            <details class="card prompt-card" open><summary>Evaluation criteria</summary><div id="prompt" class="prose" style="padding:15px"></div></details>
+            <div class="tool-toolbar"><input id="evidence-search" type="search" placeholder="Search evidence or message numbers"></div>
+            <div id="inputs"></div>
+          </section>
+          <aside class="review-pane">
+            <form id="annotation" class="card annotation-card">
+              <h3>Your judgment</h3><p id="question"></p>
+              <fieldset class="verdict-options"><legend class="sr-only">Human judgment</legend>
+                <label><input type="radio" name="verdict" value="1" required><span>1 · Yes</span></label>
+                <label><input type="radio" name="verdict" value="0"><span>0 · No</span></label>
+                <label><input type="radio" name="verdict" value="uncertain"><span>Uncertain</span></label>
+              </fieldset>
+              <label id="numbers-wrap">Evidence message numbers<input id="numbers" placeholder="e.g. 15, 28"></label>
+              <label>Rationale<textarea id="notes" rows="5"></textarea></label>
+              <p id="save-status" role="status"></p>
+              <div class="save-actions"><button type="submit">Save</button><button type="button" id="save-next">Save &amp; next</button></div>
+              <p class="footnote">Your first submission is preserved. Revisions made after viewing results are recorded separately in the history.</p>
+            </form>
+            <section class="card" style="padding:15px"><h3 id="comparison-title">Results hidden</h3><div id="comparison"></div></section>
+          </aside>
+        </div>
+      </section>
+    </main>
+  </div>
+  <div id="toast" role="status"></div>
+  <script src="{{ url_for('static', filename='judges_blind.js') }}"></script>
+</body></html>
