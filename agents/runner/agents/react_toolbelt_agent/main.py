@@ -1,0 +1,699 @@
+"""
+ReAct Toolbelt Agent with ReSum Context Management.
+"""
+
+import asyncio
+import json
+import time
+from typing import Any
+
+from fastmcp import Client as FastMCPClient
+from litellm import Choices
+from litellm.exceptions import ContextWindowExceededError, Timeout
+from litellm.experimental_mcp_client import call_openai_tool, load_mcp_tools
+from litellm.files.main import ModelResponse
+from loguru import logger
+from openai.types.chat.chat_completion_message_tool_call import (
+    ChatCompletionMessageToolCall,
+)
+from openai.types.chat.chat_completion_tool_param import ChatCompletionToolParam
+
+from runner.agents.models import (
+    AgentRunInput,
+    AgentStatus,
+    AgentTrajectoryOutput,
+    LitellmAnyMessage,
+    LitellmInputMessage,
+    LitellmOutputMessage,
+    LiveMessageList,
+    get_msg_attr,
+    get_msg_content,
+)
+from runner.utils.error import is_fatal_mcp_error, is_system_error
+from runner.utils.llm import generate_response
+from runner.utils.mcp import (
+    build_mcp_gateway_schema,
+    content_blocks_to_messages,
+    drain_shielded_task,
+)
+from runner.utils.usage import UsageTracker
+
+from .resum import ReSumManager
+from .tool_result import truncate_tool_messages
+from .tools import (
+    FINAL_ANSWER_TOOL,
+    META_TOOL_NAMES,
+    META_TOOLS,
+    TIMER_TOOL,
+    MetaToolHandler,
+    parse_final_answer,
+    timer_status,
+)
+
+
+def _mcp_tool_call_payload(tool_call: Any) -> Any:
+    """Return the plain mapping expected by LiteLLM's MCP transformer.
+
+    LiteLLM annotates ``call_openai_tool`` with its Pydantic tool-call model,
+    but its transformer subscripts both the outer call and nested function as
+    dictionaries. Calls reconstructed during trajectory replay contain an
+    OpenAI Pydantic function object, which is not subscriptable.
+    """
+    model_dump = getattr(tool_call, "model_dump", None)
+    if callable(model_dump):
+        return model_dump(mode="json")
+    return tool_call
+
+
+class ReActAgent:
+    """ReAct Toolbelt Agent with ReSum context management."""
+
+    def __init__(self, run_input: AgentRunInput):
+        self.trajectory_id: str = run_input.trajectory_id
+        self.model: str = run_input.orchestrator_model
+        self.messages: list[LitellmAnyMessage] = LiveMessageList(run_input.initial_messages)
+
+        if run_input.mcp_gateway_url is None:
+            raise ValueError("MCP gateway URL is required for react toolbelt agent")
+
+        self.mcp_client = FastMCPClient(
+            build_mcp_gateway_schema(
+                run_input.mcp_gateway_url,
+                run_input.mcp_gateway_auth_token,
+                run_input.mcp_gateway_actor_id,
+            )
+        )
+
+        # Config
+        config = run_input.agent_config_values
+        self.timeout: int = config.get("timeout", 10800)
+        self.max_steps: int = config.get("max_steps", 250)
+        self.replay_history: bool = bool(
+            (run_input.custom_args or {}).get("replay_tool_calls")
+        )
+        raw_timer_seconds = (run_input.custom_args or {}).get("timer_seconds")
+        self.timer_seconds: float | None = (
+            float(raw_timer_seconds)
+            if isinstance(raw_timer_seconds, (int, float))
+            and not isinstance(raw_timer_seconds, bool)
+            and raw_timer_seconds > 0
+            else None
+        )
+        self.resume_summarization_record: dict[str, Any] | None = (
+            (run_input.custom_args or {}).get("resume_summarization_record")
+        )
+        self.tool_call_timeout: int = 60
+        self.llm_response_timeout: int = config.get("llm_response_timeout", 600)
+        self.max_toolbelt_size: int = 80
+
+        self.extra_args: dict[str, Any] = run_input.orchestrator_extra_args or {}
+
+        # Components
+        self.resum: ReSumManager = ReSumManager(self.model, self.extra_args)
+
+        # Toolbelt state
+        self.all_tools: dict[str, ChatCompletionToolParam] = {}
+        self.toolbelt: set[str] = set()
+        self.meta_tool_handler: MetaToolHandler | None = None
+
+        # Agent state
+        self._finalized: bool = False
+        self._final_answer: str | None = None
+        self._final_status: str = "completed"
+        self.status: AgentStatus = AgentStatus.PENDING
+        self.start_time: float | None = None
+        self.timer_started_at: float | None = None
+        self._automatic_timer_call_count: int = 0
+        self._usage_tracker: UsageTracker = UsageTracker(
+            track_token_breakdown=True, model=self.model
+        )
+
+    def _get_tools(self) -> list[ChatCompletionToolParam]:
+        """Get tools for LLM: meta-tools + toolbelt + built-in tools."""
+        toolbelt_tools = [self.all_tools[name] for name in self.toolbelt]
+        timer_tools = [TIMER_TOOL] if self.timer_seconds is not None else []
+        return list(META_TOOLS) + toolbelt_tools + timer_tools + [FINAL_ANSWER_TOOL]
+
+    async def _initialize_tools(self, client: Any) -> None:
+        """Load tools from MCP gateway."""
+        tools: list[ChatCompletionToolParam] = await load_mcp_tools(
+            client.session, format="openai"
+        )  # pyright: ignore[reportAssignmentType]
+
+        for tool in tools:
+            name = tool.get("function", {}).get("name")
+            if name:
+                self.all_tools[name] = tool
+
+        self.meta_tool_handler = MetaToolHandler(
+            self.all_tools, self.toolbelt, self.max_toolbelt_size
+        )
+
+        logger.bind(
+            message_type="configure",
+            payload=list(self.all_tools.keys()),
+        ).info(f"Loaded {len(self.all_tools)} MCP tools (toolbelt starts empty)")
+
+    async def step(self, client: Any) -> None:
+        """Execute one step of the ReAct loop."""
+        # Proactive ReSum check
+        if self.resum.should_summarize(self.messages):
+            logger.bind(message_type="resum").info("Summarizing context")
+            try:
+                before = len(self.messages)
+                self.messages = LiveMessageList(await self.resum.summarize(
+                    self.messages, trigger="proactive_threshold"
+                ), write_existing=False)
+                # Only flag a compaction when context was actually reduced;
+                # summarize() can no-op and return the messages unchanged.
+                if len(self.messages) < before:
+                    self._usage_tracker.track_compaction()
+            except Exception as e:
+                logger.error(f"Summarization failed: {e}")
+
+        # Put a fresh timer result immediately before every model turn so it
+        # cannot be hidden by a preceding context compaction.
+        await self._append_automatic_timer_update(client)
+
+        # Call LLM
+        try:
+            response: ModelResponse = await generate_response(
+                self.model,
+                self.messages,
+                self._get_tools(),
+                self.llm_response_timeout,
+                self.extra_args,
+                trajectory_id=self.trajectory_id,
+            )
+        except ContextWindowExceededError:
+            logger.warning("Context exceeded, summarizing")
+            before = len(self.messages)
+            self.messages = LiveMessageList(await self.resum.summarize(
+                self.messages, trigger="context_window_exceeded"
+            ), write_existing=False)
+            if len(self.messages) < before:
+                self._usage_tracker.track_compaction()
+            return
+        except Timeout:
+            logger.error("LLM timeout")
+            return
+        except Exception as e:
+            logger.error(f"LLM error: {e}")
+            raise
+
+        self._usage_tracker.track(response)
+        choices = response.choices
+        if not choices or not isinstance(choices[0], Choices):
+            logger.bind(message_type="step").warning(
+                "LLM returned an empty response with no choices, re-prompting with 'continue'"
+            )
+            self.messages.append(
+                LitellmOutputMessage(
+                    role="user", content="Continue. Use final_answer when done."
+                )
+            )
+            return
+
+        response_message = LitellmOutputMessage.model_validate(choices[0].message)
+        tool_calls = getattr(response_message, "tool_calls", None)
+        content = getattr(response_message, "content", None)
+
+        # Log reasoning if present (o1/reasoning models)
+        if getattr(response_message, "reasoning_content", None):
+            logger.bind(message_type="reasoning").info(
+                response_message.reasoning_content
+            )
+
+        # Log thinking blocks if present (Claude extended thinking)
+        if getattr(response_message, "thinking_blocks", None):
+            if isinstance(response_message.thinking_blocks, list):
+                for thinking_block in response_message.thinking_blocks:
+                    if thinking_block.get("thinking"):
+                        logger.bind(message_type="thinking").debug(
+                            thinking_block.get("thinking")
+                        )
+
+        # Log response content
+        if content:
+            logger.bind(message_type="response").info(content)
+
+        # Log tool call summary
+        if tool_calls:
+            tool_names = [tc.function.name for tc in tool_calls]
+            logger.bind(message_type="step").info(
+                f"Calling {len(tool_calls)} tool(s): {', '.join(tool_names)}"
+            )
+        elif not content:
+            logger.bind(message_type="step").warning("No content and no tool calls")
+            try:
+                finish_reason = choices[0].finish_reason if choices else None
+                logger.bind(message_type="step").warning(
+                    f"(finish_reason={finish_reason})"
+                )
+            except Exception as e:
+                logger.error(f"Error getting finish reason: {e}")
+
+        step_msg_start = len(self.messages)
+        self.messages.append(response_message)
+
+        try:
+            if tool_calls:
+                await self._handle_tool_calls(client, tool_calls)
+            else:
+                self.messages.append(
+                    LitellmOutputMessage(
+                        role="user",
+                        content="No tools called. Use final_answer to submit your answer. Please continue completing the task.",
+                    )
+                )
+        finally:
+            # Attribute this step's tool-result tokens even if tool handling
+            # raised (partial results still count).
+            self._record_step_tool_output(step_msg_start)
+
+    def _record_step_tool_output(self, step_msg_start: int) -> None:
+        """Attribute this step's tool-result tokens to its call_log entry.
+
+        Reads role/name/content with get_msg_attr/get_msg_content so it handles
+        both Pydantic and TypedDict messages (MCP tool results are TypedDicts).
+        No-op unless breakdown tracking is enabled.
+        """
+        tool_texts: list[str] = []
+        image_uris: list[str] = []
+        for m in self.messages[step_msg_start + 1 :]:
+            c = get_msg_content(m)
+            # Tool-result images land in this step's range either inside the tool
+            # message (Anthropic embeds image_url blocks) or as deferred user
+            # messages (other providers can't embed in tool results). Collect
+            # either; they're elided before storage so they must be counted now.
+            if isinstance(c, list):
+                for b in c:
+                    if isinstance(b, dict) and b.get("type") == "image_url":
+                        url = (b.get("image_url") or {}).get("url")
+                        if url:
+                            image_uris.append(url)
+            if get_msg_attr(m, "role") != "tool":
+                continue
+            # A *successful* final_answer is echoed as a tool message but is
+            # already counted via final_answer_tokens, so skip it to avoid double
+            # counting. A *rejected* final_answer (e.g. incomplete todos) is not,
+            # so let its error body count as tool output.
+            if get_msg_attr(m, "name") == "final_answer" and self._finalized:
+                continue
+            if isinstance(c, str):
+                tool_texts.append(c)
+            elif isinstance(c, list):
+                tool_texts.append(
+                    " ".join(b.get("text", "") for b in c if isinstance(b, dict))
+                )
+        if tool_texts:
+            self._usage_tracker.track_tool_output(" ".join(tool_texts))
+        for uri in image_uris:
+            self._usage_tracker.track_tool_output_image(uri)
+
+    async def _handle_tool_calls(self, client: Any, tool_calls: list[Any]) -> None:
+        """Process tool calls."""
+        mcp_tool_calls: list[Any] = []
+
+        # Built-in timer calls have no shared mutable state and are all answered
+        # before terminal/MCP handling. This keeps parallel timer calls valid,
+        # including a batch that also contains final_answer.
+        for tool_call in tool_calls:
+            if tool_call.function.name != "timer":
+                continue
+            if self.timer_seconds is None or self.timer_started_at is None:
+                result = json.dumps({"error": "No timer is active for this run."})
+            else:
+                result = timer_status(
+                    self.timer_seconds, time.monotonic() - self.timer_started_at
+                )
+            logger.bind(
+                message_type="tool_result",
+                ref=tool_call.id,
+                name="timer",
+                payload=result,
+            ).info("Timer checked")
+            self.messages.append(
+                LitellmOutputMessage(
+                    role="tool",
+                    tool_call_id=tool_call.id,
+                    name="timer",
+                    content=result,
+                )
+            )
+
+        for tool_call in tool_calls:
+            name = tool_call.function.name
+
+            if name == "timer":
+                continue
+
+            # Final answer - validate todos, then handle and return
+            if name == "final_answer":
+                # Check for incomplete todos
+                assert self.meta_tool_handler
+                incomplete = self.meta_tool_handler.get_incomplete_todos()
+                if incomplete:
+                    incomplete_list = ", ".join(
+                        f"'{t.id}' ({t.status.value})" for t in incomplete
+                    )
+                    error_msg = (
+                        f"ERROR: Cannot submit final_answer with incomplete todos. "
+                        f"You have {len(incomplete)} incomplete task(s): {incomplete_list}. "
+                        f"Use todo_write to mark each as 'completed' or 'cancelled' first."
+                    )
+                    logger.bind(message_type="tool").warning(
+                        f"final_answer rejected: {len(incomplete)} incomplete todos"
+                    )
+                    self.messages.append(
+                        LitellmOutputMessage(
+                            role="tool",
+                            tool_call_id=tool_call.id,
+                            name="final_answer",
+                            content=error_msg,
+                        )
+                    )
+                    return
+
+                answer, status = parse_final_answer(tool_call.function.arguments)
+                self._usage_tracker.track_final_answer(answer)
+                logger.bind(message_type="final_answer").info(answer)
+
+                self._finalized = True
+                self._final_answer = answer
+                self._final_status = status
+
+                self.messages.append(
+                    LitellmOutputMessage(
+                        role="tool",
+                        tool_call_id=tool_call.id,
+                        name="final_answer",
+                        content=answer,
+                    )
+                )
+                return
+
+            # Meta-tool - handle locally
+            if name in META_TOOL_NAMES:
+                logger.bind(
+                    message_type="tool_call",
+                    ref=tool_call.id,
+                    name=name,
+                    payload=tool_call.function.arguments,
+                ).info(f"Meta-tool: {name}")
+                assert self.meta_tool_handler
+                result = self.meta_tool_handler.handle(
+                    name, tool_call.function.arguments
+                )
+                logger.bind(
+                    message_type="tool_result",
+                    ref=tool_call.id,
+                    name=name,
+                    payload=result,
+                ).info(f"Meta-tool {name} completed")
+                self.messages.append(
+                    LitellmOutputMessage(
+                        role="tool",
+                        tool_call_id=tool_call.id,
+                        name=name,
+                        content=result,
+                    )
+                )
+                continue
+
+            # MCP tool - collect for batch execution
+            mcp_tool_calls.append(tool_call)
+
+        # Execute MCP tools (using shared client connection)
+        deferred_image_messages: list[LitellmInputMessage] = []
+        for tool_call in mcp_tool_calls:
+            await self._execute_mcp_tool(client, tool_call, deferred_image_messages)
+        self.messages.extend(deferred_image_messages)
+
+    async def _execute_mcp_tool(
+        self,
+        client: Any,
+        tool_call: Any,
+        deferred_image_messages: list[LitellmInputMessage],
+    ) -> None:
+        """Execute an MCP tool call."""
+        name = tool_call.function.name
+
+        if name not in self.toolbelt:
+            self.messages.append(
+                LitellmOutputMessage(
+                    role="tool",
+                    tool_call_id=tool_call.id,
+                    name=name,
+                    content=f"Error: '{name}' not in toolbelt. Use toolbelt_add_tool first.",
+                )
+            )
+            return
+
+        tool_logger = logger.bind(
+            ref=tool_call.id,
+            name=name,
+        )
+        tool_logger.bind(
+            message_type="tool_call",
+            payload=tool_call.function.arguments,
+        ).info(f"Calling tool {name}")
+
+        tool_result_logger = tool_logger.bind(message_type="tool_result")
+
+        shielded_task = asyncio.ensure_future(
+            call_openai_tool(client.session, _mcp_tool_call_payload(tool_call))
+        )
+        try:
+            result = await asyncio.wait_for(
+                asyncio.shield(shielded_task),
+                timeout=self.tool_call_timeout,
+            )
+        except TimeoutError:
+            await drain_shielded_task(shielded_task)
+            if (shielded_task.done() and not shielded_task.cancelled()
+                    and shielded_task.exception() is None):
+                result = shielded_task.result()
+                tool_result_logger.info(f"Tool {name} completed during timeout grace period")
+            else:
+                tool_result_logger.error(f"Tool call {name} timed out")
+                self.messages.append(
+                    LitellmOutputMessage(
+                        role="tool",
+                        tool_call_id=tool_call.id,
+                        name=name,
+                        content=("Tool call timed out while waiting for its result. "
+                                 "The operation may still complete. Check its status or "
+                                 "output before retrying actions that change data."),
+                    )
+                )
+                return
+        except Exception as e:
+            if is_fatal_mcp_error(e):
+                tool_result_logger.error(f"Fatal MCP error, ending run: {repr(e)}")
+                self.messages.append(
+                    LitellmOutputMessage(
+                        role="tool",
+                        tool_call_id=tool_call.id,
+                        name=name,
+                        content=f"Fatal error: {e}",
+                    )
+                )
+                raise
+            tool_result_logger.error(f"Error calling tool {name}: {repr(e)}")
+            self.messages.append(
+                LitellmOutputMessage(
+                    role="tool",
+                    tool_call_id=tool_call.id,
+                    name=name,
+                    content=f"Error: {e}",
+                )
+            )
+            return
+
+        if not result.content:
+            tool_result_logger.error(f"Tool {name} returned no content")
+            self.messages.append(
+                LitellmOutputMessage(
+                    role="tool",
+                    tool_call_id=tool_call.id,
+                    name=name,
+                    content="No content returned",
+                )
+            )
+            return
+
+        tool_result_logger.bind(
+            payload=[block.model_dump() for block in result.content],
+        ).info(f"Tool {name} called successfully")
+
+        messages = content_blocks_to_messages(
+            result.content,
+            tool_call.id,
+            name,
+            self.model,
+            deferred_image_messages=deferred_image_messages,
+        )
+        truncate_tool_messages(messages, self.model)
+        self.messages.extend(messages)
+
+    async def _append_automatic_timer_update(self, client: Any) -> None:
+        """Call the built-in timer once before each model turn when enabled."""
+        if self.timer_seconds is None:
+            return
+
+        self._automatic_timer_call_count += 1
+        assistant_message = LitellmOutputMessage(
+            role="assistant",
+            content=None,
+            tool_calls=[
+                {
+                    "id": f"automatic_timer_{self._automatic_timer_call_count}",
+                    "type": "function",
+                    "function": {"name": "timer", "arguments": "{}"},
+                }
+            ],
+        )
+        self.messages.append(assistant_message)
+        result_start = len(self.messages)
+        await self._handle_tool_calls(client, assistant_message.tool_calls or [])
+        for message in self.messages[result_start:]:
+            content = get_msg_content(message)
+            if get_msg_attr(message, "role") == "tool" and isinstance(content, str):
+                self._usage_tracker.track_tool_output(content)
+
+    def _build_output(self) -> AgentTrajectoryOutput:
+        return AgentTrajectoryOutput(
+            messages=self.resum.get_full_history(self.messages),
+            status=self.status,
+            time_elapsed=time.time() - self.start_time if self.start_time else 0,
+            usage=self._usage_tracker.to_dict(),
+            summarization_records=self.resum.summarization_records,
+        )
+
+    async def run(self) -> AgentTrajectoryOutput:
+        """Run the agent loop with a single MCP connection."""
+        try:
+            async with asyncio.timeout(self.timeout):
+                # Single MCP connection for entire agent lifecycle
+                async with self.mcp_client as client:
+                    logger.info(f"Starting ReAct Toolbelt agent with {self.model}")
+                    await self._initialize_tools(client)
+
+                    if self.replay_history:
+                        await self._replay_tool_calls(client)
+
+                    self.start_time = time.time()
+                    self.timer_started_at = time.monotonic()
+                    self.status = AgentStatus.RUNNING
+
+                    for step in range(self.max_steps):
+                        if self._finalized:
+                            logger.info(f"Finalized after {step} steps")
+                            break
+                        logger.bind(message_type="step").info(
+                            f"Starting step {step + 1}"
+                        )
+                        await self.step(client)
+
+                    if not self._finalized:
+                        logger.error(f"Not finalized after {self.max_steps} steps")
+                        self.status = AgentStatus.FAILED
+                    else:
+                        self.status = AgentStatus.COMPLETED
+
+                    return self._build_output()
+
+        except TimeoutError:
+            logger.error(f"Timeout after {self.timeout}s")
+            self.status = AgentStatus.ERROR
+            return self._build_output()
+
+        except asyncio.CancelledError:
+            logger.error("Cancelled")
+            self.status = AgentStatus.CANCELLED
+            return self._build_output()
+
+        except Exception as e:
+            logger.error(f"Error: {e}")
+            self.status = (
+                AgentStatus.ERROR if is_system_error(e) else AgentStatus.FAILED
+            )
+            return self._build_output()
+
+    async def _replay_tool_calls(self, client: Any) -> None:
+        """Rebuild environment and local state from a saved trajectory."""
+        historical_messages = list(self.messages)
+        calls = []
+        for message in historical_messages:
+            calls.extend(
+                ChatCompletionMessageToolCall.model_validate(call)
+                for call in (get_msg_attr(message, "tool_calls") or [])
+            )
+        logger.info(f"Replaying {len(calls)} historical tool call(s)")
+        for index, tool_call in enumerate(calls, start=1):
+            if tool_call.function.name == "final_answer":
+                raise ValueError("Cannot resume a trajectory containing final_answer")
+            logger.info(
+                f"Replaying historical tool call {index}/{len(calls)}: "
+                f"{tool_call.function.name}"
+            )
+            await self._handle_tool_calls(client, [tool_call])
+        # Replay output only restores MCP side effects and local toolbelt/todo
+        # state. Restore the exact live context at the last ReSum boundary when
+        # one exists; otherwise the original history remains model-visible.
+        if self.resume_summarization_record:
+            self.messages = LiveMessageList(self._restore_summarized_context(
+                historical_messages, self.resume_summarization_record
+            ), write_existing=False)
+        else:
+            self.messages = LiveMessageList(historical_messages, write_existing=False)
+
+    def _restore_summarized_context(
+        self,
+        historical_messages: list[LitellmAnyMessage],
+        record: dict[str, Any],
+    ) -> list[LitellmAnyMessage]:
+        """Recreate the live context produced by the last ReSum operation."""
+        trigger_index = record.get("trigger_after_trajectory_message_index")
+        summarized_range = record.get("runtime_summarized_message_range") or {}
+        recent_start = summarized_range.get("end_exclusive")
+        summary = (record.get("output") or {}).get("summary")
+        if not isinstance(trigger_index, int) or not isinstance(recent_start, int):
+            raise ValueError("Invalid summarization record boundary metadata")
+        if not isinstance(summary, str) or not summary:
+            raise ValueError("Summarization record has no output summary")
+        if not 0 <= trigger_index < len(historical_messages):
+            raise ValueError("Summarization trigger index is outside the trajectory")
+
+        through_trigger = historical_messages[: trigger_index + 1]
+        system_messages = [
+            message
+            for message in through_trigger
+            if get_msg_attr(message, "role") == "system"
+        ]
+        non_system = [
+            message
+            for message in through_trigger
+            if get_msg_attr(message, "role") != "system"
+        ]
+        if not 0 <= recent_start <= len(non_system):
+            raise ValueError("Summarization recent-window boundary is invalid")
+
+        self.resum.running_summary = summary
+        # Preserve the full old trajectory in output while using only the
+        # summarized state as the model's live context.
+        self.resum._pre_summarization_history = [
+            message
+            for message in through_trigger
+            if get_msg_attr(message, "role") != "system"
+        ]
+        summarized_context = self.resum._build_output(
+            system_messages, non_system[recent_start:]
+        )
+        return summarized_context + historical_messages[trigger_index + 1 :]
+
+
+async def run(run_input: AgentRunInput) -> AgentTrajectoryOutput:
+    """Entry point for the ReAct Toolbelt agent."""
+    return await ReActAgent(run_input).run()

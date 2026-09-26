@@ -1,0 +1,15 @@
+BEGIN:VCALENDAR
+PRODID:-//APEX//Task Reference Fixture//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:evt-88856a77
+DTSTART:20260901T150000Z
+DTEND:20260901T160000Z
+SUMMARY:Review: Motion to Transfer Trident Auto IEEPA Tariff Challenge
+DESCRIPTION:Review the draft assessment of whether the motion to transfer the Trident Auto Corporation tariff challenge from the U.S. District Court for the District of Columbia to the Court of International Trade will be granted. Confirm the jurisdictional and IEEPA framework and ensure the final response contains only a yes-or-no answer with a single-sentence explanation\, without presuming an outcome.
+LOCATION:Secure virtual legal review
+ATTENDEE:mailto:litigation.counsel@tridentauto.com
+ATTENDEE:mailto:ieepa.litigation@usdoj.gov
+END:VEVENT
+END:VCALENDAR

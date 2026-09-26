@@ -1,0 +1,15 @@
+BEGIN:VCALENDAR
+PRODID:-//APEX//Task Reference Fixture//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:evt-5af82a55
+DTSTART:20260901T150000Z
+DTEND:20260901T160000Z
+SUMMARY:Review: Elastic N.V. Q2 FY26 Public Comparables Benchmark
+DESCRIPTION:Collaborative review of the Elastic N.V. Q2 FY26 (ending October 31\, 2025) peer benchmark. Validate the Public Comparables Q2 mean calculations for Market Cap\, Enterprise Value\, EV/Revenue\, and EV/EBITDA\, then review Elastic’s percentage overperformance or underperformance against each peer average. Confirm that Market Cap and Enterprise Value are shown as whole numbers\; multiples are shown to two decimal places with an “x”\; values above $1 trillion are excluded from the applicable Market Cap and Enterprise Value averages\; negative EV/Revenue and EV/EBITDA multiples are excluded\; and EV/EBITDA multiples above 200.00x are excluded. This meeting is for methodology and deliverable review and does not presume analytical findings.
+LOCATION:Elastic virtual collaboration room
+ATTENDEE:mailto:valuation-analyst@elastic.co
+ATTENDEE:mailto:public-comparables-reviewer@elastic.co
+END:VEVENT
+END:VCALENDAR

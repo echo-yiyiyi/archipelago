@@ -1,0 +1,8 @@
+{
+  "max_steps": 150,
+  "model": "anthropic/claude-opus-4-8",
+  "extra_args": {
+    "reasoning_effort": "max",
+    "max_tokens": 128000
+  }
+}

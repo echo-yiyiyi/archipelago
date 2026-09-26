@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Maya Chen",
+        "email": "maya.chen@northbridgecapital.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "Northbridge Capital Partners: Hi\u2014could you update the Accretion / Dilution Model\u2019s DCF-Solv tab for the revised stock-based compensation, mid-year discounting, and 1.0% revenue growth assumptions, then send me the present value of forecast-period cash flows excluding terminal value in USD millions?",
+      "topic_id": "task-context",
+      "message_id": "ABD7FB5E/task-context/task-context"
+    }
+  ]
+}

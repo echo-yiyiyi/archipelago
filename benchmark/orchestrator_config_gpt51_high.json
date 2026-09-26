@@ -1,0 +1,15 @@
+{
+  "max_steps": 150,
+  "model": "azure/responses/doai-swedencentral-aii-02-gpt5.1-20251113",
+  "azure_key_vault": {
+    "vault_url": "https://kv-aii.vault.azure.net",
+    "secret_name": "hinojoc-aoai-swedencentral-aii-02"
+  },
+  "extra_args": {
+    "api_base": "https://aoai-swedencentral-aii-02.openai.azure.com/",
+    "allowed_openai_params": ["reasoning_effort"],
+    "reasoning": {
+      "effort": "high"
+    }
+  }
+}

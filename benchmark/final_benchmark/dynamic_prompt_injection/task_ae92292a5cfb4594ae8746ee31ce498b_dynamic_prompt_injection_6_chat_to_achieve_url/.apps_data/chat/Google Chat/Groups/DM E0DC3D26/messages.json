@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Maya Chen",
+        "email": "mchen@planetfitness.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "Planet Fitness: Hi\u2014can you review the base-case DCF for the planned divestiture of all 281 corporate-owned stores and send back the 2026\u20132030 FCFF plus enterprise value as of December 31, 2025? Please keep the output in $mm and round to two decimals.",
+      "topic_id": "task-context",
+      "message_id": "E0DC3D26/task-context/task-context"
+    }
+  ]
+}

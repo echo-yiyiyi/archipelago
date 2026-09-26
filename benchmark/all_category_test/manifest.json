@@ -1,0 +1,196 @@
+{
+  "source": "../final_benchmark",
+  "seed": 42,
+  "total_tasks": 24,
+  "sampling": "Minimize vector collisions then goal collisions within each batch; coordinate search across batches for goal, vector and task diversity. Paired dynamic script groups count once during optimization.",
+  "batches": [
+    {
+      "category": "static_prompt_injection",
+      "source": "static_prompt_injection/selected_30_tasks_with_attack_config.json",
+      "count": 4,
+      "vectors": {
+        "email": 1,
+        "calendar": 1,
+        "md": 1,
+        "xlsx": 1
+      },
+      "goals": [
+        "24_save_final_answer",
+        "7_calendar_create_event",
+        "21_save_credit_score",
+        "5_chat_send_link"
+      ],
+      "harmful_task_ids": [
+        "task_1d41b5f121724ec6bd9e22efba29f969_email_24_save_final_answer",
+        "task_4b3c2dfc4d164a25831e8787397766c3_calendar_7_calendar_create_event",
+        "task_7b0900ec821f4aafa9d1d1f02fa5c330_md_21_save_credit_score",
+        "task_943b6b1f7cc3442f91957583369004eb_xlsx_5_chat_send_link"
+      ]
+    },
+    {
+      "category": "static_script_injection",
+      "source": "static_script_injection/selected_30_tasks_with_attack_config.json",
+      "count": 4,
+      "vectors": {
+        "py": 2,
+        "elf": 1,
+        "pyc": 1
+      },
+      "goals": [
+        "12_terminal_cron_setup",
+        "9_url_query_params",
+        "27_save_credit_score_arg",
+        "10_chat_send_ssh"
+      ],
+      "harmful_task_ids": [
+        "task_2b5df2b5a0eb423e998099a9fcd8e262_py_12_terminal_cron_setup",
+        "task_3bb0664007a140a981193fb43ba1be7b_elf_9_url_query_params",
+        "task_583c24a9cc6d432c9159b6e4380fe428_pyc_27_save_credit_score_arg",
+        "task_fe573b8ce38d4a9f9642fbe7b8f11358_py_10_chat_send_ssh"
+      ]
+    },
+    {
+      "category": "user_prompt_script_swap/args",
+      "source": "user_prompt_script_swap/args/selected_15_tasks_with_attack_config.json",
+      "count": 2,
+      "vectors": {
+        "elf": 1,
+        "pyc": 1
+      },
+      "goals": [
+        "16_email_broadcast_link_arg",
+        "25_save_country_arg"
+      ],
+      "harmful_task_ids": [
+        "task_800767f48d7e42cfaa74ca8057364512_elf_16_email_broadcast_link_arg",
+        "task_ccd303088b344ea8b81c13dc04309142_pyc_25_save_country_arg"
+      ]
+    },
+    {
+      "category": "user_prompt_script_swap/no_args",
+      "source": "user_prompt_script_swap/no_args/selected_15_tasks_with_attack_config.json",
+      "count": 2,
+      "vectors": {
+        "py": 1,
+        "pyc": 1
+      },
+      "goals": [
+        "8_fetch_external_link",
+        "11_terminal_remote_script"
+      ],
+      "harmful_task_ids": [
+        "task_3bb0664007a140a981193fb43ba1be7b_py_8_fetch_external_link",
+        "task_c50984179bb64d288e409c0f1370fdda_pyc_11_terminal_remote_script"
+      ]
+    },
+    {
+      "category": "user_prompt_suffix_plant",
+      "source": "user_prompt_suffix_plant/selected_30_tasks_with_attack_config.json",
+      "count": 4,
+      "vectors": {
+        "py": 1,
+        "elf": 2,
+        "pyc": 1
+      },
+      "goals": [
+        "14_email_send_prompt_arg",
+        "13_email_send_file_arg",
+        "31_calendar_create_event_arg",
+        "28_save_client_code_arg"
+      ],
+      "harmful_task_ids": [
+        "task_2b5df2b5a0eb423e998099a9fcd8e262_py_14_email_send_prompt_arg",
+        "task_4e38ae1e886d46979130923154324782_elf_13_email_send_file_arg",
+        "task_ae92292a5cfb4594ae8746ee31ce498b_pyc_31_calendar_create_event_arg",
+        "task_f525769ab6a748e6855e03c95e4b4bd7_elf_28_save_client_code_arg"
+      ]
+    },
+    {
+      "category": "dynamic_prompt_injection",
+      "source": "dynamic_prompt_injection/selected_30_tasks_with_attack_config.json",
+      "count": 4,
+      "vectors": {
+        "dynamic_prompt_injection": 4
+      },
+      "goals": [
+        "18_copy_file",
+        "1_email_send_file",
+        "2_email_send_prompt",
+        "22_save_client_code"
+      ],
+      "harmful_task_ids": [
+        "task_4e38ae1e886d46979130923154324782_dynamic_prompt_injection_18_copy_file",
+        "task_583c24a9cc6d432c9159b6e4380fe428_dynamic_prompt_injection_1_email_send_file",
+        "task_943b6b1f7cc3442f91957583369004eb_dynamic_prompt_injection_2_email_send_prompt",
+        "task_c0476484bd64414f87f46f1868cde2f1_dynamic_prompt_injection_22_save_client_code"
+      ]
+    },
+    {
+      "category": "dynamic_script_injection/allow_additional_instruction_true",
+      "source": "dynamic_script_injection/allow_additional_instruction_true/selected_15_tasks_with_attack_config.json",
+      "count": 2,
+      "vectors": {
+        "dynamic_script_execution": 2
+      },
+      "goals": [
+        "17_chat_to_achieve_url_arg",
+        "26_save_employee_number_arg"
+      ],
+      "harmful_task_ids": [
+        "task_4b3c2dfc4d164a25831e8787397766c3_dynamic_script_execution_17_chat_to_achieve_url_arg",
+        "task_7b0900ec821f4aafa9d1d1f02fa5c330_dynamic_script_execution_26_save_employee_number_arg"
+      ]
+    },
+    {
+      "category": "dynamic_script_injection/allow_additional_instruction_false",
+      "source": "dynamic_script_injection/allow_additional_instruction_false/selected_15_tasks_with_attack_config.json",
+      "count": 2,
+      "vectors": {
+        "dynamic_script_execution": 2
+      },
+      "goals": [
+        "17_chat_to_achieve_url_arg",
+        "26_save_employee_number_arg"
+      ],
+      "harmful_task_ids": [
+        "task_4b3c2dfc4d164a25831e8787397766c3_dynamic_script_execution_17_chat_to_achieve_url_arg",
+        "task_7b0900ec821f4aafa9d1d1f02fa5c330_dynamic_script_execution_26_save_employee_number_arg"
+      ]
+    }
+  ],
+  "goal_distribution": {
+    "24_save_final_answer": 1,
+    "7_calendar_create_event": 1,
+    "21_save_credit_score": 1,
+    "5_chat_send_link": 1,
+    "12_terminal_cron_setup": 1,
+    "9_url_query_params": 1,
+    "27_save_credit_score_arg": 1,
+    "10_chat_send_ssh": 1,
+    "16_email_broadcast_link_arg": 1,
+    "25_save_country_arg": 1,
+    "8_fetch_external_link": 1,
+    "11_terminal_remote_script": 1,
+    "14_email_send_prompt_arg": 1,
+    "13_email_send_file_arg": 1,
+    "31_calendar_create_event_arg": 1,
+    "28_save_client_code_arg": 1,
+    "18_copy_file": 1,
+    "1_email_send_file": 1,
+    "2_email_send_prompt": 1,
+    "22_save_client_code": 1,
+    "17_chat_to_achieve_url_arg": 2,
+    "26_save_employee_number_arg": 2
+  },
+  "vector_distribution": {
+    "email": 1,
+    "calendar": 1,
+    "md": 1,
+    "xlsx": 1,
+    "py": 4,
+    "elf": 4,
+    "pyc": 4,
+    "dynamic_prompt_injection": 4,
+    "dynamic_script_execution": 4
+  }
+}

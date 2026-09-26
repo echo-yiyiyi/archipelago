@@ -1,0 +1,10 @@
+{
+  "max_steps": 150,
+  "model": "azure/responses/aoai-swedencentral-aii-02-gpt-5.6-terra",
+  "extra_args": {
+    "api_base": "https://aoai-swedencentral-aii-02.openai.azure.com/",
+    "reasoning": {
+      "effort": "high"
+    }
+  }
+}

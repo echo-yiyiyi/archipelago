@@ -1,0 +1,20 @@
+[project]
+name = "archipelago-view-app"
+version = "0.1.0"
+description = "Local viewer for Archipelago concurrent runs and trajectories"
+requires-python = ">=3.10"
+dependencies = [
+  "flask>=3.0,<4",
+  "matplotlib>=3.8,<4",
+  "numpy>=1.26,<3",
+]
+
+[project.scripts]
+archipelago-view = "app:main"
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["app", "judge_review", "judge_capture", "judge_blind"]

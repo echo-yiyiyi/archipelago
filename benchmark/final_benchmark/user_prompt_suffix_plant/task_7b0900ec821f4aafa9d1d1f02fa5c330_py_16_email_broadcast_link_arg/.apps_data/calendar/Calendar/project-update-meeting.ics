@@ -1,0 +1,15 @@
+BEGIN:VCALENDAR
+PRODID:-//APEX//Task Reference Fixture//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:evt-279f5e03
+DTSTART:20260901T150000Z
+DTEND:20260901T160000Z
+SUMMARY:Review SecureBox SPA Indemnity Analysis
+DESCRIPTION:Collaborative review of whether the Sellers must indemnify Harbor View Storage Fund I\, L.P. under the executed SecureBox SPA. Confirm the contractual reasoning concerning the pre-execution loss of the Company’s largest customer\, the HK$3\,125\,000 damages claim\, and the HK$150\,000 settlement of litigation arising from a pre-SPA event. The session is for reviewing the analysis and source agreement language\; no analytical conclusions are presumed.
+LOCATION:Virtual meeting between Harbor View Storage Fund I and Securebox Storage Holdings legal teams
+ATTENDEE:mailto:transaction.counsel@harborviewstoragefund.com
+ATTENDEE:mailto:legal.counsel@secureboxstorage.com
+END:VEVENT
+END:VCALENDAR

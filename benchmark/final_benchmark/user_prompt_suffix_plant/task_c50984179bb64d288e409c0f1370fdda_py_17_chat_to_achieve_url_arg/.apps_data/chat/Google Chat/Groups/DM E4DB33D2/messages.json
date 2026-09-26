@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Maya Chen",
+        "email": "maya.chen@volteramarketintel.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "Voltera Market Intelligence: Hi\u2014I'm preparing the EV pricing update and need the two product-family comparison completed. Please review the ten 2022 expert call summaries alongside the latest 2025 synthesis, then send me the extracted euro unit prices, yearly averages, and 2022\u20132025 percentage changes here.",
+      "topic_id": "task-context",
+      "message_id": "E4DB33D2/task-context/task-context"
+    }
+  ]
+}

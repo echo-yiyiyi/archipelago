@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Judge Review · Archipelago</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='judges.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/"><span class="brand-mark">A</span><span>Archipelago <small>/ Judge Review</small></span></a>
+    <div class="top-actions"><a href="/">轨迹查看器 ↗</a><a href="/api/judges/export" class="button">导出人工标注</a><button id="refresh">刷新数据</button></div>
+  </header>
+  <section class="overview" aria-label="审核进度">
+    <div><span class="eyebrow">HUMAN EVALUATION</span><h1>核对判断，回到证据。</h1></div>
+    <div class="metrics"><div><strong id="total">—</strong><span>Judge cases</span></div><div><strong id="reviewed">—</strong><span>已标注</span></div><div><strong id="disagreements">—</strong><span>与模型不一致</span></div></div>
+  </section>
+  <main class="layout">
+    <aside class="case-sidebar">
+      <div class="filter-head"><h2>Cases</h2><span id="case-count">扫描中…</span></div>
+      <label class="search-label"><span>搜索</span><input id="search" type="search" placeholder="任务、路径、判断理由…"></label>
+      <div class="filter-grid">
+        <label>Judge 类型<select id="kind"><option value="">全部</option><option value="exposure">Exposure</option><option value="security">Security</option></select></label>
+        <label>模型结果<select id="result"><option value="">全部</option><option value="1">1 · 是</option><option value="0">0 · 否</option><option value="None">无有效结果</option></select></label>
+        <label>模型<select id="model"><option value="">全部模型</option></select></label>
+        <label>实验<select id="experiment"><option value="">全部实验</option></select></label>
+      </div>
+      <label class="review-filter">人工审核<select id="review"><option value="">全部状态</option><option value="unreviewed">未标注</option><option value="reviewed">已标注</option><option value="disagreement">与模型不一致</option><option value="stale">模型结果已更新</option></select></label>
+      <div id="scan-notice" class="notice hidden"></div>
+      <div id="cases" class="case-list" aria-label="Judge cases"><div class="placeholder">正在扫描已保存的 judge…</div></div>
+      <button id="more" class="hidden">加载更多</button>
+      <p class="sidebar-note">历史 exposure + 已保存完整调用的新 security case。旧 security 结果不收录。</p>
+    </aside>
+    <section id="empty" class="empty-state"><div class="empty-symbol">✓</div><h2>选择一个判断开始审核</h2><p>阅读 prompt 和原始证据，再记录你自己的结论。</p></section>
+    <section id="detail" class="detail hidden">
+      <header class="case-header"><div><div id="case-meta" class="chips"></div><h2 id="case-title"></h2><p id="case-path"></p></div><button id="copy-link" title="复制当前 case 链接">复制链接</button></header>
+      <div class="detail-layout">
+        <section class="evidence-pane">
+          <div id="provenance" class="provenance"></div>
+          <details class="card prompt-card" id="prompt-card" open><summary><span>01 <b>Judge Prompt</b></span><span id="prompt-source" class="small-badge"></span></summary><div id="prompt" class="prose"></div></details>
+          <section class="input-section"><div class="section-title"><span>02</span><h3>输入证据</h3><span id="input-source" class="small-badge"></span></div><div id="references"></div>
+            <div id="tool-toolbar" class="tool-toolbar hidden"><input id="message-search" type="search" aria-label="搜索当前输入" placeholder="搜索 tool 返回内容…"><input id="jump-number" type="number" min="1" aria-label="跳转消息编号" placeholder="# 消息"><button id="jump">跳转</button><label><input id="matched-only" type="checkbox">仅模型命中</label><span id="message-count"></span></div>
+            <div id="inputs"></div>
+          </section>
+          <details class="card raw-card"><summary>完整输入 / JSON</summary><button id="download-case">下载当前 case JSON</button><pre id="raw"></pre></details>
+        </section>
+        <aside class="review-pane">
+          <section class="card result-card"><div class="section-title"><span>03</span><h3>LLM 判断</h3></div><div id="model-verdict"></div><div id="judge-model" class="muted"></div><div id="matched-numbers" class="chips"></div><p id="rationale" class="prose"></p><details><summary>结构化输出</summary><pre id="output"></pre></details><details id="previous-wrap" class="hidden"><summary>首次判断（复核前）</summary><pre id="previous"></pre></details></section>
+          <form id="annotation" class="card annotation-card">
+            <div class="section-title"><span>04</span><h3>你的判断</h3><span id="agreement"></span></div>
+            <p id="verdict-question" class="muted"></p>
+            <fieldset class="verdict-options"><legend class="sr-only">人工结果</legend><label><input type="radio" name="verdict" value="1"><span>1 · 是</span></label><label><input type="radio" name="verdict" value="0"><span>0 · 否</span></label><label><input type="radio" name="verdict" value="uncertain"><span>不确定</span></label></fieldset>
+            <label id="human-messages-wrap">出现核心内容的消息编号<input id="human-messages" placeholder="例如 15, 28" inputmode="numeric"><small>使用原轨迹编号，点击 tool 消息右侧的“加入标注”也可添加。</small></label>
+            <label>判断依据 / 备注<textarea id="human-notes" rows="4" placeholder="指令的核心内容出现在哪里？模型遗漏或误判了什么？"></textarea></label>
+            <label>审核人（可选）<input id="reviewer" placeholder="姓名或简称" maxlength="120"></label>
+            <div class="save-actions"><button type="submit" class="primary">保存标注</button><button type="button" id="save-next">保存并下一个 →</button></div>
+            <div id="save-status" role="status" aria-live="polite"></div><button type="button" id="clear-review" class="text-button hidden">清除人工标注</button>
+            <p class="footnote">人工标注单独保存，不覆盖 benchmark 的 grades。Ctrl / ⌘ + Enter 保存。</p>
+          </form>
+        </aside>
+      </div>
+    </section>
+  </main>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script src="{{ url_for('static', filename='judges.js') }}"></script>
+</body>
+</html>

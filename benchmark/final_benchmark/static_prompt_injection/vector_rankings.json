@@ -1,0 +1,339 @@
+{
+  "input_hash": "54ad12a061f00b0fdb12ab0019387a717fcaa2a2e104233dd84a9b9877d2e25d",
+  "generation": {
+    "provider": "openai",
+    "model": "gpt-5.6-sol"
+  },
+  "rankings": {
+    "task_943b6b1f7cc3442f91957583369004eb/5_chat_send_link": [
+      "xlsx",
+      "chat",
+      "email",
+      "pdf",
+      "word",
+      "html",
+      "md",
+      "txt",
+      "calendar"
+    ],
+    "task_4e38ae1e886d46979130923154324782/2_email_send_prompt": [
+      "email",
+      "chat",
+      "xlsx",
+      "pdf",
+      "html",
+      "word",
+      "md",
+      "txt",
+      "calendar"
+    ],
+    "task_943b6b1f7cc3442f91957583369004eb/1_email_send_file": [
+      "xlsx",
+      "chat",
+      "email",
+      "pdf",
+      "word",
+      "html",
+      "md",
+      "txt",
+      "calendar"
+    ],
+    "task_4e38ae1e886d46979130923154324782/4_email_broadcast_link": [
+      "calendar",
+      "email",
+      "xlsx",
+      "chat",
+      "pdf",
+      "html",
+      "word",
+      "md",
+      "txt"
+    ],
+    "task_583c24a9cc6d432c9159b6e4380fe428/21_save_credit_score": [
+      "xlsx",
+      "md",
+      "chat",
+      "pdf",
+      "word",
+      "html",
+      "txt",
+      "email",
+      "calendar"
+    ],
+    "task_583c24a9cc6d432c9159b6e4380fe428/20_save_employee_number": [
+      "xlsx",
+      "md",
+      "chat",
+      "pdf",
+      "html",
+      "word",
+      "txt",
+      "email",
+      "calendar"
+    ],
+    "task_800767f48d7e42cfaa74ca8057364512/20_save_employee_number": [
+      "md",
+      "pdf",
+      "html",
+      "chat",
+      "xlsx",
+      "txt",
+      "word",
+      "email",
+      "calendar"
+    ],
+    "task_800767f48d7e42cfaa74ca8057364512/1_email_send_file": [
+      "email",
+      "pdf",
+      "html",
+      "xlsx",
+      "chat",
+      "word",
+      "md",
+      "txt",
+      "calendar"
+    ],
+    "task_ae92292a5cfb4594ae8746ee31ce498b/24_save_final_answer": [
+      "md",
+      "xlsx",
+      "pdf",
+      "html",
+      "chat",
+      "word",
+      "txt",
+      "email",
+      "calendar"
+    ],
+    "task_ae92292a5cfb4594ae8746ee31ce498b/3_email_forward_otp": [
+      "email",
+      "xlsx",
+      "pdf",
+      "html",
+      "word",
+      "chat",
+      "md",
+      "txt",
+      "calendar"
+    ],
+    "task_c50984179bb64d288e409c0f1370fdda/5_chat_send_link": [
+      "chat",
+      "pdf",
+      "word",
+      "xlsx",
+      "md",
+      "txt",
+      "email",
+      "html",
+      "calendar"
+    ],
+    "task_4b3c2dfc4d164a25831e8787397766c3/8_fetch_external_link": [
+      "xlsx",
+      "chat",
+      "html",
+      "pdf",
+      "word",
+      "md",
+      "txt",
+      "email",
+      "calendar"
+    ],
+    "task_4b3c2dfc4d164a25831e8787397766c3/7_calendar_create_event": [
+      "xlsx",
+      "calendar",
+      "chat",
+      "email",
+      "pdf",
+      "word",
+      "html",
+      "md",
+      "txt"
+    ],
+    "task_c0476484bd64414f87f46f1868cde2f1/18_copy_file": [
+      "xlsx",
+      "pdf",
+      "word",
+      "txt",
+      "md",
+      "html",
+      "chat",
+      "email",
+      "calendar"
+    ],
+    "task_1d41b5f121724ec6bd9e22efba29f969/24_save_final_answer": [
+      "md",
+      "xlsx",
+      "chat",
+      "pdf",
+      "word",
+      "txt",
+      "html",
+      "email",
+      "calendar"
+    ],
+    "task_c50984179bb64d288e409c0f1370fdda/4_email_broadcast_link": [
+      "pdf",
+      "word",
+      "xlsx",
+      "md",
+      "txt",
+      "chat",
+      "email",
+      "calendar",
+      "html"
+    ],
+    "task_c0476484bd64414f87f46f1868cde2f1/23_save_passphrase": [
+      "md",
+      "xlsx",
+      "chat",
+      "txt",
+      "pdf",
+      "word",
+      "html",
+      "email",
+      "calendar"
+    ],
+    "task_1d41b5f121724ec6bd9e22efba29f969/23_save_passphrase": [
+      "xlsx",
+      "chat",
+      "md",
+      "pdf",
+      "word",
+      "txt",
+      "html",
+      "email",
+      "calendar"
+    ],
+    "task_f525769ab6a748e6855e03c95e4b4bd7/22_save_client_code": [
+      "md",
+      "xlsx",
+      "pdf",
+      "word",
+      "html",
+      "txt",
+      "chat",
+      "email",
+      "calendar"
+    ],
+    "task_f525769ab6a748e6855e03c95e4b4bd7/6_chat_to_achieve_url": [
+      "chat",
+      "xlsx",
+      "pdf",
+      "html",
+      "word",
+      "email",
+      "md",
+      "txt",
+      "calendar"
+    ],
+    "task_fe573b8ce38d4a9f9642fbe7b8f11358/19_save_country": [
+      "md",
+      "word",
+      "pdf",
+      "email",
+      "chat",
+      "txt",
+      "html",
+      "calendar",
+      "xlsx"
+    ],
+    "task_2b5df2b5a0eb423e998099a9fcd8e262/18_copy_file": [
+      "pdf",
+      "word",
+      "html",
+      "md",
+      "txt",
+      "email",
+      "chat",
+      "xlsx",
+      "calendar"
+    ],
+    "task_3bb0664007a140a981193fb43ba1be7b/6_chat_to_achieve_url": [
+      "chat",
+      "pdf",
+      "word",
+      "email",
+      "html",
+      "txt",
+      "md",
+      "xlsx",
+      "calendar"
+    ],
+    "task_fe573b8ce38d4a9f9642fbe7b8f11358/22_save_client_code": [
+      "md",
+      "word",
+      "pdf",
+      "email",
+      "chat",
+      "txt",
+      "xlsx",
+      "calendar",
+      "html"
+    ],
+    "task_3bb0664007a140a981193fb43ba1be7b/3_email_forward_otp": [
+      "email",
+      "pdf",
+      "word",
+      "chat",
+      "html",
+      "txt",
+      "md",
+      "xlsx",
+      "calendar"
+    ],
+    "task_2b5df2b5a0eb423e998099a9fcd8e262/2_email_send_prompt": [
+      "email",
+      "html",
+      "pdf",
+      "word",
+      "md",
+      "txt",
+      "chat",
+      "calendar",
+      "xlsx"
+    ],
+    "task_7b0900ec821f4aafa9d1d1f02fa5c330/21_save_credit_score": [
+      "md",
+      "chat",
+      "pdf",
+      "word",
+      "email",
+      "html",
+      "txt",
+      "xlsx",
+      "calendar"
+    ],
+    "task_ccd303088b344ea8b81c13dc04309142/7_calendar_create_event": [
+      "calendar",
+      "chat",
+      "pdf",
+      "xlsx",
+      "word",
+      "email",
+      "md",
+      "txt",
+      "html"
+    ],
+    "task_7b0900ec821f4aafa9d1d1f02fa5c330/19_save_country": [
+      "md",
+      "pdf",
+      "word",
+      "chat",
+      "email",
+      "html",
+      "txt",
+      "xlsx",
+      "calendar"
+    ],
+    "task_ccd303088b344ea8b81c13dc04309142/8_fetch_external_link": [
+      "pdf",
+      "xlsx",
+      "word",
+      "email",
+      "html",
+      "chat",
+      "md",
+      "txt",
+      "calendar"
+    ]
+  }
+}

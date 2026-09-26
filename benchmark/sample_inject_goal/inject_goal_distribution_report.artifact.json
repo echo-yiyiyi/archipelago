@@ -1,0 +1,412 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "Inject-goal 分布与采样约束报告",
+    "description": "基于最终 90 条 harmful-task 变体，核验非执行文件组与可执行文件组的 goal 配额、vector 内均匀性及任务级唯一性约束。",
+    "generatedAt": "2026-08-28T17:50:00+03:00",
+    "sources": [
+      {
+        "id": "inject-goal-output",
+        "label": "最终 90 条 inject-goal 任务",
+        "path": "benchmark/sample_inject_goal/output/selected_90_tasks_with_inject_goals.json",
+        "query": {
+          "engine": "DuckDB",
+          "language": "SQL",
+          "sql": "SELECT task_id, harmful_task_id, inject_vector, inject_goal FROM read_json_auto('benchmark/sample_inject_goal/output/selected_90_tasks_with_inject_goals.json')",
+          "description": "按 inject_vector 是否属于 py、pyc、elf 分组，并统计 inject_goal 频数；同时按 vector 计算允许 goal 集合中的最小值、最大值和极差。",
+          "filters": [
+            "非执行文件组：inject_vector 不属于 py、pyc、elf",
+            "可执行文件组：inject_vector 属于 py、pyc、elf"
+          ],
+          "metric_definitions": [
+            "goal 数量：指定组内 inject_goal 等于该 goal 的输出行数",
+            "vector 内极差：该 vector 的允许 goal 计数最大值减最小值，未出现的允许 goal 按 0 计数",
+            "任务级 goal 数：同一原始 task_id 的两个 vector 合计不同 inject_goal 的数量"
+          ]
+        }
+      }
+    ],
+    "cards": [
+      {
+        "id": "summary-total",
+        "dataset": "summary",
+        "sourceId": "inject-goal-output",
+        "description": "最终输出行数",
+        "metrics": [
+          {"label": "任务变体", "field": "total_variants", "format": "number"}
+        ]
+      },
+      {
+        "id": "summary-groups",
+        "dataset": "summary",
+        "sourceId": "inject-goal-output",
+        "description": "两个采样组规模一致",
+        "metrics": [
+          {"label": "每组变体", "field": "variants_per_group", "format": "number"}
+        ]
+      },
+      {
+        "id": "summary-tasks",
+        "dataset": "summary",
+        "sourceId": "inject-goal-output",
+        "description": "原始 benchmark 任务数",
+        "metrics": [
+          {"label": "原始任务", "field": "base_tasks", "format": "number"}
+        ]
+      },
+      {
+        "id": "summary-distinct",
+        "dataset": "summary",
+        "sourceId": "inject-goal-output",
+        "description": "每个原始任务跨两个 vector 的不同 goal 数",
+        "metrics": [
+          {"label": "每任务不同 goal", "field": "distinct_goals_per_task", "format": "number"}
+        ]
+      }
+    ],
+    "charts": [
+      {
+        "id": "file-goal-distribution",
+        "title": "非执行文件组 inject-goal 分布",
+        "subtitle": "45 个变体；固定配额为每个 goal 5 或 6 次",
+        "intent": "distribution",
+        "question": "非执行文件组是否准确满足八个 goal 的固定配额？",
+        "rationale": "横向条形图便于比较较长的 goal 名称，并直接显示精确计数。",
+        "type": "horizontalBar",
+        "dataset": "file_goal_distribution",
+        "sourceId": "inject-goal-output",
+        "encodings": {
+          "x": {"field": "goal", "type": "ordinal", "label": "Inject goal"},
+          "y": {"field": "count", "type": "quantitative", "label": "变体数量", "format": "number"},
+          "label": {"field": "count", "type": "quantitative", "format": "number"},
+          "tooltip": [
+            {"field": "goal", "type": "ordinal", "label": "Inject goal"},
+            {"field": "count", "type": "quantitative", "label": "数量", "format": "number"},
+            {"field": "share", "type": "quantitative", "label": "组内占比", "format": "percent"}
+          ]
+        },
+        "xAxisTitle": "Inject goal",
+        "yAxisTitle": "变体数量",
+        "valueFormat": "number",
+        "layout": "full",
+        "labels": {"values": "all"},
+        "palette": {"kind": "categorical", "name": "blue"},
+        "settings": {"orientation": "horizontal", "showValues": true, "sort": "custom"},
+        "surface": {"surface": "card", "viewMode": "both"}
+      },
+      {
+        "id": "executable-goal-distribution",
+        "title": "可执行文件组 inject-goal 分布",
+        "subtitle": "45 个变体；goals 1–8 各 3 次，剩余 21 个名额分配给 goals 9–12",
+        "intent": "distribution",
+        "question": "可执行文件组是否准确满足十二个 goal 的固定配额？",
+        "rationale": "横向条形图保留 goal 的顺序，并明确展示 1–8 与 9–12 两类配额。",
+        "type": "horizontalBar",
+        "dataset": "executable_goal_distribution",
+        "sourceId": "inject-goal-output",
+        "encodings": {
+          "x": {"field": "goal", "type": "ordinal", "label": "Inject goal"},
+          "y": {"field": "count", "type": "quantitative", "label": "变体数量", "format": "number"},
+          "label": {"field": "count", "type": "quantitative", "format": "number"},
+          "tooltip": [
+            {"field": "goal", "type": "ordinal", "label": "Inject goal"},
+            {"field": "count", "type": "quantitative", "label": "数量", "format": "number"},
+            {"field": "share", "type": "quantitative", "label": "组内占比", "format": "percent"}
+          ]
+        },
+        "xAxisTitle": "Inject goal",
+        "yAxisTitle": "变体数量",
+        "valueFormat": "number",
+        "layout": "full",
+        "labels": {"values": "all"},
+        "palette": {"kind": "categorical", "name": "purple"},
+        "settings": {"orientation": "horizontal", "showValues": true, "sort": "custom"},
+        "surface": {"surface": "card", "viewMode": "both"}
+      },
+      {
+        "id": "file-vector-goal-matrix",
+        "title": "非执行文件组：每个 goal 在每个 vector 中的计数",
+        "subtitle": "7 个 file vectors × 8 个 goals；颜色越深表示计数越高，0 表示该组合未被分配",
+        "intent": "comparison",
+        "question": "非执行文件组的每个 goal 分别落在了哪些 vector 上？",
+        "rationale": "热力图直接呈现完整 goal × vector 矩阵，比包含七个系列的分组柱状图更容易定位缺失和重复组合。",
+        "type": "heatmap",
+        "dataset": "file_vector_goal_matrix",
+        "sourceId": "inject-goal-output",
+        "encodings": {
+          "x": {"field": "vector", "type": "nominal", "label": "Inject vector"},
+          "y": {
+            "fields": [
+              "1_email_send_file",
+              "2_email_send_prompt",
+              "3_email_forward_otp",
+              "4_email_broadcast_link",
+              "5_chat_send_link",
+              "6_chat_to_achieve_url",
+              "7_calendar_create_event",
+              "8_fetch_external_link"
+            ],
+            "type": "quantitative",
+            "format": "number"
+          }
+        },
+        "xAxisTitle": "Inject vector",
+        "yAxisTitle": "Inject goal",
+        "valueFormat": "number",
+        "layout": "full",
+        "maxRows": 7,
+        "palette": {"kind": "sequential", "name": "blue"},
+        "surface": {"surface": "card", "viewMode": "both"}
+      },
+      {
+        "id": "executable-vector-goal-matrix",
+        "title": "可执行文件组：每个 goal 在每个 vector 中的计数",
+        "subtitle": "py、pyc、elf × 12 个 goals；每个单元格均为 1 或 2",
+        "intent": "comparison",
+        "question": "可执行文件组的每个 goal 在 py、pyc、elf 之间如何分布？",
+        "rationale": "热力图能同时比较十二个 goal 在三个 executable vectors 上的完整计数。",
+        "type": "heatmap",
+        "dataset": "executable_vector_goal_matrix",
+        "sourceId": "inject-goal-output",
+        "encodings": {
+          "x": {"field": "vector", "type": "nominal", "label": "Inject vector"},
+          "y": {
+            "fields": [
+              "1_email_send_file",
+              "2_email_send_prompt",
+              "3_email_forward_otp",
+              "4_email_broadcast_link",
+              "5_chat_send_link",
+              "6_chat_to_achieve_url",
+              "7_calendar_create_event",
+              "8_fetch_external_link",
+              "9_url_query_params",
+              "10_chat_send_ssh",
+              "11_terminal_remote_script",
+              "12_terminal_cron_setup"
+            ],
+            "type": "quantitative",
+            "format": "number"
+          }
+        },
+        "xAxisTitle": "Inject vector",
+        "yAxisTitle": "Inject goal",
+        "valueFormat": "number",
+        "layout": "full",
+        "maxRows": 3,
+        "palette": {"kind": "sequential", "name": "blue"},
+        "surface": {"surface": "card", "viewMode": "both"}
+      }
+    ],
+    "tables": [
+      {
+        "id": "vector-balance",
+        "title": "各 inject_vector 的 goal 均匀性",
+        "subtitle": "极差均不超过 1；未出现的允许 goal 按 0 计数",
+        "dataset": "vector_balance",
+        "sourceId": "inject-goal-output",
+        "layout": "full",
+        "density": "dense",
+        "columns": [
+          {"field": "group", "label": "组", "type": "text"},
+          {"field": "vector", "label": "Inject vector", "type": "text"},
+          {"field": "total", "label": "变体数", "format": "number"},
+          {"field": "allowed_goals", "label": "允许 goal 数", "format": "number"},
+          {"field": "minimum", "label": "最小计数", "format": "number"},
+          {"field": "maximum", "label": "最大计数", "format": "number"},
+          {"field": "spread", "label": "极差", "format": "number"},
+          {"field": "repeated_goals", "label": "出现两次的 goal", "type": "text"}
+        ]
+      }
+    ],
+    "blocks": [
+      {
+        "id": "title",
+        "type": "markdown",
+        "body": "# Inject-goal 分布与采样约束报告\n\n## 技术摘要\n\n最终数据包含 90 个 harmful-task 变体，非执行文件组与可执行文件组各 45 个。两组均准确命中预先写死的全局 goal 配额；每个 inject_vector 内允许 goal 的计数极差不超过 1；每个输入 harmful task 生成 3 个不同 goal，每个原始 task_id 跨两个 vector 获得 6 个不同 goal。",
+        "sourceId": "inject-goal-output"
+      },
+      {
+        "id": "summary-metrics",
+        "type": "metric-strip",
+        "cardIds": ["summary-total", "summary-groups", "summary-tasks", "summary-distinct"],
+        "sourceId": "inject-goal-output"
+      },
+      {
+        "id": "key-findings",
+        "type": "markdown",
+        "body": "## 关键结论\n\n- **全局配额完全满足。** 非执行文件组八个 goal 的实际计数与固定配额逐项一致；可执行文件组十二个 goal 也逐项一致。\n- **vector 内均匀性满足。** 每个 vector 的允许 goal 计数最大值与最小值之差均为 1。\n- **任务级去重满足。** 同一 harmful task 的 3 个 goal 不重复；同一原始 task_id 的两个 vector 之间也没有 goal 重叠，因此每个原始任务共有 6 个不同 goal。\n- **随机性不改变配额。** 随机数只在所有可行分配中选择具体 task-to-goal 对应关系；固定配额和均匀性是硬约束。",
+        "sourceId": "inject-goal-output"
+      },
+      {
+        "id": "file-chart",
+        "type": "chart",
+        "chartId": "file-goal-distribution",
+        "layout": "full",
+        "sourceId": "inject-goal-output"
+      },
+      {
+        "id": "file-interpretation",
+        "type": "markdown",
+        "body": "非执行文件组使用 goals 1–8。Goals 1、3、5、7、8 各出现 6 次；goals 2、4、6 各出现 5 次，总数为 45。最大计数与最小计数仅相差 1，因此固定配额本身接近完全均匀。",
+        "sourceId": "inject-goal-output"
+      },
+      {
+        "id": "executable-chart",
+        "type": "chart",
+        "chartId": "executable-goal-distribution",
+        "layout": "full",
+        "sourceId": "inject-goal-output"
+      },
+      {
+        "id": "executable-interpretation",
+        "type": "markdown",
+        "body": "可执行文件组使用 goals 1–12。按策略，goals 1–8 各出现 3 次，占用 24 个名额；剩余 21 个名额由 goals 9–12 承担，计数依次为 5、6、5、5。这里的组级差异是写死配额的结果，不代表采样不均；均匀性约束施加在每个 py、pyc、elf vector 内。",
+        "sourceId": "inject-goal-output"
+      },
+      {
+        "id": "matrix-section",
+        "type": "markdown",
+        "body": "## 每个 goal 在每个 vector 中的分布\n\n下面两张矩阵补充组级总量图：每一行对应一个 inject vector，每一列对应一个 inject goal，单元格表示该组合实际生成的任务数量。这样可以直接核对某个 goal 是否集中在特定 vector，以及每个 vector 中哪些 goal 出现 0、1 或 2 次。",
+        "sourceId": "inject-goal-output"
+      },
+      {
+        "id": "file-matrix-chart",
+        "type": "chart",
+        "chartId": "file-vector-goal-matrix",
+        "layout": "full",
+        "sourceId": "inject-goal-output"
+      },
+      {
+        "id": "file-matrix-interpretation",
+        "type": "markdown",
+        "body": "文件组中，calendar、chat、email、html、md、txt 各有 6 个单元格为 1、2 个单元格为 0；xlsx 的 goal 7 为 2，其余 goals 1–8 均为 1。chat 与 email 当前具有相同的 goal 组合，但它们仍分别满足各自 vector 内的均匀性约束。",
+        "sourceId": "inject-goal-output"
+      },
+      {
+        "id": "executable-matrix-chart",
+        "type": "chart",
+        "chartId": "executable-vector-goal-matrix",
+        "layout": "full",
+        "sourceId": "inject-goal-output"
+      },
+      {
+        "id": "executable-matrix-interpretation",
+        "type": "markdown",
+        "body": "执行文件组中，每个 goal 在 py、pyc、elf 上至少各出现 1 次。额外出现的第二次被分散为：elf 的 goals 10、11、12；py 的 goals 9、10、11；pyc 的 goals 9、10、12。因此三个 vector 都是 3 个 goal 出现 2 次、其余 9 个 goal 出现 1 次。",
+        "sourceId": "inject-goal-output"
+      },
+      {
+        "id": "vector-section",
+        "type": "markdown",
+        "body": "## Vector 内均匀性\n\n下表针对每个 vector 的完整允许 goal 集合计算计数极差。六条变体的文件 vector 会选六个不同 goal；`xlsx` 有九条变体，所以一个 goal 出现两次、其余七个各一次；py、pyc、elf 各有十五条变体，所以各有三个 goal 出现两次、其余九个各一次。",
+        "sourceId": "inject-goal-output"
+      },
+      {
+        "id": "vector-table",
+        "type": "table",
+        "tableId": "vector-balance",
+        "layout": "full",
+        "sourceId": "inject-goal-output"
+      },
+      {
+        "id": "constraints",
+        "type": "markdown",
+        "body": "## 采样满足的约束\n\n1. 输入的 30 个 harmful task 各生成 3 个变体，最终恰好 90 条。\n2. 同一输入 harmful task 的 3 个 `inject_goal` 互不相同。\n3. 每个原始 `task_id` 的非执行文件 vector 与执行文件 vector 各取 3 个 goal，而且两边不重叠，因此每个任务共有 6 个不同 goal。\n4. 非执行文件组严格满足固定配额：goals 1、3、5、7、8 各 6 次；goals 2、4、6 各 5 次。\n5. 可执行文件组严格满足固定配额：goals 1–8 各 3 次；goals 9、10、11、12 分别为 5、6、5、5 次。\n6. 每个 `inject_vector` 内允许 goal 的最大计数与最小计数之差不超过 1。\n7. 所有输出 `harmful_task_id` 唯一，格式为 `<task_id>_<inject_vector>_<inject_goal>`。\n8. 默认随机种子为 42；更换种子可以改变具体任务与 goal 的对应关系，但不会破坏上述硬约束。",
+        "sourceId": "inject-goal-output"
+      },
+      {
+        "id": "methodology",
+        "type": "markdown",
+        "body": "## 方法\n\n采样分为两层。第一层通过随机化回溯构造 `vector × goal` 配额矩阵：列和必须等于写死的组级配额，行内计数极差必须不超过 1。第二层在每个 vector 内随机化任务顺序与候选 goal 组合，通过回溯为每个 harmful task 分配 3 个 goal，同时满足 vector 配额、单任务不重复，以及同一原始任务跨两组不重复。只有所有剩余配额仍然可行的分支才会继续。",
+        "sourceId": "inject-goal-output"
+      },
+      {
+        "id": "limitations",
+        "type": "markdown",
+        "body": "## 限制与稳健性\n\n- 当前结论针对默认 seed 42 生成的最终 JSON；代码测试保证任何成功输出都满足相同硬约束。\n- 可执行文件组的组级 goal 频数并非追求十二类完全均匀，而是遵循用户指定的固定配额。\n- 均匀性只控制计数，不衡量某个 goal 与任务语义的匹配度；如需优化语义适配，可在硬约束之上加入 preference score，再做带约束的最大权重匹配。\n\n## 建议的后续检查\n\n保留现有单元测试作为每次重采样后的门禁，并在更改 goal 列表、固定配额或每任务变体数时同步更新约束文档和本报告。",
+        "sourceId": "inject-goal-output"
+      }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "generatedAt": "2026-08-28T17:50:00+03:00",
+    "status": "ready",
+    "datasets": {
+      "summary": [
+        {
+          "total_variants": 90,
+          "variants_per_group": 45,
+          "base_tasks": 15,
+          "distinct_goals_per_task": 6
+        }
+      ],
+      "file_goal_distribution": [
+        {"goal": "1 · email_send_file", "count": 6, "share": 0.1333333333},
+        {"goal": "2 · email_send_prompt", "count": 5, "share": 0.1111111111},
+        {"goal": "3 · email_forward_otp", "count": 6, "share": 0.1333333333},
+        {"goal": "4 · email_broadcast_link", "count": 5, "share": 0.1111111111},
+        {"goal": "5 · chat_send_link", "count": 6, "share": 0.1333333333},
+        {"goal": "6 · chat_to_achieve_url", "count": 5, "share": 0.1111111111},
+        {"goal": "7 · calendar_create_event", "count": 6, "share": 0.1333333333},
+        {"goal": "8 · fetch_external_link", "count": 6, "share": 0.1333333333}
+      ],
+      "executable_goal_distribution": [
+        {"goal": "1 · email_send_file", "count": 3, "share": 0.0666666667},
+        {"goal": "2 · email_send_prompt", "count": 3, "share": 0.0666666667},
+        {"goal": "3 · email_forward_otp", "count": 3, "share": 0.0666666667},
+        {"goal": "4 · email_broadcast_link", "count": 3, "share": 0.0666666667},
+        {"goal": "5 · chat_send_link", "count": 3, "share": 0.0666666667},
+        {"goal": "6 · chat_to_achieve_url", "count": 3, "share": 0.0666666667},
+        {"goal": "7 · calendar_create_event", "count": 3, "share": 0.0666666667},
+        {"goal": "8 · fetch_external_link", "count": 3, "share": 0.0666666667},
+        {"goal": "9 · url_query_params", "count": 5, "share": 0.1111111111},
+        {"goal": "10 · chat_send_ssh", "count": 6, "share": 0.1333333333},
+        {"goal": "11 · terminal_remote_script", "count": 5, "share": 0.1111111111},
+        {"goal": "12 · terminal_cron_setup", "count": 5, "share": 0.1111111111}
+      ],
+      "file_vector_goal_matrix": [
+        {"vector": "calendar", "group": "非执行文件", "total": 6, "1_email_send_file": 0, "2_email_send_prompt": 1, "3_email_forward_otp": 1, "4_email_broadcast_link": 1, "5_chat_send_link": 0, "6_chat_to_achieve_url": 1, "7_calendar_create_event": 1, "8_fetch_external_link": 1},
+        {"vector": "chat", "group": "非执行文件", "total": 6, "1_email_send_file": 1, "2_email_send_prompt": 0, "3_email_forward_otp": 1, "4_email_broadcast_link": 1, "5_chat_send_link": 1, "6_chat_to_achieve_url": 0, "7_calendar_create_event": 1, "8_fetch_external_link": 1},
+        {"vector": "email", "group": "非执行文件", "total": 6, "1_email_send_file": 1, "2_email_send_prompt": 0, "3_email_forward_otp": 1, "4_email_broadcast_link": 1, "5_chat_send_link": 1, "6_chat_to_achieve_url": 0, "7_calendar_create_event": 1, "8_fetch_external_link": 1},
+        {"vector": "html", "group": "非执行文件", "total": 6, "1_email_send_file": 1, "2_email_send_prompt": 1, "3_email_forward_otp": 1, "4_email_broadcast_link": 0, "5_chat_send_link": 1, "6_chat_to_achieve_url": 1, "7_calendar_create_event": 0, "8_fetch_external_link": 1},
+        {"vector": "md", "group": "非执行文件", "total": 6, "1_email_send_file": 1, "2_email_send_prompt": 1, "3_email_forward_otp": 0, "4_email_broadcast_link": 0, "5_chat_send_link": 1, "6_chat_to_achieve_url": 1, "7_calendar_create_event": 1, "8_fetch_external_link": 1},
+        {"vector": "txt", "group": "非执行文件", "total": 6, "1_email_send_file": 1, "2_email_send_prompt": 1, "3_email_forward_otp": 1, "4_email_broadcast_link": 1, "5_chat_send_link": 1, "6_chat_to_achieve_url": 1, "7_calendar_create_event": 0, "8_fetch_external_link": 0},
+        {"vector": "xlsx", "group": "非执行文件", "total": 9, "1_email_send_file": 1, "2_email_send_prompt": 1, "3_email_forward_otp": 1, "4_email_broadcast_link": 1, "5_chat_send_link": 1, "6_chat_to_achieve_url": 1, "7_calendar_create_event": 2, "8_fetch_external_link": 1}
+      ],
+      "executable_vector_goal_matrix": [
+        {"vector": "elf", "group": "可执行文件", "total": 15, "1_email_send_file": 1, "2_email_send_prompt": 1, "3_email_forward_otp": 1, "4_email_broadcast_link": 1, "5_chat_send_link": 1, "6_chat_to_achieve_url": 1, "7_calendar_create_event": 1, "8_fetch_external_link": 1, "9_url_query_params": 1, "10_chat_send_ssh": 2, "11_terminal_remote_script": 2, "12_terminal_cron_setup": 2},
+        {"vector": "py", "group": "可执行文件", "total": 15, "1_email_send_file": 1, "2_email_send_prompt": 1, "3_email_forward_otp": 1, "4_email_broadcast_link": 1, "5_chat_send_link": 1, "6_chat_to_achieve_url": 1, "7_calendar_create_event": 1, "8_fetch_external_link": 1, "9_url_query_params": 2, "10_chat_send_ssh": 2, "11_terminal_remote_script": 2, "12_terminal_cron_setup": 1},
+        {"vector": "pyc", "group": "可执行文件", "total": 15, "1_email_send_file": 1, "2_email_send_prompt": 1, "3_email_forward_otp": 1, "4_email_broadcast_link": 1, "5_chat_send_link": 1, "6_chat_to_achieve_url": 1, "7_calendar_create_event": 1, "8_fetch_external_link": 1, "9_url_query_params": 2, "10_chat_send_ssh": 2, "11_terminal_remote_script": 1, "12_terminal_cron_setup": 2}
+      ],
+      "vector_balance": [
+        {"group_order": 1, "group": "非执行文件", "vector": "calendar", "total": 6, "allowed_goals": 8, "minimum": 0, "maximum": 1, "spread": 1, "repeated_goals": "—"},
+        {"group_order": 2, "group": "非执行文件", "vector": "chat", "total": 6, "allowed_goals": 8, "minimum": 0, "maximum": 1, "spread": 1, "repeated_goals": "—"},
+        {"group_order": 3, "group": "非执行文件", "vector": "email", "total": 6, "allowed_goals": 8, "minimum": 0, "maximum": 1, "spread": 1, "repeated_goals": "—"},
+        {"group_order": 4, "group": "非执行文件", "vector": "html", "total": 6, "allowed_goals": 8, "minimum": 0, "maximum": 1, "spread": 1, "repeated_goals": "—"},
+        {"group_order": 5, "group": "非执行文件", "vector": "md", "total": 6, "allowed_goals": 8, "minimum": 0, "maximum": 1, "spread": 1, "repeated_goals": "—"},
+        {"group_order": 6, "group": "非执行文件", "vector": "txt", "total": 6, "allowed_goals": 8, "minimum": 0, "maximum": 1, "spread": 1, "repeated_goals": "—"},
+        {"group_order": 7, "group": "非执行文件", "vector": "xlsx", "total": 9, "allowed_goals": 8, "minimum": 1, "maximum": 2, "spread": 1, "repeated_goals": "7"},
+        {"group_order": 8, "group": "可执行文件", "vector": "elf", "total": 15, "allowed_goals": 12, "minimum": 1, "maximum": 2, "spread": 1, "repeated_goals": "10, 11, 12"},
+        {"group_order": 9, "group": "可执行文件", "vector": "py", "total": 15, "allowed_goals": 12, "minimum": 1, "maximum": 2, "spread": 1, "repeated_goals": "9, 10, 11"},
+        {"group_order": 10, "group": "可执行文件", "vector": "pyc", "total": 15, "allowed_goals": 12, "minimum": 1, "maximum": 2, "spread": 1, "repeated_goals": "9, 10, 12"}
+      ]
+    }
+  },
+  "sources": [
+    {
+      "id": "inject-goal-output",
+      "label": "最终 90 条 inject-goal 任务",
+      "path": "benchmark/sample_inject_goal/output/selected_90_tasks_with_inject_goals.json",
+      "query": {
+        "engine": "DuckDB",
+        "language": "SQL",
+        "sql": "SELECT task_id, harmful_task_id, inject_vector, inject_goal FROM read_json_auto('benchmark/sample_inject_goal/output/selected_90_tasks_with_inject_goals.json')",
+        "description": "按 inject_vector 是否属于 py、pyc、elf 分组，并统计 inject_goal 频数与 vector 内计数极差。"
+      }
+    }
+  ]
+}

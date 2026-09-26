@@ -1,0 +1,21 @@
+{
+  "model": "openai/glm-5.3-flash",
+  "max_steps": 150,
+  "api_base": "https://api.z.ai/api/paas/v4",
+  "api_key_env": "ZAI_API_KEY",
+  "extra_args": {
+    "allowed_openai_params": [
+      "reasoning_effort"
+    ],
+    "reasoning_effort": "max",
+    "temperature": 1.0,
+    "top_p": 0.95,
+    "max_tokens": 131072,
+    "stream": false,
+    "extra_body": {
+      "thinking": {
+        "type": "enabled"
+      }
+    }
+  }
+}
