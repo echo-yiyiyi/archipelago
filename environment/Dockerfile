@@ -78,6 +78,11 @@ ENV PATH=/app/.venv/bin:$PATH \
     UV_SYSTEM_PYTHON=1 \
     PORT=8080
 
+# Preserve trust in benchmark test endpoints using the original public test CA.
+# Keep this in a thin final layer so CA changes retain dependency-install caches.
+COPY benchmark/proxy/certs/archipelago-test-ca.crt /usr/local/share/ca-certificates/archipelago-test-ca.crt
+RUN update-ca-certificates
+
 # Expose FastAPI port
 EXPOSE 8080
 
