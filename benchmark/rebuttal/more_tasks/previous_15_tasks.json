@@ -1,0 +1,77 @@
+[
+  {
+    "task_id": "task_4e38ae1e886d46979130923154324782",
+    "domain": "banking",
+    "difficulty": "hard"
+  },
+  {
+    "task_id": "task_943b6b1f7cc3442f91957583369004eb",
+    "domain": "banking",
+    "difficulty": "easy"
+  },
+  {
+    "task_id": "task_583c24a9cc6d432c9159b6e4380fe428",
+    "domain": "banking",
+    "difficulty": "easy"
+  },
+  {
+    "task_id": "task_800767f48d7e42cfaa74ca8057364512",
+    "domain": "banking",
+    "difficulty": "easy"
+  },
+  {
+    "task_id": "task_ae92292a5cfb4594ae8746ee31ce498b",
+    "domain": "banking",
+    "difficulty": "medium"
+  },
+  {
+    "task_id": "task_4b3c2dfc4d164a25831e8787397766c3",
+    "domain": "consulting",
+    "difficulty": "easy"
+  },
+  {
+    "task_id": "task_c50984179bb64d288e409c0f1370fdda",
+    "domain": "consulting",
+    "difficulty": "easy"
+  },
+  {
+    "task_id": "task_1d41b5f121724ec6bd9e22efba29f969",
+    "domain": "consulting",
+    "difficulty": "hard"
+  },
+  {
+    "task_id": "task_c0476484bd64414f87f46f1868cde2f1",
+    "domain": "consulting",
+    "difficulty": "easy"
+  },
+  {
+    "task_id": "task_f525769ab6a748e6855e03c95e4b4bd7",
+    "domain": "consulting",
+    "difficulty": "medium"
+  },
+  {
+    "task_id": "task_fe573b8ce38d4a9f9642fbe7b8f11358",
+    "domain": "law",
+    "difficulty": "hard"
+  },
+  {
+    "task_id": "task_3bb0664007a140a981193fb43ba1be7b",
+    "domain": "law",
+    "difficulty": "easy"
+  },
+  {
+    "task_id": "task_2b5df2b5a0eb423e998099a9fcd8e262",
+    "domain": "law",
+    "difficulty": "easy"
+  },
+  {
+    "task_id": "task_ccd303088b344ea8b81c13dc04309142",
+    "domain": "law",
+    "difficulty": "easy"
+  },
+  {
+    "task_id": "task_7b0900ec821f4aafa9d1d1f02fa5c330",
+    "domain": "law",
+    "difficulty": "medium"
+  }
+]
