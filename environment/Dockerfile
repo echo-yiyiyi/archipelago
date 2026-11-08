@@ -78,11 +78,6 @@ ENV PATH=/app/.venv/bin:$PATH \
     UV_SYSTEM_PYTHON=1 \
     PORT=8080
 
-# Keep the benchmark-only CA in a final thin layer so rotating local test
-# certificates does not invalidate the expensive dependency-install layers.
-COPY examples/hugging_face_task/proxy/certs/archipelago-test-ca.crt /usr/local/share/ca-certificates/archipelago-test-ca.crt
-RUN update-ca-certificates
-
 # Expose FastAPI port
 EXPOSE 8080
 
