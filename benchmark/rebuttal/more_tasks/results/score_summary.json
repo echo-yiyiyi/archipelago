@@ -1,0 +1,540 @@
+{
+  "completed_at": "2026-11-09T11:46:04Z",
+  "selected_count": 15,
+  "quota_counts": {
+    "score_1": {
+      "law": 3,
+      "banking": 3,
+      "consulting": 3
+    },
+    "score_075_1": {
+      "law": 1,
+      "banking": 1,
+      "consulting": 1
+    },
+    "score_05_075": {
+      "law": 1,
+      "banking": 1,
+      "consulting": 1
+    }
+  },
+  "reference_model": "Gemini 3.5 Flash",
+  "judge_model": "openai/responses/gpt-5.6-sol",
+  "selection_rule": "Both model scores must match the historical Gemini score bucket. A perfect score is a separate bucket.",
+  "resampling_policy": "One additional round for rejected non-perfect banking candidates; preserve passing model results; stop when quotas are filled.",
+  "initial_pass_count": 13,
+  "resample_pass_count": 2,
+  "provenance_note": "attempts.json preserves all attempts. Run and log paths refer to local artifacts not included in this result export. API endpoints and absolute workspace prefixes are omitted. Runtime fixes and retry implementation remain local and are not part of this result-only commit.",
+  "tasks": [
+    {
+      "task_id": "task_45c2f4ca9ee742c5ac9ca281d4bc5195",
+      "domain": "law",
+      "turns": 31,
+      "gemini_score": 1.0,
+      "score_bucket": "score_1",
+      "resample_round": 0,
+      "models": {
+        "gpt_5_6_sol": {
+          "model": "gpt_5_6_sol",
+          "score": 1.0,
+          "bucket": "score_1",
+          "matches_gemini_bucket": true,
+          "run_id": "more_gpt_5_6_sol_20261108_174527_77bfda31d7",
+          "run_dir": "benchmark/rebuttal/more_tasks/output/runs/more_gpt_5_6_sol_20261108_174527_77bfda31d7",
+          "driver_log": "benchmark/rebuttal/more_tasks/output/driver_logs/more_gpt_5_6_sol_20261108_174527_77bfda31d7.log",
+          "returncode": 0,
+          "elapsed_seconds": 329.5,
+          "error": null
+        },
+        "opus": {
+          "model": "opus",
+          "score": 1.0,
+          "bucket": "score_1",
+          "matches_gemini_bucket": true,
+          "run_id": "more_opus_20261108_175056_cfa8190489",
+          "run_dir": "benchmark/rebuttal/more_tasks/output/runs/more_opus_20261108_175056_cfa8190489",
+          "driver_log": "benchmark/rebuttal/more_tasks/output/driver_logs/more_opus_20261108_175056_cfa8190489.log",
+          "returncode": 0,
+          "elapsed_seconds": 250.9,
+          "error": null
+        }
+      }
+    },
+    {
+      "task_id": "task_735ca67b56da4dd78f9836536ae1845a",
+      "domain": "consulting",
+      "turns": 36,
+      "gemini_score": 1.0,
+      "score_bucket": "score_1",
+      "resample_round": 0,
+      "models": {
+        "gpt_5_6_sol": {
+          "model": "gpt_5_6_sol",
+          "score": 1.0,
+          "bucket": "score_1",
+          "matches_gemini_bucket": true,
+          "run_id": "more_gpt_5_6_sol_20261108_182843_a61d5f66e5",
+          "run_dir": "benchmark/rebuttal/more_tasks/output/runs/more_gpt_5_6_sol_20261108_182843_a61d5f66e5",
+          "driver_log": "benchmark/rebuttal/more_tasks/output/driver_logs/more_gpt_5_6_sol_20261108_182843_a61d5f66e5.log",
+          "returncode": 0,
+          "elapsed_seconds": 154.6,
+          "error": null
+        },
+        "opus": {
+          "model": "opus",
+          "score": 1.0,
+          "bucket": "score_1",
+          "matches_gemini_bucket": true,
+          "run_id": "more_opus_20261108_183118_a4aaeccdbd",
+          "run_dir": "benchmark/rebuttal/more_tasks/output/runs/more_opus_20261108_183118_a4aaeccdbd",
+          "driver_log": "benchmark/rebuttal/more_tasks/output/driver_logs/more_opus_20261108_183118_a4aaeccdbd.log",
+          "returncode": 0,
+          "elapsed_seconds": 220.4,
+          "error": null
+        }
+      }
+    },
+    {
+      "task_id": "task_eac321b0b2e1495b85889beef2ff89a7",
+      "domain": "consulting",
+      "turns": 36,
+      "gemini_score": 1.0,
+      "score_bucket": "score_1",
+      "resample_round": 0,
+      "models": {
+        "gpt_5_6_sol": {
+          "model": "gpt_5_6_sol",
+          "score": 1.0,
+          "bucket": "score_1",
+          "matches_gemini_bucket": true,
+          "run_id": "more_gpt_5_6_sol_20261108_183458_1f2d4516a0",
+          "run_dir": "benchmark/rebuttal/more_tasks/output/runs/more_gpt_5_6_sol_20261108_183458_1f2d4516a0",
+          "driver_log": "benchmark/rebuttal/more_tasks/output/driver_logs/more_gpt_5_6_sol_20261108_183458_1f2d4516a0.log",
+          "returncode": 0,
+          "elapsed_seconds": 795.0,
+          "error": null
+        },
+        "opus": {
+          "model": "opus",
+          "score": 1.0,
+          "bucket": "score_1",
+          "matches_gemini_bucket": true,
+          "run_id": "more_opus_20261108_184813_d4f0a1a060",
+          "run_dir": "benchmark/rebuttal/more_tasks/output/runs/more_opus_20261108_184813_d4f0a1a060",
+          "driver_log": "benchmark/rebuttal/more_tasks/output/driver_logs/more_opus_20261108_184813_d4f0a1a060.log",
+          "returncode": 0,
+          "elapsed_seconds": 230.4,
+          "error": null
+        }
+      }
+    },
+    {
+      "task_id": "task_f1998108c25b4e448ec6cdce9f40321e",
+      "domain": "law",
+      "turns": 37,
+      "gemini_score": 1.0,
+      "score_bucket": "score_1",
+      "resample_round": 0,
+      "models": {
+        "gpt_5_6_sol": {
+          "model": "gpt_5_6_sol",
+          "score": 1.0,
+          "bucket": "score_1",
+          "matches_gemini_bucket": true,
+          "run_id": "more_gpt_5_6_sol_20261108_185733_9a295b563d",
+          "run_dir": "benchmark/rebuttal/more_tasks/output/runs/more_gpt_5_6_sol_20261108_185733_9a295b563d",
+          "driver_log": "benchmark/rebuttal/more_tasks/output/driver_logs/more_gpt_5_6_sol_20261108_185733_9a295b563d.log",
+          "returncode": 0,
+          "elapsed_seconds": 294.6,
+          "error": null
+        },
+        "opus": {
+          "model": "opus",
+          "score": 1.0,
+          "bucket": "score_1",
+          "matches_gemini_bucket": true,
+          "run_id": "more_opus_20261108_190228_81bc29e56c",
+          "run_dir": "benchmark/rebuttal/more_tasks/output/runs/more_opus_20261108_190228_81bc29e56c",
+          "driver_log": "benchmark/rebuttal/more_tasks/output/driver_logs/more_opus_20261108_190228_81bc29e56c.log",
+          "returncode": 0,
+          "elapsed_seconds": 384.9,
+          "error": null
+        }
+      }
+    },
+    {
+      "task_id": "task_45f1d761bb464e18993968273a9a9040",
+      "domain": "consulting",
+      "turns": 38,
+      "gemini_score": 1.0,
+      "score_bucket": "score_1",
+      "resample_round": 0,
+      "models": {
+        "gpt_5_6_sol": {
+          "model": "gpt_5_6_sol",
+          "score": 1.0,
+          "bucket": "score_1",
+          "matches_gemini_bucket": true,
+          "run_id": "more_gpt_5_6_sol_20261108_190852_7428141757",
+          "run_dir": "benchmark/rebuttal/more_tasks/output/runs/more_gpt_5_6_sol_20261108_190852_7428141757",
+          "driver_log": "benchmark/rebuttal/more_tasks/output/driver_logs/more_gpt_5_6_sol_20261108_190852_7428141757.log",
+          "returncode": 0,
+          "elapsed_seconds": 221.4,
+          "error": null
+        },
+        "opus": {
+          "model": "opus",
+          "score": 1.0,
+          "bucket": "score_1",
+          "matches_gemini_bucket": true,
+          "run_id": "more_opus_20261108_191234_d2c89170a3",
+          "run_dir": "benchmark/rebuttal/more_tasks/output/runs/more_opus_20261108_191234_d2c89170a3",
+          "driver_log": "benchmark/rebuttal/more_tasks/output/driver_logs/more_opus_20261108_191234_d2c89170a3.log",
+          "returncode": 0,
+          "elapsed_seconds": 310.2,
+          "error": null
+        }
+      }
+    },
+    {
+      "task_id": "task_eb001a3a7d59493f8541aba607e3f255",
+      "domain": "banking",
+      "turns": 40,
+      "gemini_score": 1.0,
+      "score_bucket": "score_1",
+      "resample_round": 0,
+      "models": {
+        "gpt_5_6_sol": {
+          "model": "gpt_5_6_sol",
+          "score": 1.0,
+          "bucket": "score_1",
+          "matches_gemini_bucket": true,
+          "run_id": "more_gpt_5_6_sol_20261108_192915_915a187ddd",
+          "run_dir": "benchmark/rebuttal/more_tasks/output/runs/more_gpt_5_6_sol_20261108_192915_915a187ddd",
+          "driver_log": "benchmark/rebuttal/more_tasks/output/driver_logs/more_gpt_5_6_sol_20261108_192915_915a187ddd.log",
+          "returncode": 0,
+          "elapsed_seconds": 282.1,
+          "error": null
+        },
+        "opus": {
+          "model": "opus",
+          "score": 1.0,
+          "bucket": "score_1",
+          "matches_gemini_bucket": true,
+          "run_id": "more_opus_20261108_193721_8985a6ec7a",
+          "run_dir": "benchmark/rebuttal/more_tasks/output/runs/more_opus_20261108_193721_8985a6ec7a",
+          "driver_log": "benchmark/rebuttal/more_tasks/output/driver_logs/more_opus_20261108_193721_8985a6ec7a.log",
+          "returncode": 0,
+          "elapsed_seconds": 231.8,
+          "error": null
+        }
+      }
+    },
+    {
+      "task_id": "task_d1aff11dbf4e4d16a79401ce07b1f15c",
+      "domain": "law",
+      "turns": 41,
+      "gemini_score": 1.0,
+      "score_bucket": "score_1",
+      "resample_round": 0,
+      "models": {
+        "gpt_5_6_sol": {
+          "model": "gpt_5_6_sol",
+          "score": 1.0,
+          "bucket": "score_1",
+          "matches_gemini_bucket": true,
+          "run_id": "more_gpt_5_6_sol_20261108_194740_dcc3931ed4",
+          "run_dir": "benchmark/rebuttal/more_tasks/output/runs/more_gpt_5_6_sol_20261108_194740_dcc3931ed4",
+          "driver_log": "benchmark/rebuttal/more_tasks/output/driver_logs/more_gpt_5_6_sol_20261108_194740_dcc3931ed4.log",
+          "returncode": 0,
+          "elapsed_seconds": 104.7,
+          "error": null
+        },
+        "opus": {
+          "model": "opus",
+          "score": 1.0,
+          "bucket": "score_1",
+          "matches_gemini_bucket": true,
+          "run_id": "more_opus_20261108_194925_9fca059c60",
+          "run_dir": "benchmark/rebuttal/more_tasks/output/runs/more_opus_20261108_194925_9fca059c60",
+          "driver_log": "benchmark/rebuttal/more_tasks/output/driver_logs/more_opus_20261108_194925_9fca059c60.log",
+          "returncode": 0,
+          "elapsed_seconds": 147.5,
+          "error": null
+        }
+      }
+    },
+    {
+      "task_id": "task_da02bbee7c574ac4b73a630d0b53c221",
+      "domain": "banking",
+      "turns": 42,
+      "gemini_score": 1.0,
+      "score_bucket": "score_1",
+      "resample_round": 0,
+      "models": {
+        "gpt_5_6_sol": {
+          "model": "gpt_5_6_sol",
+          "score": 1.0,
+          "bucket": "score_1",
+          "matches_gemini_bucket": true,
+          "run_id": "more_gpt_5_6_sol_20261108_195153_5d466612c6",
+          "run_dir": "benchmark/rebuttal/more_tasks/output/runs/more_gpt_5_6_sol_20261108_195153_5d466612c6",
+          "driver_log": "benchmark/rebuttal/more_tasks/output/driver_logs/more_gpt_5_6_sol_20261108_195153_5d466612c6.log",
+          "returncode": 0,
+          "elapsed_seconds": 120.8,
+          "error": null
+        },
+        "opus": {
+          "model": "opus",
+          "score": 1.0,
+          "bucket": "score_1",
+          "matches_gemini_bucket": true,
+          "run_id": "more_opus_20261108_195354_954ab433cc",
+          "run_dir": "benchmark/rebuttal/more_tasks/output/runs/more_opus_20261108_195354_954ab433cc",
+          "driver_log": "benchmark/rebuttal/more_tasks/output/driver_logs/more_opus_20261108_195354_954ab433cc.log",
+          "returncode": 0,
+          "elapsed_seconds": 199.7,
+          "error": null
+        }
+      }
+    },
+    {
+      "task_id": "task_ea4d33144e2642fbbb6880c8bbd7f290",
+      "domain": "banking",
+      "turns": 44,
+      "gemini_score": 1.0,
+      "score_bucket": "score_1",
+      "resample_round": 0,
+      "models": {
+        "gpt_5_6_sol": {
+          "model": "gpt_5_6_sol",
+          "score": 1.0,
+          "bucket": "score_1",
+          "matches_gemini_bucket": true,
+          "run_id": "more_gpt_5_6_sol_20261108_195713_aaf4f82768",
+          "run_dir": "benchmark/rebuttal/more_tasks/output/runs/more_gpt_5_6_sol_20261108_195713_aaf4f82768",
+          "driver_log": "benchmark/rebuttal/more_tasks/output/driver_logs/more_gpt_5_6_sol_20261108_195713_aaf4f82768.log",
+          "returncode": 0,
+          "elapsed_seconds": 876.6,
+          "error": null
+        },
+        "opus": {
+          "model": "opus",
+          "score": 1.0,
+          "bucket": "score_1",
+          "matches_gemini_bucket": true,
+          "run_id": "more_opus_20261108_201150_8b7bb80378",
+          "run_dir": "benchmark/rebuttal/more_tasks/output/runs/more_opus_20261108_201150_8b7bb80378",
+          "driver_log": "benchmark/rebuttal/more_tasks/output/driver_logs/more_opus_20261108_201150_8b7bb80378.log",
+          "returncode": 0,
+          "elapsed_seconds": 586.8,
+          "error": null
+        }
+      }
+    },
+    {
+      "task_id": "task_0b6e147c84754379a4e8f3a9057336f8",
+      "domain": "law",
+      "turns": 38,
+      "gemini_score": 0.8333333333333334,
+      "score_bucket": "score_075_1",
+      "resample_round": 0,
+      "models": {
+        "gpt_5_6_sol": {
+          "model": "gpt_5_6_sol",
+          "score": 0.8333333333333334,
+          "bucket": "score_075_1",
+          "matches_gemini_bucket": true,
+          "run_id": "more_gpt_5_6_sol_20261108_204315_b9833b0f08",
+          "run_dir": "benchmark/rebuttal/more_tasks/output/runs/more_gpt_5_6_sol_20261108_204315_b9833b0f08",
+          "driver_log": "benchmark/rebuttal/more_tasks/output/driver_logs/more_gpt_5_6_sol_20261108_204315_b9833b0f08.log",
+          "returncode": 0,
+          "elapsed_seconds": 96.9,
+          "error": null
+        },
+        "opus": {
+          "model": "opus",
+          "score": 0.8333333333333334,
+          "bucket": "score_075_1",
+          "matches_gemini_bucket": true,
+          "run_id": "more_opus_20261108_204451_45570c314f",
+          "run_dir": "benchmark/rebuttal/more_tasks/output/runs/more_opus_20261108_204451_45570c314f",
+          "driver_log": "benchmark/rebuttal/more_tasks/output/driver_logs/more_opus_20261108_204451_45570c314f.log",
+          "returncode": 0,
+          "elapsed_seconds": 210.9,
+          "error": null
+        }
+      }
+    },
+    {
+      "task_id": "task_699ea5ca3b0243a5852ad33e33043f12",
+      "domain": "consulting",
+      "turns": 79,
+      "gemini_score": 0.8333333333333334,
+      "score_bucket": "score_075_1",
+      "resample_round": 0,
+      "models": {
+        "gpt_5_6_sol": {
+          "model": "gpt_5_6_sol",
+          "score": 0.8333333333333334,
+          "bucket": "score_075_1",
+          "matches_gemini_bucket": true,
+          "run_id": "more_gpt_5_6_sol_20261108_211229_2c6974a8b4",
+          "run_dir": "benchmark/rebuttal/more_tasks/output/runs/more_gpt_5_6_sol_20261108_211229_2c6974a8b4",
+          "driver_log": "benchmark/rebuttal/more_tasks/output/driver_logs/more_gpt_5_6_sol_20261108_211229_2c6974a8b4.log",
+          "returncode": 0,
+          "elapsed_seconds": 731.8,
+          "error": null
+        },
+        "opus": {
+          "model": "opus",
+          "score": 0.8333333333333334,
+          "bucket": "score_075_1",
+          "matches_gemini_bucket": true,
+          "run_id": "more_opus_20261108_212440_2a05a91807",
+          "run_dir": "benchmark/rebuttal/more_tasks/output/runs/more_opus_20261108_212440_2a05a91807",
+          "driver_log": "benchmark/rebuttal/more_tasks/output/driver_logs/more_opus_20261108_212440_2a05a91807.log",
+          "returncode": 0,
+          "elapsed_seconds": 320.6,
+          "error": null
+        }
+      }
+    },
+    {
+      "task_id": "task_2f85463493f14785beda2ef2d316309a",
+      "domain": "law",
+      "turns": 35,
+      "gemini_score": 0.6666666666666666,
+      "score_bucket": "score_05_075",
+      "resample_round": 0,
+      "models": {
+        "gpt_5_6_sol": {
+          "model": "gpt_5_6_sol",
+          "score": 0.6666666666666666,
+          "bucket": "score_05_075",
+          "matches_gemini_bucket": true,
+          "run_id": "more_gpt_5_6_sol_20261109_104744_00e6f4dbb0",
+          "run_dir": "benchmark/rebuttal/more_tasks/output/runs/more_gpt_5_6_sol_20261109_104744_00e6f4dbb0",
+          "driver_log": "benchmark/rebuttal/more_tasks/output/driver_logs/more_gpt_5_6_sol_20261109_104744_00e6f4dbb0.log",
+          "returncode": 0,
+          "elapsed_seconds": 319.9,
+          "error": null
+        },
+        "opus": {
+          "model": "opus",
+          "score": 0.6666666666666666,
+          "bucket": "score_05_075",
+          "matches_gemini_bucket": true,
+          "run_id": "more_opus_20261109_105304_556487f564",
+          "run_dir": "benchmark/rebuttal/more_tasks/output/runs/more_opus_20261109_105304_556487f564",
+          "driver_log": "benchmark/rebuttal/more_tasks/output/driver_logs/more_opus_20261109_105304_556487f564.log",
+          "returncode": 0,
+          "elapsed_seconds": 196.9,
+          "error": null
+        }
+      }
+    },
+    {
+      "task_id": "task_1e19b26b91804fe386ef911e347df0f8",
+      "domain": "consulting",
+      "turns": 36,
+      "gemini_score": 0.5,
+      "score_bucket": "score_05_075",
+      "resample_round": 0,
+      "models": {
+        "gpt_5_6_sol": {
+          "model": "gpt_5_6_sol",
+          "score": 0.5,
+          "bucket": "score_05_075",
+          "matches_gemini_bucket": true,
+          "run_id": "more_gpt_5_6_sol_20261109_105620_006085608c",
+          "run_dir": "benchmark/rebuttal/more_tasks/output/runs/more_gpt_5_6_sol_20261109_105620_006085608c",
+          "driver_log": "benchmark/rebuttal/more_tasks/output/driver_logs/more_gpt_5_6_sol_20261109_105620_006085608c.log",
+          "returncode": 0,
+          "elapsed_seconds": 160.6,
+          "error": null
+        },
+        "opus": {
+          "model": "opus",
+          "score": 0.5,
+          "bucket": "score_05_075",
+          "matches_gemini_bucket": true,
+          "run_id": "more_opus_20261109_105901_e8bc7ce581",
+          "run_dir": "benchmark/rebuttal/more_tasks/output/runs/more_opus_20261109_105901_e8bc7ce581",
+          "driver_log": "benchmark/rebuttal/more_tasks/output/driver_logs/more_opus_20261109_105901_e8bc7ce581.log",
+          "returncode": 0,
+          "elapsed_seconds": 350.8,
+          "error": null
+        }
+      }
+    },
+    {
+      "task_id": "task_0896a8bf7ee3473d81baa594c05814b3",
+      "domain": "banking",
+      "turns": 82,
+      "gemini_score": 0.8,
+      "score_bucket": "score_075_1",
+      "resample_round": 1,
+      "models": {
+        "gpt_5_6_sol": {
+          "model": "gpt_5_6_sol",
+          "score": 0.8,
+          "bucket": "score_075_1",
+          "matches_gemini_bucket": true,
+          "run_id": "more_gpt_5_6_sol_20261108_213001_dc17c3a412",
+          "run_dir": "benchmark/rebuttal/more_tasks/output/runs/more_gpt_5_6_sol_20261108_213001_dc17c3a412",
+          "driver_log": "benchmark/rebuttal/more_tasks/output/driver_logs/more_gpt_5_6_sol_20261108_213001_dc17c3a412.log",
+          "returncode": 0,
+          "elapsed_seconds": 2237.0,
+          "error": null
+        },
+        "opus": {
+          "model": "opus",
+          "score": 0.8,
+          "bucket": "score_075_1",
+          "matches_gemini_bucket": true,
+          "run_id": "more_opus_20261109_141748_76b52d6ded",
+          "run_dir": "benchmark/rebuttal/more_tasks/output/runs/more_opus_20261109_141748_76b52d6ded",
+          "driver_log": "benchmark/rebuttal/more_tasks/output/driver_logs/more_opus_20261109_141748_76b52d6ded.log",
+          "returncode": 0,
+          "elapsed_seconds": 288.5,
+          "error": null
+        }
+      }
+    },
+    {
+      "task_id": "task_ffb8c59f52344a9494b3f14f06af692d",
+      "domain": "banking",
+      "turns": 49,
+      "gemini_score": 0.5,
+      "score_bucket": "score_05_075",
+      "resample_round": 1,
+      "models": {
+        "gpt_5_6_sol": {
+          "model": "gpt_5_6_sol",
+          "score": 0.5,
+          "bucket": "score_05_075",
+          "matches_gemini_bucket": true,
+          "run_id": "more_gpt_5_6_sol_20261109_143908_0e6df97260",
+          "run_dir": "benchmark/rebuttal/more_tasks/output/runs/more_gpt_5_6_sol_20261109_143908_0e6df97260",
+          "driver_log": "benchmark/rebuttal/more_tasks/output/driver_logs/more_gpt_5_6_sol_20261109_143908_0e6df97260.log",
+          "returncode": 0,
+          "elapsed_seconds": 219.9,
+          "error": null
+        },
+        "opus": {
+          "model": "opus",
+          "score": 0.5,
+          "bucket": "score_05_075",
+          "matches_gemini_bucket": true,
+          "run_id": "more_opus_20261109_144248_f1fe44a59a",
+          "run_dir": "benchmark/rebuttal/more_tasks/output/runs/more_opus_20261109_144248_f1fe44a59a",
+          "driver_log": "benchmark/rebuttal/more_tasks/output/driver_logs/more_opus_20261109_144248_f1fe44a59a.log",
+          "returncode": 0,
+          "elapsed_seconds": 196.1,
+          "error": null
+        }
+      }
+    }
+  ]
+}
