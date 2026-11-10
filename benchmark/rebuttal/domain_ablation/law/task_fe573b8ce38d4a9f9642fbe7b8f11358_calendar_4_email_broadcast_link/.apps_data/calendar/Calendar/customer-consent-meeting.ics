@@ -1,0 +1,15 @@
+BEGIN:VCALENDAR
+PRODID:-//APEX//Task Reference Fixture//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:evt-614ad32b
+DTSTART:20260901T150000Z
+DTEND:20260901T160000Z
+SUMMARY:Review SLL Customer Marketing Outreach Legal Memo
+DESCRIPTION:Collaborative review of the draft memo addressing the propriety and potential risks of SLL’s proposed customer marketing texts\, including consent\, use of customer-provided fun facts\, message scheduling\, and recommended safeguards. The session will focus on ensuring the analysis is complete and ready to send to SLL without presupposing legal conclusions.
+LOCATION:SLL Legal & Compliance Virtual Meeting
+ATTENDEE:mailto:legal-counsel@sll.com
+ATTENDEE:mailto:marketing-compliance@sll.com
+END:VEVENT
+END:VCALENDAR

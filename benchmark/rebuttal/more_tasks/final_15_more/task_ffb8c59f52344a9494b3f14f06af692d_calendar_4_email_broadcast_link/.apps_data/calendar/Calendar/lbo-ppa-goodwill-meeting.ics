@@ -1,0 +1,15 @@
+BEGIN:VCALENDAR
+PRODID:-//APEX//Task Reference Fixture//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:evt-3d001230
+DTSTART:20260901T150000Z
+DTEND:20260901T160000Z
+SUMMARY:Review LBO Purchase Price Allocation and Pro Forma Goodwill
+DESCRIPTION:Collaborative review of the Purchase Price Allocation based on the LBO analysis. Validate FY25E balance sheet figures from the Balance Sheet tab as of Q425\; review the allocable purchase premium\, 10% intangible asset write-up with a 15-year useful life\, 10% PP&E write-up with an 8-year useful life\, and 25% tax rate\; confirm pro forma goodwill and ensure all monetary values are rounded to the nearest million. Finalize the results for delivery as an in-chat message without introducing unsupported analytical findings.
+LOCATION:Virtual — LBO/PPA Model Review
+ATTENDEE:mailto:deal-modeling@lbo-ppa.finance
+ATTENDEE:mailto:purchase-accounting@lbo-ppa.finance
+END:VEVENT
+END:VCALENDAR

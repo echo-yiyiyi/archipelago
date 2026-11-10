@@ -33,6 +33,7 @@ from runner.utils.decorators import (
     with_retry,
 )
 from runner.utils.image_fetch import apply_anthropic_image_policy
+from runner.utils.gemini_tool_results import literal_schema_tool_results
 from runner.utils.metrics import distribution
 from runner.utils.settings import get_settings
 
@@ -700,6 +701,7 @@ def _is_non_retriable_bad_request(e: Exception) -> bool:
         "exceeds 5 mb",
         "5242880",
         "file format is invalid or unsupported",
+        "does not match to a display_name",
         "image dimensions exceed max allowed size",
         "at least one non-system message",
     ]
@@ -811,6 +813,8 @@ async def generate_response(
     # image parts with a text placeholder so text-only models can proceed.
     if _is_text_only_model(model):
         messages = _strip_images_for_text_only(messages)
+    if "gemini" in model.lower():
+        messages = literal_schema_tool_results(messages)
     if model.startswith("anthropic/"):
         messages = apply_anthropic_image_policy(messages, tools, model=model)
         # A trailing empty assistant "prefill" turn (authored content == "")

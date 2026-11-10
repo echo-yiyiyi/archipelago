@@ -1,0 +1,6 @@
+!*/task_*/**
+**/__pycache__/
+**/.generation_input.json
+**/.generate-*/
+**/.previous-generation-*/
+.generation.lock

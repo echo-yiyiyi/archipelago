@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Maya Patel",
+        "email": "mpatel@cohenandsteers.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "Cohen & Steers: Hi\u2014could you calculate CNS\u2019s implied 2030E levered FCF yield under both the perpetuity growth and exit multiple DCF methods using the assumptions in the task, and send me the results to one decimal place?",
+      "topic_id": "task-context",
+      "message_id": "3F1D4550/task-context/task-context"
+    }
+  ]
+}

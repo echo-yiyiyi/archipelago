@@ -1,0 +1,15 @@
+BEGIN:VCALENDAR
+PRODID:-//APEX//Task Reference Fixture//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:evt-b92a1297
+DTSTART:20260901T150000Z
+DTEND:20260901T160000Z
+SUMMARY:Review Helios Deferred Capex and Cash Position Analysis
+DESCRIPTION:Review the calculation of capex not spent because only 80% of 2026–2027 requirements are deployed\, using the 2026–2030 capex requirements from Helios’ five-year business case scenario summary. Validate that the deferred 20% remains as cash and earns 3% annual interest through 2030\, confirm the effect on total cash position\, and ensure the conclusion is formatted as a message with values rounded to two decimal places. This meeting is for methodology and output review\; no analytical findings are assumed.
+LOCATION:Helios Finance — Microsoft Teams
+ATTENDEE:mailto:capex.analyst@helios.com
+ATTENDEE:mailto:treasury.reviewer@helios.com
+END:VEVENT
+END:VCALENDAR

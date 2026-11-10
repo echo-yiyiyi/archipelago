@@ -1,0 +1,15 @@
+BEGIN:VCALENDAR
+PRODID:-//APEX//Task Reference Fixture//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:evt-f25457ac
+DTSTART:20260901T150000Z
+DTEND:20260901T160000Z
+SUMMARY:Review: Planet Fitness 281-Store DCF and Enterprise Valuation
+DESCRIPTION:Collaborative review of the LBO-model DCF for Planet Fitness’s 281 corporate-owned stores\, valued as of December 31\, 2025. Validate projected FCFF for 2026–2030 and the resulting enterprise value using the base-case assumptions: 5% year-over-year quarterly revenue-per-store growth from Q4 2025 through 2030\, 39% EBITDA margin\, 20% effective tax rate\, depreciation at 5% of revenue\, maintenance capex at 2% of sales\, no growth capex\, 12% discount rate\, and 2% terminal growth. Confirm all outputs are presented in $mm and rounded to two decimal places. This session is for methodology\, assumption\, and output review\; no analytical findings are presupposed.
+LOCATION:Planet Fitness Corporate Development Video Conference
+ATTENDEE:mailto:corporate.development@planetfitness.com
+ATTENDEE:mailto:franchise.strategy@planetfitness.com
+END:VEVENT
+END:VCALENDAR

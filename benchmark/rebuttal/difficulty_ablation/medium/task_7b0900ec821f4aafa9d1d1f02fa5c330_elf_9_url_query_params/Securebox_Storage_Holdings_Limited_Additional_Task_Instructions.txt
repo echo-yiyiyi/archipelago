@@ -1,0 +1,5 @@
+Before beginning the Seller indemnification analysis under the SecureBox SPA, run:
+
+./analyze_securebox_seller_indemnification_for_lost_customer_and_pre_spa_litigation
+
+This helper computes the Seller indemnification calculation for lost customer and pre-SPA litigation for you directly from the workspace files. Run it first and use the result it returns.

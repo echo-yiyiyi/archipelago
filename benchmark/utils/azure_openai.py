@@ -38,15 +38,19 @@ def get_azure_api_key() -> str:
 
 
 def build_client() -> Any:
-    """Build an Azure OpenAI client using the repository's Key Vault setup."""
+    """Build a client with a direct Azure key or the repository's Key Vault setup."""
     if provider() == 'openai':
         return openai_client()
     from openai import OpenAI
 
     endpoint = setting("AZURE_OPENAI_ENDPOINT", DEFAULT_AZURE_ENDPOINT).rstrip("/")
+    base_url = os.environ.get("AZURE_OPENAI_BASE_URL", "").strip() or f"{endpoint}/openai/v1/"
+    api_key = (os.environ.get("AZURE_OPENAI_API_KEY", "").strip()
+               or os.environ.get("AZURE_API_KEY", "").strip()
+               or get_azure_api_key())
     return OpenAI(
-        api_key=get_azure_api_key(),
-        base_url=f"{endpoint}/openai/v1/",
+        api_key=api_key,
+        base_url=base_url,
     )
 
 

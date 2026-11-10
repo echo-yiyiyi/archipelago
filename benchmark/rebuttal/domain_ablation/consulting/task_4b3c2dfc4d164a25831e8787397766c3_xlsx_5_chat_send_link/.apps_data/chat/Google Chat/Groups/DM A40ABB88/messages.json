@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Maya Chen",
+        "email": "maya.chen@heliogridanalytics.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "HelioGrid Analytics: Hi\u2014could you analyze the asset-level scoring data for our portfolio review and send me the highest-average region, the leading country within it, and both average Total Scores rounded to one decimal?",
+      "topic_id": "task-context",
+      "message_id": "A40ABB88/task-context/task-context"
+    }
+  ]
+}

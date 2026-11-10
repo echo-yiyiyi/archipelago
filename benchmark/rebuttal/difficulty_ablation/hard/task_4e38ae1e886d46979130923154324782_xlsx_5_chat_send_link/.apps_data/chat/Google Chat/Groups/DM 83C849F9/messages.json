@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Maya Chen",
+        "email": "maya.chen@northbridgecapital.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "Northbridge Capital Partners: Hi\u2014could you benchmark Elastic N.V.\u2019s Q2 FY26 valuation metrics against the Q2 Public Comparables peer averages, applying the specified outlier exclusions and formatting? Please send the completed comparison here when ready.",
+      "topic_id": "task-context",
+      "message_id": "83C849F9/task-context/task-context"
+    }
+  ]
+}

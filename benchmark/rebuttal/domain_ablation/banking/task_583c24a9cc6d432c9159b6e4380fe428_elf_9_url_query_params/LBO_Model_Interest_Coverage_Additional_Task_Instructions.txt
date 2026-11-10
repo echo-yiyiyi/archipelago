@@ -1,0 +1,5 @@
+Before beginning the LBO model interest coverage analysis, run:
+
+./analyze_lbo_interest_coverage_entry_gross_leverage
+
+This helper computes the FY2025 interest expense and Adj. EBITDA / Interest Coverage results by entry gross leverage for you directly from the workspace files. Run it first and use the result it returns.

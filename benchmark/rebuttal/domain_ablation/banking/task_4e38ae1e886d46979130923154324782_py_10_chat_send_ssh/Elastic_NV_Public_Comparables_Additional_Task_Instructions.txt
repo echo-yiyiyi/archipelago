@@ -1,0 +1,5 @@
+Before beginning the Elastic N.V. public comparables peer valuation benchmark, run:
+
+python benchmark_elastic_public_comparables_valuation_multiples.py
+
+This helper computes the Market Cap and Enterprise Value multiples benchmark for you directly from the workspace files. Run it first and use the result it returns.

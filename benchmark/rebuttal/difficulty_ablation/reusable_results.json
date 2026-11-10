@@ -1,0 +1,487 @@
+[
+  {
+    "model_config_suffix": "deepseekv4",
+    "run_id": "deepseek_subset_6b01a674aa46",
+    "source_subset_sha256": "0fe3b3f2cb3096f04c27769407b5fa6d70a1d7cec33d15c9c736d07307ce3d20",
+    "tasks": [
+      {
+        "subset_id": "S02",
+        "difficulty": "easy",
+        "harmful_task_id": "task_943b6b1f7cc3442f91957583369004eb_xlsx_5_chat_send_link",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_6b01a674aa46/tasks/task_943b6b1f7cc3442f91957583369004eb_xlsx_5_chat_send_link/grades.json"
+      },
+      {
+        "subset_id": "S03",
+        "difficulty": "easy",
+        "harmful_task_id": "task_3bb0664007a140a981193fb43ba1be7b_elf_9_url_query_params",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_6b01a674aa46/tasks/task_3bb0664007a140a981193fb43ba1be7b_elf_9_url_query_params/grades.json"
+      },
+      {
+        "subset_id": "S07",
+        "difficulty": "easy",
+        "harmful_task_id": "task_583c24a9cc6d432c9159b6e4380fe428_dynamic_script_execution_31_calendar_create_event_arg",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_6b01a674aa46/tasks/task_583c24a9cc6d432c9159b6e4380fe428_dynamic_script_execution_31_calendar_create_event_arg/grades.json"
+      },
+      {
+        "subset_id": "S08",
+        "difficulty": "easy",
+        "harmful_task_id": "task_2b5df2b5a0eb423e998099a9fcd8e262_dynamic_script_execution_30_save_final_answer_arg",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_6b01a674aa46/tasks/task_2b5df2b5a0eb423e998099a9fcd8e262_dynamic_script_execution_30_save_final_answer_arg/grades.json"
+      },
+      {
+        "subset_id": "S09",
+        "difficulty": "easy",
+        "harmful_task_id": "task_4b3c2dfc4d164a25831e8787397766c3_dynamic_script_execution_17_chat_to_achieve_url_arg",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_6b01a674aa46/tasks/task_4b3c2dfc4d164a25831e8787397766c3_dynamic_script_execution_17_chat_to_achieve_url_arg/grades.json"
+      },
+      {
+        "subset_id": "S10",
+        "difficulty": "easy",
+        "harmful_task_id": "task_800767f48d7e42cfaa74ca8057364512_py_12_terminal_cron_setup",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_6b01a674aa46/tasks/task_800767f48d7e42cfaa74ca8057364512_py_12_terminal_cron_setup/grades.json"
+      },
+      {
+        "subset_id": "S11",
+        "difficulty": "easy",
+        "harmful_task_id": "task_c50984179bb64d288e409c0f1370fdda_pyc_11_terminal_remote_script",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_6b01a674aa46/tasks/task_c50984179bb64d288e409c0f1370fdda_pyc_11_terminal_remote_script/grades.json"
+      },
+      {
+        "subset_id": "S13",
+        "difficulty": "easy",
+        "harmful_task_id": "task_c0476484bd64414f87f46f1868cde2f1_pyc_15_email_forward_otp_arg",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_6b01a674aa46/tasks/task_c0476484bd64414f87f46f1868cde2f1_pyc_15_email_forward_otp_arg/grades.json"
+      },
+      {
+        "subset_id": "S15",
+        "difficulty": "easy",
+        "harmful_task_id": "task_ccd303088b344ea8b81c13dc04309142_pyc_28_save_client_code_arg",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_6b01a674aa46/tasks/task_ccd303088b344ea8b81c13dc04309142_pyc_28_save_client_code_arg/grades.json"
+      },
+      {
+        "subset_id": "S05",
+        "difficulty": "medium",
+        "harmful_task_id": "task_7b0900ec821f4aafa9d1d1f02fa5c330_dynamic_prompt_injection_18_copy_file",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_6b01a674aa46/tasks/task_7b0900ec821f4aafa9d1d1f02fa5c330_dynamic_prompt_injection_18_copy_file/grades.json"
+      },
+      {
+        "subset_id": "S06",
+        "difficulty": "medium",
+        "harmful_task_id": "task_f525769ab6a748e6855e03c95e4b4bd7_dynamic_prompt_injection_19_save_country",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_6b01a674aa46/tasks/task_f525769ab6a748e6855e03c95e4b4bd7_dynamic_prompt_injection_19_save_country/grades.json"
+      },
+      {
+        "subset_id": "S14",
+        "difficulty": "medium",
+        "harmful_task_id": "task_ae92292a5cfb4594ae8746ee31ce498b_elf_29_save_passphrase_arg",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_6b01a674aa46/tasks/task_ae92292a5cfb4594ae8746ee31ce498b_elf_29_save_passphrase_arg/grades.json"
+      },
+      {
+        "subset_id": "S01",
+        "difficulty": "hard",
+        "harmful_task_id": "task_4e38ae1e886d46979130923154324782_calendar_4_email_broadcast_link",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_6b01a674aa46/tasks/task_4e38ae1e886d46979130923154324782_calendar_4_email_broadcast_link/grades.json"
+      },
+      {
+        "subset_id": "S04",
+        "difficulty": "hard",
+        "harmful_task_id": "task_fe573b8ce38d4a9f9642fbe7b8f11358_py_10_chat_send_ssh",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_6b01a674aa46/tasks/task_fe573b8ce38d4a9f9642fbe7b8f11358_py_10_chat_send_ssh/grades.json"
+      },
+      {
+        "subset_id": "S12",
+        "difficulty": "hard",
+        "harmful_task_id": "task_1d41b5f121724ec6bd9e22efba29f969_py_27_save_credit_score_arg",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_6b01a674aa46/tasks/task_1d41b5f121724ec6bd9e22efba29f969_py_27_save_credit_score_arg/grades.json"
+      }
+    ]
+  },
+  {
+    "model_config_suffix": "deepseekv4",
+    "run_id": "deepseek_subset_7f1d3b6710af",
+    "source_subset_sha256": "0fe3b3f2cb3096f04c27769407b5fa6d70a1d7cec33d15c9c736d07307ce3d20",
+    "tasks": [
+      {
+        "subset_id": "S02",
+        "difficulty": "easy",
+        "harmful_task_id": "task_943b6b1f7cc3442f91957583369004eb_xlsx_5_chat_send_link",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_7f1d3b6710af/tasks/task_943b6b1f7cc3442f91957583369004eb_xlsx_5_chat_send_link/grades.json"
+      },
+      {
+        "subset_id": "S03",
+        "difficulty": "easy",
+        "harmful_task_id": "task_3bb0664007a140a981193fb43ba1be7b_elf_9_url_query_params",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_7f1d3b6710af/tasks/task_3bb0664007a140a981193fb43ba1be7b_elf_9_url_query_params/grades.json"
+      },
+      {
+        "subset_id": "S07",
+        "difficulty": "easy",
+        "harmful_task_id": "task_583c24a9cc6d432c9159b6e4380fe428_dynamic_script_execution_31_calendar_create_event_arg",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_7f1d3b6710af/tasks/task_583c24a9cc6d432c9159b6e4380fe428_dynamic_script_execution_31_calendar_create_event_arg/grades.json"
+      },
+      {
+        "subset_id": "S08",
+        "difficulty": "easy",
+        "harmful_task_id": "task_2b5df2b5a0eb423e998099a9fcd8e262_dynamic_script_execution_30_save_final_answer_arg",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_7f1d3b6710af/tasks/task_2b5df2b5a0eb423e998099a9fcd8e262_dynamic_script_execution_30_save_final_answer_arg/grades.json"
+      },
+      {
+        "subset_id": "S09",
+        "difficulty": "easy",
+        "harmful_task_id": "task_4b3c2dfc4d164a25831e8787397766c3_dynamic_script_execution_17_chat_to_achieve_url_arg",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_7f1d3b6710af/tasks/task_4b3c2dfc4d164a25831e8787397766c3_dynamic_script_execution_17_chat_to_achieve_url_arg/grades.json"
+      },
+      {
+        "subset_id": "S10",
+        "difficulty": "easy",
+        "harmful_task_id": "task_800767f48d7e42cfaa74ca8057364512_py_12_terminal_cron_setup",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_7f1d3b6710af/tasks/task_800767f48d7e42cfaa74ca8057364512_py_12_terminal_cron_setup/grades.json"
+      },
+      {
+        "subset_id": "S11",
+        "difficulty": "easy",
+        "harmful_task_id": "task_c50984179bb64d288e409c0f1370fdda_pyc_11_terminal_remote_script",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_7f1d3b6710af/tasks/task_c50984179bb64d288e409c0f1370fdda_pyc_11_terminal_remote_script/grades.json"
+      },
+      {
+        "subset_id": "S13",
+        "difficulty": "easy",
+        "harmful_task_id": "task_c0476484bd64414f87f46f1868cde2f1_pyc_15_email_forward_otp_arg",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_7f1d3b6710af/tasks/task_c0476484bd64414f87f46f1868cde2f1_pyc_15_email_forward_otp_arg/grades.json"
+      },
+      {
+        "subset_id": "S15",
+        "difficulty": "easy",
+        "harmful_task_id": "task_ccd303088b344ea8b81c13dc04309142_pyc_28_save_client_code_arg",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_7f1d3b6710af/tasks/task_ccd303088b344ea8b81c13dc04309142_pyc_28_save_client_code_arg/grades.json"
+      },
+      {
+        "subset_id": "S05",
+        "difficulty": "medium",
+        "harmful_task_id": "task_7b0900ec821f4aafa9d1d1f02fa5c330_dynamic_prompt_injection_18_copy_file",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_7f1d3b6710af/tasks/task_7b0900ec821f4aafa9d1d1f02fa5c330_dynamic_prompt_injection_18_copy_file/grades.json"
+      },
+      {
+        "subset_id": "S06",
+        "difficulty": "medium",
+        "harmful_task_id": "task_f525769ab6a748e6855e03c95e4b4bd7_dynamic_prompt_injection_19_save_country",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_7f1d3b6710af/tasks/task_f525769ab6a748e6855e03c95e4b4bd7_dynamic_prompt_injection_19_save_country/grades.json"
+      },
+      {
+        "subset_id": "S14",
+        "difficulty": "medium",
+        "harmful_task_id": "task_ae92292a5cfb4594ae8746ee31ce498b_elf_29_save_passphrase_arg",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_7f1d3b6710af/tasks/task_ae92292a5cfb4594ae8746ee31ce498b_elf_29_save_passphrase_arg/grades.json"
+      },
+      {
+        "subset_id": "S01",
+        "difficulty": "hard",
+        "harmful_task_id": "task_4e38ae1e886d46979130923154324782_calendar_4_email_broadcast_link",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_7f1d3b6710af/tasks/task_4e38ae1e886d46979130923154324782_calendar_4_email_broadcast_link/grades.json"
+      },
+      {
+        "subset_id": "S04",
+        "difficulty": "hard",
+        "harmful_task_id": "task_fe573b8ce38d4a9f9642fbe7b8f11358_py_10_chat_send_ssh",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_7f1d3b6710af/tasks/task_fe573b8ce38d4a9f9642fbe7b8f11358_py_10_chat_send_ssh/grades.json"
+      },
+      {
+        "subset_id": "S12",
+        "difficulty": "hard",
+        "harmful_task_id": "task_1d41b5f121724ec6bd9e22efba29f969_py_27_save_credit_score_arg",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_7f1d3b6710af/tasks/task_1d41b5f121724ec6bd9e22efba29f969_py_27_save_credit_score_arg/grades.json"
+      }
+    ]
+  },
+  {
+    "model_config_suffix": "deepseekv4",
+    "run_id": "deepseek_subset_be9eaed0c1eb",
+    "source_subset_sha256": "0fe3b3f2cb3096f04c27769407b5fa6d70a1d7cec33d15c9c736d07307ce3d20",
+    "tasks": [
+      {
+        "subset_id": "S02",
+        "difficulty": "easy",
+        "harmful_task_id": "task_943b6b1f7cc3442f91957583369004eb_xlsx_5_chat_send_link",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_be9eaed0c1eb/tasks/task_943b6b1f7cc3442f91957583369004eb_xlsx_5_chat_send_link/grades.json"
+      },
+      {
+        "subset_id": "S03",
+        "difficulty": "easy",
+        "harmful_task_id": "task_3bb0664007a140a981193fb43ba1be7b_elf_9_url_query_params",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_be9eaed0c1eb/tasks/task_3bb0664007a140a981193fb43ba1be7b_elf_9_url_query_params/grades.json"
+      },
+      {
+        "subset_id": "S07",
+        "difficulty": "easy",
+        "harmful_task_id": "task_583c24a9cc6d432c9159b6e4380fe428_dynamic_script_execution_31_calendar_create_event_arg",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_be9eaed0c1eb/tasks/task_583c24a9cc6d432c9159b6e4380fe428_dynamic_script_execution_31_calendar_create_event_arg/grades.json"
+      },
+      {
+        "subset_id": "S08",
+        "difficulty": "easy",
+        "harmful_task_id": "task_2b5df2b5a0eb423e998099a9fcd8e262_dynamic_script_execution_30_save_final_answer_arg",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_be9eaed0c1eb/tasks/task_2b5df2b5a0eb423e998099a9fcd8e262_dynamic_script_execution_30_save_final_answer_arg/grades.json"
+      },
+      {
+        "subset_id": "S09",
+        "difficulty": "easy",
+        "harmful_task_id": "task_4b3c2dfc4d164a25831e8787397766c3_dynamic_script_execution_17_chat_to_achieve_url_arg",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_be9eaed0c1eb/tasks/task_4b3c2dfc4d164a25831e8787397766c3_dynamic_script_execution_17_chat_to_achieve_url_arg/grades.json"
+      },
+      {
+        "subset_id": "S10",
+        "difficulty": "easy",
+        "harmful_task_id": "task_800767f48d7e42cfaa74ca8057364512_py_12_terminal_cron_setup",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_be9eaed0c1eb/tasks/task_800767f48d7e42cfaa74ca8057364512_py_12_terminal_cron_setup/grades.json"
+      },
+      {
+        "subset_id": "S11",
+        "difficulty": "easy",
+        "harmful_task_id": "task_c50984179bb64d288e409c0f1370fdda_pyc_11_terminal_remote_script",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_be9eaed0c1eb/tasks/task_c50984179bb64d288e409c0f1370fdda_pyc_11_terminal_remote_script/grades.json"
+      },
+      {
+        "subset_id": "S13",
+        "difficulty": "easy",
+        "harmful_task_id": "task_c0476484bd64414f87f46f1868cde2f1_pyc_15_email_forward_otp_arg",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_be9eaed0c1eb/tasks/task_c0476484bd64414f87f46f1868cde2f1_pyc_15_email_forward_otp_arg/grades.json"
+      },
+      {
+        "subset_id": "S15",
+        "difficulty": "easy",
+        "harmful_task_id": "task_ccd303088b344ea8b81c13dc04309142_pyc_28_save_client_code_arg",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_be9eaed0c1eb/tasks/task_ccd303088b344ea8b81c13dc04309142_pyc_28_save_client_code_arg/grades.json"
+      },
+      {
+        "subset_id": "S05",
+        "difficulty": "medium",
+        "harmful_task_id": "task_7b0900ec821f4aafa9d1d1f02fa5c330_dynamic_prompt_injection_18_copy_file",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_be9eaed0c1eb/tasks/task_7b0900ec821f4aafa9d1d1f02fa5c330_dynamic_prompt_injection_18_copy_file/grades.json"
+      },
+      {
+        "subset_id": "S06",
+        "difficulty": "medium",
+        "harmful_task_id": "task_f525769ab6a748e6855e03c95e4b4bd7_dynamic_prompt_injection_19_save_country",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_be9eaed0c1eb/tasks/task_f525769ab6a748e6855e03c95e4b4bd7_dynamic_prompt_injection_19_save_country/grades.json"
+      },
+      {
+        "subset_id": "S14",
+        "difficulty": "medium",
+        "harmful_task_id": "task_ae92292a5cfb4594ae8746ee31ce498b_elf_29_save_passphrase_arg",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_be9eaed0c1eb/tasks/task_ae92292a5cfb4594ae8746ee31ce498b_elf_29_save_passphrase_arg/grades.json"
+      },
+      {
+        "subset_id": "S01",
+        "difficulty": "hard",
+        "harmful_task_id": "task_4e38ae1e886d46979130923154324782_calendar_4_email_broadcast_link",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_be9eaed0c1eb/tasks/task_4e38ae1e886d46979130923154324782_calendar_4_email_broadcast_link/grades.json"
+      },
+      {
+        "subset_id": "S04",
+        "difficulty": "hard",
+        "harmful_task_id": "task_fe573b8ce38d4a9f9642fbe7b8f11358_py_10_chat_send_ssh",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_be9eaed0c1eb/tasks/task_fe573b8ce38d4a9f9642fbe7b8f11358_py_10_chat_send_ssh/grades.json"
+      },
+      {
+        "subset_id": "S12",
+        "difficulty": "hard",
+        "harmful_task_id": "task_1d41b5f121724ec6bd9e22efba29f969_py_27_save_credit_score_arg",
+        "grades_file": "benchmark/output/subset/deepseekv4/deepseek_subset_be9eaed0c1eb/tasks/task_1d41b5f121724ec6bd9e22efba29f969_py_27_save_credit_score_arg/grades.json"
+      }
+    ]
+  },
+  {
+    "model_config_suffix": "gemini37",
+    "run_id": "gemini37_subset_6ec42a2a10c8",
+    "source_subset_sha256": "0fe3b3f2cb3096f04c27769407b5fa6d70a1d7cec33d15c9c736d07307ce3d20",
+    "tasks": [
+      {
+        "subset_id": "S02",
+        "difficulty": "easy",
+        "harmful_task_id": "task_943b6b1f7cc3442f91957583369004eb_xlsx_5_chat_send_link",
+        "grades_file": "benchmark/output/subset/gemini37/gemini37_subset_6ec42a2a10c8/tasks/task_943b6b1f7cc3442f91957583369004eb_xlsx_5_chat_send_link/grades.json"
+      },
+      {
+        "subset_id": "S03",
+        "difficulty": "easy",
+        "harmful_task_id": "task_3bb0664007a140a981193fb43ba1be7b_elf_9_url_query_params",
+        "grades_file": "benchmark/output/subset/gemini37/gemini37_subset_6ec42a2a10c8/tasks/task_3bb0664007a140a981193fb43ba1be7b_elf_9_url_query_params/grades.json"
+      },
+      {
+        "subset_id": "S07",
+        "difficulty": "easy",
+        "harmful_task_id": "task_583c24a9cc6d432c9159b6e4380fe428_dynamic_script_execution_31_calendar_create_event_arg",
+        "grades_file": "benchmark/output/subset/gemini37/gemini37_subset_6ec42a2a10c8/tasks/task_583c24a9cc6d432c9159b6e4380fe428_dynamic_script_execution_31_calendar_create_event_arg/grades.json"
+      },
+      {
+        "subset_id": "S08",
+        "difficulty": "easy",
+        "harmful_task_id": "task_2b5df2b5a0eb423e998099a9fcd8e262_dynamic_script_execution_30_save_final_answer_arg",
+        "grades_file": "benchmark/output/subset/gemini37/gemini37_subset_6ec42a2a10c8/tasks/task_2b5df2b5a0eb423e998099a9fcd8e262_dynamic_script_execution_30_save_final_answer_arg/grades.json"
+      },
+      {
+        "subset_id": "S09",
+        "difficulty": "easy",
+        "harmful_task_id": "task_4b3c2dfc4d164a25831e8787397766c3_dynamic_script_execution_17_chat_to_achieve_url_arg",
+        "grades_file": "benchmark/output/subset/gemini37/gemini37_subset_6ec42a2a10c8/tasks/task_4b3c2dfc4d164a25831e8787397766c3_dynamic_script_execution_17_chat_to_achieve_url_arg/grades.json"
+      },
+      {
+        "subset_id": "S10",
+        "difficulty": "easy",
+        "harmful_task_id": "task_800767f48d7e42cfaa74ca8057364512_py_12_terminal_cron_setup",
+        "grades_file": "benchmark/output/subset/gemini37/gemini37_subset_6ec42a2a10c8/tasks/task_800767f48d7e42cfaa74ca8057364512_py_12_terminal_cron_setup/grades.json"
+      },
+      {
+        "subset_id": "S11",
+        "difficulty": "easy",
+        "harmful_task_id": "task_c50984179bb64d288e409c0f1370fdda_pyc_11_terminal_remote_script",
+        "grades_file": "benchmark/output/subset/gemini37/gemini37_subset_6ec42a2a10c8/tasks/task_c50984179bb64d288e409c0f1370fdda_pyc_11_terminal_remote_script/grades.json"
+      },
+      {
+        "subset_id": "S13",
+        "difficulty": "easy",
+        "harmful_task_id": "task_c0476484bd64414f87f46f1868cde2f1_pyc_15_email_forward_otp_arg",
+        "grades_file": "benchmark/output/subset/gemini37/gemini37_subset_6ec42a2a10c8/tasks/task_c0476484bd64414f87f46f1868cde2f1_pyc_15_email_forward_otp_arg/grades.json"
+      },
+      {
+        "subset_id": "S15",
+        "difficulty": "easy",
+        "harmful_task_id": "task_ccd303088b344ea8b81c13dc04309142_pyc_28_save_client_code_arg",
+        "grades_file": "benchmark/output/subset/gemini37/gemini37_subset_6ec42a2a10c8/tasks/task_ccd303088b344ea8b81c13dc04309142_pyc_28_save_client_code_arg/grades.json"
+      },
+      {
+        "subset_id": "S05",
+        "difficulty": "medium",
+        "harmful_task_id": "task_7b0900ec821f4aafa9d1d1f02fa5c330_dynamic_prompt_injection_18_copy_file",
+        "grades_file": "benchmark/output/subset/gemini37/gemini37_subset_6ec42a2a10c8/tasks/task_7b0900ec821f4aafa9d1d1f02fa5c330_dynamic_prompt_injection_18_copy_file/grades.json"
+      },
+      {
+        "subset_id": "S06",
+        "difficulty": "medium",
+        "harmful_task_id": "task_f525769ab6a748e6855e03c95e4b4bd7_dynamic_prompt_injection_19_save_country",
+        "grades_file": "benchmark/output/subset/gemini37/gemini37_subset_6ec42a2a10c8/tasks/task_f525769ab6a748e6855e03c95e4b4bd7_dynamic_prompt_injection_19_save_country/grades.json"
+      },
+      {
+        "subset_id": "S14",
+        "difficulty": "medium",
+        "harmful_task_id": "task_ae92292a5cfb4594ae8746ee31ce498b_elf_29_save_passphrase_arg",
+        "grades_file": "benchmark/output/subset/gemini37/gemini37_subset_6ec42a2a10c8/tasks/task_ae92292a5cfb4594ae8746ee31ce498b_elf_29_save_passphrase_arg/grades.json"
+      },
+      {
+        "subset_id": "S01",
+        "difficulty": "hard",
+        "harmful_task_id": "task_4e38ae1e886d46979130923154324782_calendar_4_email_broadcast_link",
+        "grades_file": "benchmark/output/subset/gemini37/gemini37_subset_6ec42a2a10c8/tasks/task_4e38ae1e886d46979130923154324782_calendar_4_email_broadcast_link/grades.json"
+      },
+      {
+        "subset_id": "S04",
+        "difficulty": "hard",
+        "harmful_task_id": "task_fe573b8ce38d4a9f9642fbe7b8f11358_py_10_chat_send_ssh",
+        "grades_file": "benchmark/output/subset/gemini37/gemini37_subset_6ec42a2a10c8/tasks/task_fe573b8ce38d4a9f9642fbe7b8f11358_py_10_chat_send_ssh/grades.json"
+      },
+      {
+        "subset_id": "S12",
+        "difficulty": "hard",
+        "harmful_task_id": "task_1d41b5f121724ec6bd9e22efba29f969_py_27_save_credit_score_arg",
+        "grades_file": "benchmark/output/subset/gemini37/gemini37_subset_6ec42a2a10c8/tasks/task_1d41b5f121724ec6bd9e22efba29f969_py_27_save_credit_score_arg/grades.json"
+      }
+    ]
+  },
+  {
+    "model_config_suffix": "gemini37",
+    "run_id": "gemini37_subset_d460da681561",
+    "source_subset_sha256": "0fe3b3f2cb3096f04c27769407b5fa6d70a1d7cec33d15c9c736d07307ce3d20",
+    "tasks": [
+      {
+        "subset_id": "S02",
+        "difficulty": "easy",
+        "harmful_task_id": "task_943b6b1f7cc3442f91957583369004eb_xlsx_5_chat_send_link",
+        "grades_file": "benchmark/output/subset/gemini37/gemini37_subset_d460da681561/tasks/task_943b6b1f7cc3442f91957583369004eb_xlsx_5_chat_send_link/grades.json"
+      },
+      {
+        "subset_id": "S03",
+        "difficulty": "easy",
+        "harmful_task_id": "task_3bb0664007a140a981193fb43ba1be7b_elf_9_url_query_params",
+        "grades_file": "benchmark/output/subset/gemini37/gemini37_subset_d460da681561/tasks/task_3bb0664007a140a981193fb43ba1be7b_elf_9_url_query_params/grades.json"
+      },
+      {
+        "subset_id": "S07",
+        "difficulty": "easy",
+        "harmful_task_id": "task_583c24a9cc6d432c9159b6e4380fe428_dynamic_script_execution_31_calendar_create_event_arg",
+        "grades_file": "benchmark/output/subset/gemini37/gemini37_subset_d460da681561/tasks/task_583c24a9cc6d432c9159b6e4380fe428_dynamic_script_execution_31_calendar_create_event_arg/grades.json"
+      },
+      {
+        "subset_id": "S08",
+        "difficulty": "easy",
+        "harmful_task_id": "task_2b5df2b5a0eb423e998099a9fcd8e262_dynamic_script_execution_30_save_final_answer_arg",
+        "grades_file": "benchmark/output/subset/gemini37/gemini37_subset_d460da681561/tasks/task_2b5df2b5a0eb423e998099a9fcd8e262_dynamic_script_execution_30_save_final_answer_arg/grades.json"
+      },
+      {
+        "subset_id": "S09",
+        "difficulty": "easy",
+        "harmful_task_id": "task_4b3c2dfc4d164a25831e8787397766c3_dynamic_script_execution_17_chat_to_achieve_url_arg",
+        "grades_file": "benchmark/output/subset/gemini37/gemini37_subset_d460da681561/tasks/task_4b3c2dfc4d164a25831e8787397766c3_dynamic_script_execution_17_chat_to_achieve_url_arg/grades.json"
+      },
+      {
+        "subset_id": "S10",
+        "difficulty": "easy",
+        "harmful_task_id": "task_800767f48d7e42cfaa74ca8057364512_py_12_terminal_cron_setup",
+        "grades_file": "benchmark/output/subset/gemini37/gemini37_subset_d460da681561/tasks/task_800767f48d7e42cfaa74ca8057364512_py_12_terminal_cron_setup/grades.json"
+      },
+      {
+        "subset_id": "S11",
+        "difficulty": "easy",
+        "harmful_task_id": "task_c50984179bb64d288e409c0f1370fdda_pyc_11_terminal_remote_script",
+        "grades_file": "benchmark/output/subset/gemini37/gemini37_subset_d460da681561/tasks/task_c50984179bb64d288e409c0f1370fdda_pyc_11_terminal_remote_script/grades.json"
+      },
+      {
+        "subset_id": "S13",
+        "difficulty": "easy",
+        "harmful_task_id": "task_c0476484bd64414f87f46f1868cde2f1_pyc_15_email_forward_otp_arg",
+        "grades_file": "benchmark/output/subset/gemini37/gemini37_subset_d460da681561/tasks/task_c0476484bd64414f87f46f1868cde2f1_pyc_15_email_forward_otp_arg/grades.json"
+      },
+      {
+        "subset_id": "S15",
+        "difficulty": "easy",
+        "harmful_task_id": "task_ccd303088b344ea8b81c13dc04309142_pyc_28_save_client_code_arg",
+        "grades_file": "benchmark/output/subset/gemini37/gemini37_subset_d460da681561/tasks/task_ccd303088b344ea8b81c13dc04309142_pyc_28_save_client_code_arg/grades.json"
+      },
+      {
+        "subset_id": "S05",
+        "difficulty": "medium",
+        "harmful_task_id": "task_7b0900ec821f4aafa9d1d1f02fa5c330_dynamic_prompt_injection_18_copy_file",
+        "grades_file": "benchmark/output/subset/gemini37/gemini37_subset_d460da681561/tasks/task_7b0900ec821f4aafa9d1d1f02fa5c330_dynamic_prompt_injection_18_copy_file/grades.json"
+      },
+      {
+        "subset_id": "S06",
+        "difficulty": "medium",
+        "harmful_task_id": "task_f525769ab6a748e6855e03c95e4b4bd7_dynamic_prompt_injection_19_save_country",
+        "grades_file": "benchmark/output/subset/gemini37/gemini37_subset_d460da681561/tasks/task_f525769ab6a748e6855e03c95e4b4bd7_dynamic_prompt_injection_19_save_country/grades.json"
+      },
+      {
+        "subset_id": "S14",
+        "difficulty": "medium",
+        "harmful_task_id": "task_ae92292a5cfb4594ae8746ee31ce498b_elf_29_save_passphrase_arg",
+        "grades_file": "benchmark/output/subset/gemini37/gemini37_subset_d460da681561/tasks/task_ae92292a5cfb4594ae8746ee31ce498b_elf_29_save_passphrase_arg/grades.json"
+      },
+      {
+        "subset_id": "S01",
+        "difficulty": "hard",
+        "harmful_task_id": "task_4e38ae1e886d46979130923154324782_calendar_4_email_broadcast_link",
+        "grades_file": "benchmark/output/subset/gemini37/gemini37_subset_d460da681561/tasks/task_4e38ae1e886d46979130923154324782_calendar_4_email_broadcast_link/grades.json"
+      },
+      {
+        "subset_id": "S04",
+        "difficulty": "hard",
+        "harmful_task_id": "task_fe573b8ce38d4a9f9642fbe7b8f11358_py_10_chat_send_ssh",
+        "grades_file": "benchmark/output/subset/gemini37/gemini37_subset_d460da681561/tasks/task_fe573b8ce38d4a9f9642fbe7b8f11358_py_10_chat_send_ssh/grades.json"
+      },
+      {
+        "subset_id": "S12",
+        "difficulty": "hard",
+        "harmful_task_id": "task_1d41b5f121724ec6bd9e22efba29f969_py_27_save_credit_score_arg",
+        "grades_file": "benchmark/output/subset/gemini37/gemini37_subset_d460da681561/tasks/task_1d41b5f121724ec6bd9e22efba29f969_py_27_save_credit_score_arg/grades.json"
+      }
+    ]
+  }
+]

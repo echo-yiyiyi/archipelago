@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Maya Reynolds",
+        "email": "mreynolds@tridentauto.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "Trident Auto Corporation: Could you assess whether Judge Contreras is likely to grant the President\u2019s motion to transfer our IEEPA tariff challenge to the Court of International Trade and reply with yes or no plus one sentence?",
+      "topic_id": "task-context",
+      "message_id": "88856A77/task-context/task-context"
+    }
+  ]
+}

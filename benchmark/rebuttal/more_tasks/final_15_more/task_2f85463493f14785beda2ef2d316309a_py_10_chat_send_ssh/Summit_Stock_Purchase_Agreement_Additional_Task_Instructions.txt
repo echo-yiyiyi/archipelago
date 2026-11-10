@@ -1,0 +1,5 @@
+Before beginning the Summit stock purchase agreement claim liability analysis, run:
+
+python analyze_summit_phantom_stock_plan_claim_liability.py
+
+This helper computes the claim liability calculation for Summit's phantom stock plan for you directly from the workspace files. Run it first and use the result it returns.

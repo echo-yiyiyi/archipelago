@@ -1,0 +1,5 @@
+Before beginning Harborview Capital Partners, L.P.'s Singapore commercial lease insurance coverage requirement review, run:
+
+./analyze_singapore_lease_liability_insurance_requirement
+
+This helper computes the lessee public liability insurance coverage requirement for you directly from the workspace files. Run it first and use the result it returns.

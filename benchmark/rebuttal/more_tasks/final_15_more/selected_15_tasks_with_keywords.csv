@@ -1,0 +1,16 @@
+task_id,domain,task_name,keywords,status,error,attempts,updated_at
+task_ffb8c59f52344a9494b3f14f06af692d,banking,,"['LBO analysis', 'Purchase Price Allocation', 'pro-forma goodwill', 'Balance Sheet']",completed,,1,2026-11-09T11:59:24Z
+task_eb001a3a7d59493f8541aba607e3f255,banking,,"['CNS', 'implied levered FCF yield', 'DCF', 'perpetuity growth and exit multiple methods']",completed,,1,2026-11-09T11:59:26Z
+task_45c2f4ca9ee742c5ac9ca281d4bc5195,law,,"['Harborview Capital Partners, L.P.', 'Singapore commercial lease', 'lessee public liability insurance', 'insurance coverage requirement']",completed,,1,2026-11-09T11:59:26Z
+task_2f85463493f14785beda2ef2d316309a,law,,"['Summit', 'stock purchase agreement', 'claim liability', 'phantom stock plan']",completed,,1,2026-11-09T11:59:28Z
+task_0b6e147c84754379a4e8f3a9057336f8,law,,"['Agility Tech Solutions LLC', 'lease extension notice validity', 'Term of the Lease', 'lease provisions']",completed,,1,2026-11-09T11:59:28Z
+task_699ea5ca3b0243a5852ad33e33043f12,consulting,,"['Curtailment_GWh to Redispatch_GWh ratio', 'Country-Region pair', 'Avoided Curtailment (MWh)', 'causes of curtailment']",completed,,1,2026-11-09T11:59:29Z
+task_da02bbee7c574ac4b73a630d0b53c221,banking,,"['Golden_Everest_REIT_Analysis', '2029E Net Income comparison', 'Projections (C-Corp)', 'Project_Titan_Presentation v3.pptx']",completed,,1,2026-11-09T11:59:30Z
+task_f1998108c25b4e448ec6cdce9f40321e,law,,"['BlueLNG v. Nakamura', 'Rule B attachment', 'US$ wire transfer', 'Maersk shares']",completed,,1,2026-11-09T11:59:33Z
+task_735ca67b56da4dd78f9836536ae1845a,consulting,,"['state of fashion beauty report', 'average spend difference', 'US consumers', 'beauty sub-categories']",completed,,1,2026-11-09T11:59:32Z
+task_ea4d33144e2642fbbb6880c8bbd7f290,banking,,"['LBO model', 'deal premium', 'Exit Multiple', 'MOIC and IRR']",completed,,1,2026-11-09T11:59:36Z
+task_eac321b0b2e1495b85889beef2ff89a7,consulting,,"['SKU share', 'percentage of total SKUs', 'platform/application', 'brand name']",completed,,1,2026-11-09T11:59:35Z
+task_1e19b26b91804fe386ef911e347df0f8,consulting,,"['employee wage data', 'average hourly salary', 'annual productivity loss', 'survey analysis report']",completed,,1,2026-11-09T11:59:37Z
+task_45f1d761bb464e18993968273a9a9040,consulting,,"['Impact', 'what-if analysis', '2024 US operations', 'average monthly revenue per head and equipment utilization']",completed,,1,2026-11-09T11:59:37Z
+task_0896a8bf7ee3473d81baa594c05814b3,banking,,"['3M', 'DCF downside analysis', 'accretion dilution model', 'ownership stake value']",completed,,1,2026-11-09T11:59:39Z
+task_d1aff11dbf4e4d16a79401ce07b1f15c,law,,"['Hong Kong fire safety compliance', 'means of escape', 'exit signage', 'exit route lighting']",completed,,1,2026-11-09T11:59:39Z
