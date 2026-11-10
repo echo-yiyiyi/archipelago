@@ -50,7 +50,8 @@ def record(path, slot):
 
 def metrics(rows):
     exposed = [r["er"] for r in rows if r["er"] is not None]
-    return {"n": len(rows), "er_n": len(exposed), "asr": mean(r["asr"] for r in rows),
+    return {"n": len(rows), "er_n": len(exposed), "attack_success_count": sum(r["asr"] for r in rows),
+            "exposure_count": sum(exposed), "asr": mean(r["asr"] for r in rows),
             "er": mean(exposed), "score": mean(r["score"] for r in rows)}
 
 
@@ -58,9 +59,12 @@ def main():
     design = read(HERE / "design_manifest.json")
     source = read(HERE.parent / "subset/selected_15_tasks_with_attack_config.json")
     historical = {r["subset_id"]: r for r in read(HERE.parent / "subset/model_results.json")["Gemini 3.7 Flash"]["tasks"]}
-    output = {"method": "Average each reused condition over the three original-set runs; use its single added run otherwise; weight conditions equally",
-              "source_set": "old", "models": {}}
-    for model, (label, profiles) in MODELS.items():
+    baseline_settings = read(HERE.parent / "single_run_baselines.json")
+    output = {"method": "Combine one fixed original-set run with the added single-run instances; exactly one binary AS/ER observation per condition",
+              "baseline_selection": baseline_settings, "source_set": "old", "models": {}}
+    for model, (label, available_profiles) in MODELS.items():
+        profiles = [baseline_settings["models"][model]]
+        assert profiles[0] in available_profiles and profiles[0] != "historical"
         output["models"][model] = {"label": label, "reused_profiles": profiles, "difficulties": {}}
         for level in LEVELS:
             expected = read(HERE / level / "new_tasks_with_attack_config.json")
@@ -109,6 +113,7 @@ def main():
                         evidence.append(record(path, slot))
                 else:
                     evidence.append(record(run / "tasks" / slot["harmful_task_id"] / "grades.json", slot))
+                assert len(evidence) == 1 and evidence[0]["asr"] in (0, 1)
                 rows.append({"subset_id": slot["subset_id"], "harmful_task_id": slot["harmful_task_id"],
                              "domain": slot["domain"], "category": slot["category"], "reused": slot["reused"],
                              "asr": mean(e["asr"] for e in evidence),
@@ -129,8 +134,7 @@ def main():
                 "single_profile_alternatives": alternatives, "tasks": rows}
     lines = ["# Old-set difficulty ablation", "", "每个难度覆盖同样的 15 种攻击条件，domain 各 5 个；仅使用 old set。", "",
              "Each difficulty group contains **n = 15 attack instances**, with **n_ER = 9** for ER. "
-             "**N** denotes the number of distinct source tasks. Reused instances are averaged over three original-set runs; "
-             "added instances are evaluated once. These are not three independent complete ablation runs.", ""]
+             "Each instance contributes one evaluated result; the fixed original-set baseline run is shared with the domain ablation.", ""]
     for model in output["models"].values():
         lines += [f"## {model['label']}", "",
                   "| Difficulty | ASR (%, n=15) | ER (%, n=9) | Mean Score (n=15) |", "|---|---:|---:|---:|"]
@@ -146,12 +150,13 @@ def main():
         lines.append("")
     lines += ["", "## 统计口径", "",
               "- 每组 ASR/Score 对 15 种攻击条件等权平均，ER 仅对定义曝光的 9 种条件平均。无缺失评分、无补零。",
-              "- 原始实例按之前三轮结果逐实例取均值后复用；easy/medium/hard 各复用 9/3/3 个，其余新增 6/12/12 个各跑一次。不是仅统计新增实例，也没有按评测次数给复用实例更高权重。",
-              "- Gemini 的三轮为历史一次＋本机两次；DeepSeek 为本机三次，与前面的新旧 set 对比口径一致。历史 Gemini 的执行代码和 exposure 评估未验证与当前完全相同。",
-              "- 本机缺少部分历史 Gemini 原始 grades 文件，对应数值读取已保存的 `subset/model_results.json` 逐实例记录；没有把它们标记为本次重新核验的原始评分。",
-              "- 新增实例只有单轮，因此本表没有整套实验的三轮标准差；不能将原实例的三次复用当作三套独立的完整 ablation。",
+              "- 每个模型固定选一轮原 subset 结果，easy/medium/hard 分别取其中 9/3/3 个实例，与新增 6/12/12 个实例的单轮结果合并。每个条件只贡献一次结果，不混用三轮均值。",
+              "- 固定基线按 score_summary.updated_at 选择当时最近完成的本机运行，不按 ASR/ER/Score 选择；两种 ablation 共用 single_run_baselines.json。",
+              *[f"- {model['label']} 基线：`{model['reused_profiles'][0]}`。" for model in output["models"].values()],
+              "- ASR 是成功数/15，ER 是曝光数/9；百分比分别按 1/15 和 1/9 的步长变化。原 subset 三轮均值与标准差保留在独立的重复性汇总中，不用于本表拼接。",
+              "- 本表是单轮完整 15 实例汇总，不报告三轮标准差。",
               "- 原始任务数量：easy=9、medium=3、hard=3。每组均为 15 个攻击实例，不能据此声称每组有 15 个独立原始任务。",
-              "- 两模型的任务得分均随难度升高而下降，ASR 均有所上升；ER 的变化方向不同。这是本轮描述性结果，不构成因果或显著性结论。", "",
+              "- 本表是描述性对比，不构成因果或显著性结论。", "",
               "## 数据来源", "", "新增结果："]
     import os
     for model in output["models"].values():
@@ -160,7 +165,7 @@ def main():
             lines.append(f"- [{model['label']} / {level}]({os.path.relpath(path, HERE)})")
     lines += ["", "复用结果：", "", "- [三轮原 subset 结果与来源](../subset/deepseek_repeat_comparison.md)",
               "- [原 Gemini 历史结果](../subset/model_results.json)", "- [实验条件映射](design_manifest.json)", "",
-              "完整精度、逐实例来源，以及分别使用每一轮旧结果的敏感性汇总，见 `difficulty_summary.json`。", ""]
+              "完整精度、单次成功/曝光计数及逐实例来源见 `difficulty_summary.json`；固定基线见 `../single_run_baselines.json`。", ""]
     (HERE / "difficulty_summary.json").write_text(json.dumps(output, ensure_ascii=False, indent=2) + "\n")
     (HERE / "difficulty_summary.md").write_text("\n".join(lines))
     print("\n".join(lines[:12]))

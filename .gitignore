@@ -231,6 +231,7 @@ outputs/
 benchmark/cot_prompt_adjust/output*/
 benchmark/final_benchmark/static_script_injection/direct_script_security_results.json
 benchmark/generate_attack_config/tmp/
+*.tex
 *.tar.gz
 
 # OS files

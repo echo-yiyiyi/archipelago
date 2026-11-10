@@ -1,0 +1,11 @@
+{
+  "selection_rule": "Most recent completed local subset run by score_summary.updated_at at selection time; fixed across domain and difficulty; not selected by performance",
+  "models": {
+    "gemini37": "gemini37_subset_d460da681561",
+    "deepseekv4": "deepseek_subset_6b01a674aa46"
+  },
+  "selected_updated_at": {
+    "gemini37": "2026-11-08T19:22:55.737Z",
+    "deepseekv4": "2026-11-08T18:24:11.992Z"
+  }
+}

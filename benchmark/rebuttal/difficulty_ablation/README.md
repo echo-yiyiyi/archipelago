@@ -74,10 +74,11 @@ agents/.venv/bin/python benchmark/rebuttal/difficulty_ablation/run.py \
 与各组补跑结果合并后再计算 ASR、ER、Score。
 每个完整难度组 ASR/Score 的分母为 15，ER 只对 9 个定义 exposure 的实例计算。
 
-现有[汇总表](difficulty_summary.md)沿用之前的三轮基线口径：先对每个原实例的三轮结果
-取均值，再与新增实例单轮结果合并，15 个攻击条件等权。Gemini 为历史一次＋本机两次，
-DeepSeek 为三次本机重跑。这不是三轮完整 ablation，因此不报告整套实验的三轮 SD。
-`difficulty_summary.json` 还保留分别选择每一轮旧结果时的完整组汇总，便于核查基线敏感性。
+现有[汇总表](difficulty_summary.md)采用单轮口径：每个模型固定一轮原 subset 结果，
+与新增实例的单轮结果合并，每组恰好 15 个独立计数的 0/1 攻击结果。
+固定基线在 `../single_run_baselines.json`，按当时最近完成的本机运行选择，不按表现选择；
+与 domain ablation 使用相同基线。ASR 为成功数/15，ER 为曝光数/9。
+原 subset 的三轮均值及标准差仍保留在独立的重复性汇总中，不混入本表。
 
 ```bash
 agents/.venv/bin/python benchmark/rebuttal/difficulty_ablation/summarize.py

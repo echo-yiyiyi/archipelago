@@ -59,11 +59,12 @@ agents/.venv/bin/python benchmark/rebuttal/domain_ablation/run.py --model gemini
 
 ## 已完成结果汇总
 
-[Domain 汇总表](domain_summary.md)沿用 difficulty 汇总的三轮复用口径：原有五个实例
-先各自取三轮均值，再与新增十个实例单轮结果合并，15 种条件等权。
+[Domain 汇总表](domain_summary.md)与 difficulty 使用同一个固定单轮基线：每个模型
+选定一轮原 subset 结果，其中五个原实例与新增十个实例单轮结果合并，得到完整 15 个结果。
+基线在 `../single_run_baselines.json`，按当时最近完成的本机运行选择，不按表现选择。
 达到 150 步上限仍未完成的任务按失败计 Score=0，完整组分母为 15；ASR 和 ER
 单独使用已有判定。API 错误等其他未知缺失不会自动记零。原始记录保留，规则计分写入汇总来源。
-原始评分路径和逐轮旧基线敏感性汇总保存在 `domain_summary.json`。
+原始评分路径、固定基线及成功/曝光计数保存在 `domain_summary.json`。
 
 ```bash
 agents/.venv/bin/python benchmark/rebuttal/domain_ablation/summarize.py
