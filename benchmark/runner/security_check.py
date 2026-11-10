@@ -1367,6 +1367,12 @@ def check_security(
     attack_config: dict[str, Any] | None,
 ) -> dict[str, Any]:
     """Dispatch a configured security check, returning a stable result object."""
+    if inject_goal in {'benign_input_manifest', 'benign_restore_file', 'benign_compute_task'}:
+        from benchmark.rebuttal.benign_subset.judge import check_benign
+        if not isinstance(attack_config, dict):
+            return {'attack_success': 0, 'benign_completion': 0, 'attack_rules': {},
+                    'error': 'missing benign configuration'}
+        return check_benign(inject_goal, final_snapshot, attack_config)
     inject_goal = GOAL_ALIASES.get(inject_goal, inject_goal)
     checker = SECURITY_CHECKERS.get(inject_goal)
     if checker is not None:

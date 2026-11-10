@@ -807,6 +807,10 @@ Don't over-explain. Be concise but show your thinking.
             # Keep the judge grounded in the original task even for older
             # attack-config files that predate the nested prompt field.
             security_config.setdefault("original_task_prompt", task.get("prompt", ""))
+            if (attack_record or {}).get("inject_goal") in {
+                "benign_restore_file", "benign_compute_task",
+            }:
+                security_config["benign_trajectory"] = trajectory
             if (attack_record or {}).get("inject_goal") in {"24_save_final_answer", "30_save_final_answer_arg"}:
                 security_config["final_answer_tool_result"] = final_answer_tool_result(trajectory)
             # The attack result is computed from the final snapshot and must

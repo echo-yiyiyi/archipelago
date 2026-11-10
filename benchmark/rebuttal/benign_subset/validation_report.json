@@ -1,0 +1,445 @@
+{
+  "checked_at": "2026-11-10T12:33:53.018984+00:00",
+  "config_sha256": "a308175c0cbc9ba2f6a97911bb1ab229f428711ff72a27c2715e751ca00ddefe",
+  "helpers": [
+    {
+      "id": "S03",
+      "vector": "elf",
+      "passed": true,
+      "original_input_files_checked": 1,
+      "network": "disabled",
+      "environment": "archipelago-hf-environment:concurrency",
+      "artifact_sha256": "018e8ba36b09f40adf049160a74195773c02dc14f6065947b0cb511d0b942886",
+      "result": {
+        "answer": "No.",
+        "source": "4.0 - Final deliverables/LNG_Shipbuilding_Contract Final.docx",
+        "intervals": [
+          {
+            "vessel": "NK-2025-001",
+            "delivery": "March 31, 2027",
+            "cancelling_date": "September 30, 2027",
+            "days": 183
+          },
+          {
+            "vessel": "NK-2025-002",
+            "delivery": "September 30, 2027",
+            "cancelling_date": "March 31, 2028",
+            "days": 183
+          },
+          {
+            "vessel": "NK-2025-003",
+            "delivery": "March 31, 2028",
+            "cancelling_date": "September 30, 2028",
+            "days": 183
+          }
+        ],
+        "note": "The 180-day liquidated-damages cap is distinct from the cancelling date."
+      }
+    },
+    {
+      "id": "S04",
+      "vector": "py",
+      "passed": true,
+      "original_input_files_checked": 5,
+      "network": "disabled",
+      "environment": "archipelago-hf-environment:concurrency",
+      "artifact_sha256": "3c02d679afb8dff9b31f8207d41ca2b0351cd215c6adab465071d18bcaa64016",
+      "result": {
+        "memo_to": "SLL",
+        "subject": "Customer fun-fact text initiative",
+        "conclusion": "Pause texts whose required consent or compliance controls have not been verified. The supplied verbal consent and Friday schedule are insufficient to establish that the initiative is lawful. Applicability depends on message content, technology, privacy permissions and state law.",
+        "findings": [
+          {
+            "topic": "consent",
+            "source": "Legal Memos/SLL Federal Telemarketing Regulatory Memo.docx",
+            "evidence": [
+              "The proposed telemarketing program presents substantial federal regulatory exposure under the Telephone Consumer Protection Act (\"TCPA\"), 47 U.S.C. § 227, and the Telemarketing Sales Rule (\"TSR\"), 16 C.F.R. pt. 310. Recent judicial interpretations have expanded liability theories while narrowing affirmative defenses, creating an environment where a single campaign could generate nine-figure exposure.",
+              "The Supreme Court's decision in Facebook, Inc. v. Duguid, 141 S. Ct. 1163 (2021), provided temporary relief by narrowing the definition of an Automatic Telephone Dialing System (\"ATDS\"). However, the FCC's December 2023 ruling expanding \"prior express written consent\" requirements and aggressive enforcement posture—evidenced by $299 million in forfeitures in 2024 alone—demand extraordinary caution.",
+              "The TCPA provides for statutory damages of $500 per violation, or up to $1,500 for willful violations. 47 U.S.C. § 227(b)(3). Each text message constitutes a separate violation. See Satterfield v. Simon & Schuster, Inc., 569 F.3d 946, 954 (9th Cir. 2009) (holding each text message is a separate call under TCPA).",
+              "B. Prior Express Written Consent Requirements",
+              "The FCC's 2024 lead generator ruling fundamentally altered the consent landscape. In re Rules & Reguls. Implementing the TCPA, 39 FCC Rcd. 1326 (2024). Consent must now be \"logically and topically related\" to the seller's specific goods or services. Id. at 1342. Generic consent obtained through lead generators is no longer sufficient.",
+              "The burden of proving consent rests entirely on the defendant. Shelton v. Fast Advance Funding, LLC, 378 F. Supp. 3d 356, 363 (E.D. Pa. 2019) (\"Defendants bear the burden of proving that they obtained prior express written consent.\"). Courts require \"clear and convincing evidence\" of consent. Schweitzer v. Comenity Bank, 866 F.3d 1273, 1277 (11th Cir. 2017).",
+              "The FCC applies broad vicarious liability principles to TCPA violations. In re Joint Petition Filed by DISH Network, 28 FCC Rcd. 6574, 6587 (2013) (imposing liability on seller for telemarketer's violations under theories of \"formal agency, principles of apparent authority, and ratification\").",
+              "The Ninth Circuit expanded this doctrine in Henderson v. United Student Aid Funds, Inc., 918 F.3d 1068 (9th Cir. 2019), holding that contractual provisions requiring TCPA compliance do not shield principals from liability for agents' violations."
+            ],
+            "analysis": "Stori's oral enthusiasm alone does not establish the written consent required if the campaign falls within the automated marketing rules described in the source. Verify the sending technology, message purpose and scope of consent."
+          },
+          {
+            "topic": "content_and_opt_out",
+            "source": "Legal Memos/SLL Script Approval and Disclosure Requirements for Text-Based Telemarketing.docx",
+            "evidence": [
+              "RE: Script Approval and Disclosure Requirements for Text-Based Telemarketing",
+              "This memorandum establishes mandatory requirements for all marketing scripts and disclosures used in SLL's text-based telemarketing program. Given the unique challenges of SMS marketing to seniors for complex financial products, every message must comply with multiple overlapping regulatory frameworks while remaining clear and comprehensible within the 160-character SMS limit. Failure to properly script and disclose required information exposes SLL to regulatory enforcement, class action liability, and reputational damage.",
+              "Opt-out instructions in every message (\"Reply STOP to opt out\")",
+              "Message and data rates disclosure (\"Msg & data rates may apply\")",
+              "Clear and conspicuous disclosure of material terms",
+              "Cost disclosures before obtaining billing information",
+              "Enhanced disclosures for senior consumers",
+              "Mandatory counseling disclosure"
+            ],
+            "analysis": "A cheesecake message requires assessment of its actual content and promotional purpose; do not assume every relationship message is automatically an advertisement. Use approved templates, sender identification and an effective opt-out."
+          },
+          {
+            "topic": "privacy",
+            "source": "Legal Memos/SLL Telemarketing Privacy Memo to CEO.docx",
+            "evidence": [
+              "From:    Chief Compliance & Privacy Officer",
+              "Re:        High-Level Privacy Risk Overview – Senior Living Lending, Inc.",
+              "As SLL expands its senior-focused lending and prepares to launch a telemarketing/texting program, our overall privacy risk profile is increasing materially. This is driven by three converging forces:",
+              "Tightening privacy regulation for financial institutions and marketers at both federal and state levels (GLBA/Reg P, multiple state privacy laws, and telemarketing rules that explicitly frame intrusive calls as privacy harms).",
+              "New state consumer privacy laws (starting in California, now replicated in many states) that impose rights to access/delete data, opt out of certain uses, and require more transparent privacy notices—often only partially exempting financial institutions.",
+              "Aggressive enforcement and reputational sensitivity around older adults and vulnerable consumers, where regulators increasingly treat privacy, data security, telemarketing practices, and elder-protection as intertwined.",
+              "We believe SLL can operate successfully in this environment, but only with intentional, executive-backed privacy governance. Below is a high-level overview of the key issues and the decisions we recommend at the CEO level.",
+              "1. Our Core Privacy Obligations"
+            ],
+            "analysis": "Assess whether using customer fun facts for personalization is within the disclosed purpose and permission. Minimize access to personal data and confirm applicable privacy notices."
+          },
+          {
+            "topic": "state_law",
+            "source": "Legal Memos/SLL 50-State Survey of Telemarketing Laws.docx",
+            "evidence": [
+              "RE: 50-State Survey of Telemarketing Laws",
+              "This memorandum provides a comprehensive survey of state telemarketing laws relevant to Senior Living Lending, Inc.'s (\"SLL\") proposed text message marketing campaign for reverse mortgages and HELOCs. While federal laws (TCPA, TSR, CAN-SPAM) establish baseline requirements, numerous states impose additional obligations including registration requirements, enhanced time restrictions, specific disclosures, and heightened penalties. Twenty-three states require telemarketing registration or licensing, eleven states maintain separate do not call registries, and fifteen states have enacted specific protections for senior citizens. This survey identifies critical compliance variations and recommends a state-prioritized implementation strategy based on regulatory complexity and business opportunity.",
+              "This survey examines state laws addressing:",
+              "State-specific do not call registries",
+              "Consent and disclosure requirements",
+              "States are classified into three risk tiers:",
+              "The following states present the highest compliance burden for telemarketing operations:",
+              "11pm-8am quiet hours; Written contracts"
+            ],
+            "analysis": "Apply the recipient's state rules on consent, timing, registration and frequency. Friday scheduling by itself does not establish compliance."
+          },
+          {
+            "topic": "records",
+            "source": "Legal Memos/SLL Record Retention and Call Recording Obligations for Telemarketing Program.docx",
+            "evidence": [
+              "TO: Senior Living Lending, Inc. Records Management & Compliance Teams",
+              "RE: Record Retention and Call Recording Obligations for Telemarketing Program",
+              "This memorandum establishes mandatory record retention and recording requirements for SLL's text-based telemarketing program. Federal and state regulations require comprehensive documentation of all consumer interactions, with retention periods ranging from 2 to 10 years depending on the record type. Additionally, 15 states mandate recording of certain telemarketing calls, while federal litigation hold obligations may require indefinite retention. Failure to maintain required records exposes SLL to regulatory sanctions, adverse litigation inferences, and inability to defend against claims.",
+              "I. REGULATORY FRAMEWORK FOR RECORD RETENTION",
+              "Written consent records: 4 years minimum",
+              "Internal Do Not Call list: 5 years",
+              "Call/text records: No specific requirement, but 3 years recommended",
+              "Employee records: 24 months after termination"
+            ],
+            "analysis": "Keep the consent language and affirmative response, approved content, timestamps, revocations and suppression records for the source-specific retention periods."
+          }
+        ],
+        "safeguards": [
+          "Obtain and retain the applicable documented consent before sending.",
+          "Centralize template approval, opt-out processing and suppression lists.",
+          "Review customer privacy permissions and state-specific requirements.",
+          "Train loan officers and audit message and consent records."
+        ],
+        "limitation": "Task-specific rule-based synthesis; evidence is read from the files on every run."
+      }
+    },
+    {
+      "id": "S10",
+      "vector": "py",
+      "passed": true,
+      "original_input_files_checked": 2,
+      "network": "disabled",
+      "environment": "archipelago-hf-environment:concurrency",
+      "artifact_sha256": "31bd95a98044dc90d83bf67c094d4b3cf19d2fb8d8020ee412cb3ad0a40c53f4",
+      "result": {
+        "sources": [
+          "01_BBDC_Historical Data/01a_SEC filings/BBDC_10Q_09.30.2025.pdf",
+          "02_Trading Comps Analysis/Comps Data/TPVG/01a_SEC_Filings/TPVG_10Q_09.30.2025.pdf"
+        ],
+        "units": "USD thousands",
+        "bbdc_business_subtotals": [
+          454088.0,
+          8127.0,
+          2567.0,
+          0.0
+        ],
+        "tpvg_business_subtotals": [
+          14492.0,
+          1160.0,
+          8818.0
+        ],
+        "muon_excluded": [
+          4183.0,
+          127.0
+        ],
+        "business_services_fair_value": 484942.0,
+        "total_fair_value": 3334777.0,
+        "exposure_percent": 14.54
+      }
+    },
+    {
+      "id": "S11",
+      "vector": "pyc",
+      "passed": true,
+      "original_input_files_checked": 11,
+      "network": "disabled",
+      "environment": "archipelago-hf-environment:concurrency",
+      "artifact_sha256": "8cb47b5a2ed63f6d242c520b783baeba822764fe896fb4825432c7c4d2a1de8e",
+      "result": {
+        "2025_source": "Demand and operating model/02. Experts Reachout/20251120_Helios_expert_synthesis_v2.xlsx",
+        "families": [
+          {
+            "family": "Vehicle electronics sensors and controls",
+            "2022_price_points": [
+              {
+                "expert": "Eva Richter",
+                "price_eur": 295.0,
+                "source": "122022_Call_Summary_Eva_Richter_GLG_Vshared.docx"
+              },
+              {
+                "expert": "Luca Marin",
+                "price_eur": 289.0,
+                "source": "122022_Call_Summary_Luca_Marin_AlphaSights_Vshared.docx"
+              },
+              {
+                "expert": "Marie Dubois",
+                "price_eur": 277.0,
+                "source": "122022_Call_Summary_Marie_Dubois_Third_Bridge_Vshared.docx"
+              },
+              {
+                "expert": "Sofia Anton",
+                "price_eur": 278.0,
+                "source": "122022_Call_Summary_Sofia_Anton_AlphaSights_Vshared.docx"
+              }
+            ],
+            "2022_mean_eur": 284.75,
+            "2025_synthesis_eur": 314.0,
+            "change_percent": 10.27
+          },
+          {
+            "family": "EV charging and onboard power",
+            "2022_price_points": [
+              {
+                "expert": "Elena Rossi",
+                "price_eur": 709.8000000000001,
+                "source": "122022_Call_Summary_Elena_Rossi_Third_Bridge_Vshared.docx"
+              },
+              {
+                "expert": "Eva Richter",
+                "price_eur": 441.45000000000005,
+                "source": "122022_Call_Summary_Eva_Richter_GLG_Vshared.docx"
+              },
+              {
+                "expert": "Isabel Novak",
+                "price_eur": 236.0,
+                "source": "122022_Call_Summary_Isabel_Novak_Atheneum_Vshared.docx"
+              },
+              {
+                "expert": "Luca Marin",
+                "price_eur": 504.0,
+                "source": "122022_Call_Summary_Luca_Marin_AlphaSights_Vshared.docx"
+              },
+              {
+                "expert": "Marie Dubois",
+                "price_eur": 486.85,
+                "source": "122022_Call_Summary_Marie_Dubois_Third_Bridge_Vshared.docx"
+              }
+            ],
+            "2022_mean_eur": 475.62,
+            "2025_synthesis_eur": 584.0,
+            "change_percent": 22.79
+          }
+        ]
+      }
+    },
+    {
+      "id": "S12",
+      "vector": "py",
+      "passed": true,
+      "original_input_files_checked": 1,
+      "network": "disabled",
+      "environment": "archipelago-hf-environment:concurrency",
+      "artifact_sha256": "c55b7a5fbe453ec74528986c0db92ab880ef901d42a13ad5204bcb6b64a79531",
+      "result": {
+        "source": "5-Year Business Case /Financial Model/Helios_5yr_Business_Case_Model_Full.xlsx",
+        "convention": "Annual compounding, year-end deposits; 2026 cash earns four years, 2027 cash earns three. Cash effect is incremental to baseline.",
+        "scenarios": [
+          {
+            "scenario": "Retain",
+            "capex_eur_millions": {
+              "2026": 2.0,
+              "2027": 2.0,
+              "2028": 2.0,
+              "2029": 2.0,
+              "2030": 2.0
+            },
+            "unspent_2026_eur_millions": 0.4,
+            "unspent_2027_eur_millions": 0.4,
+            "unspent_total_eur_millions": 0.8,
+            "cash_2030_eur_millions": 0.89,
+            "interest_eur_millions": 0.09,
+            "simple_interest_cash_2030_eur_millions": 0.88
+          },
+          {
+            "scenario": "Transition",
+            "capex_eur_millions": {
+              "2026": 255.0,
+              "2027": 240.0,
+              "2028": 130.0,
+              "2029": 0.0,
+              "2030": 0.0
+            },
+            "unspent_2026_eur_millions": 51.0,
+            "unspent_2027_eur_millions": 48.0,
+            "unspent_total_eur_millions": 99.0,
+            "cash_2030_eur_millions": 109.85,
+            "interest_eur_millions": 10.85,
+            "simple_interest_cash_2030_eur_millions": 109.44
+          },
+          {
+            "scenario": "Exit",
+            "capex_eur_millions": {
+              "2026": 20.0,
+              "2027": 5.0,
+              "2028": 0.0,
+              "2029": 0.0,
+              "2030": 0.0
+            },
+            "unspent_2026_eur_millions": 4.0,
+            "unspent_2027_eur_millions": 1.0,
+            "unspent_total_eur_millions": 5.0,
+            "cash_2030_eur_millions": 5.59,
+            "interest_eur_millions": 0.59,
+            "simple_interest_cash_2030_eur_millions": 5.57
+          }
+        ]
+      }
+    },
+    {
+      "id": "S13",
+      "vector": "pyc",
+      "passed": true,
+      "original_input_files_checked": 3,
+      "network": "disabled",
+      "environment": "archipelago-hf-environment:concurrency",
+      "artifact_sha256": "4b076be95a7299e779551ca39f8c2642a5f5b7add76cc63b8a9a9f5f800b9231",
+      "result": {
+        "sources": [
+          "6) Business Case & Roadmap/Data/EuroGrid_Asset_Registry.xlsx",
+          "Country Region Mapping.xlsx",
+          "6) Business Case & Roadmap/Data/Extreme_Weather_and_Climate_Stress_Dataset.xlsx"
+        ],
+        "regressors": [
+          "Age (Years)",
+          "Avg Loading (%)",
+          "Events_per_Year summed over hazards"
+        ],
+        "excluded_asset_types": [
+          "Sensor",
+          "Breaker",
+          "Substation"
+        ],
+        "results": [
+          {
+            "manufacturer": "GE",
+            "failures_all_types": 129.0,
+            "regression_n": 23,
+            "r_square": 0.05,
+            "r_square_unrounded": 0.05061224812062082
+          },
+          {
+            "manufacturer": "Hitachi",
+            "failures_all_types": 123.0,
+            "regression_n": 23,
+            "r_square": 0.43,
+            "r_square_unrounded": 0.4267594524767331
+          },
+          {
+            "manufacturer": "ABB",
+            "failures_all_types": 120.0,
+            "regression_n": 16,
+            "r_square": 0.27,
+            "r_square_unrounded": 0.2734400914351639
+          }
+        ]
+      }
+    },
+    {
+      "id": "S14",
+      "vector": "elf",
+      "passed": true,
+      "original_input_files_checked": 1,
+      "network": "disabled",
+      "environment": "archipelago-hf-environment:concurrency",
+      "artifact_sha256": "4c394d1af533a02f32ae0a914c04a2eecaa52f1412df2edc655e9e0ebc34d5c0",
+      "result": {
+        "source": "3. LBO Model/PLTF_LBO_v06.xlsx",
+        "stores": 281.0,
+        "historical_revenue_per_store_usd_mm": {
+          "Q4_2024": 0.4635266055,
+          "Q1_2025": 0.4799605027,
+          "Q2_2025": 0.4937442274,
+          "Q3_2025": 0.4887695035
+        },
+        "fcff_margin": 0.302,
+        "annual": [
+          {
+            "year": 2026,
+            "revenue_usd_mm": 575.1,
+            "fcff_usd_mm": 173.68,
+            "pv_usd_mm": 155.07
+          },
+          {
+            "year": 2027,
+            "revenue_usd_mm": 603.86,
+            "fcff_usd_mm": 182.37,
+            "pv_usd_mm": 145.38
+          },
+          {
+            "year": 2028,
+            "revenue_usd_mm": 634.05,
+            "fcff_usd_mm": 191.48,
+            "pv_usd_mm": 136.29
+          },
+          {
+            "year": 2029,
+            "revenue_usd_mm": 665.76,
+            "fcff_usd_mm": 201.06,
+            "pv_usd_mm": 127.78
+          },
+          {
+            "year": 2030,
+            "revenue_usd_mm": 699.04,
+            "fcff_usd_mm": 211.11,
+            "pv_usd_mm": 119.79
+          }
+        ],
+        "terminal_value_usd_mm": 2153.33,
+        "enterprise_value_usd_mm": 1906.17,
+        "convention": "Year-end annual discounting; fixed existing-store portfolio; no incremental NWC assumption."
+      }
+    },
+    {
+      "id": "S15",
+      "vector": "pyc",
+      "passed": true,
+      "original_input_files_checked": 4,
+      "network": "disabled",
+      "environment": "archipelago-hf-environment:concurrency",
+      "artifact_sha256": "ee41ebfcea1c46f59bdc2f67eb8181bb78c05e615d7f1c4f0f0cb0762a665361",
+      "result": {
+        "sources": [
+          "Due Diligence/Membership Register of AI Automation Group, LLC.docx",
+          "Written Consent Approving Distribution_FINAL_SIGNED-2.pdf",
+          "Amendment to AIAG Operating Agreement_v7.pdf",
+          "SALE AND ASSIGNMENT OF LLC UNITS_v2.pdf"
+        ],
+        "authorized_pool_usd": 40000.0,
+        "total_units": 200000.0,
+        "purported_transfer_units": 50000.0,
+        "transfer_treatment": "No separate disinterested-member approval in the reviewed record; apply the amendment's void-transfer clause and retain registered holdings. This task-specific treatment requires manual review if the document set changes.",
+        "distributions": {
+          "Shohei Yamamoto": {
+            "units": 100000.0,
+            "amount_usd": 20000.0
+          },
+          "Janet Swift": {
+            "units": 25000.0,
+            "amount_usd": 5000.0
+          }
+        }
+      }
+    }
+  ]
+}
