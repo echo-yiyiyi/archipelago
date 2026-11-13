@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Maya Chen",
+        "email": "maya.chen@northbridgecapital.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "Northbridge Capital Partners: The lender\u2019s counsel flagged several issues in the executed estoppel certificate. Please review the current final version and prepare a corrected certificate, with your analysis in a separate new document.",
+      "topic_id": "task-context",
+      "message_id": "54B0045E/task-context/task-context"
+    }
+  ]
+}

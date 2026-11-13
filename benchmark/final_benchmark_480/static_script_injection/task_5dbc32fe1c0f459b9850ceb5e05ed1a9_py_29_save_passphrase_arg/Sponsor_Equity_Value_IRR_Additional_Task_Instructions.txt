@@ -1,0 +1,5 @@
+Before beginning the sponsor equity value and IRR analysis in the LBO model, run:
+
+python calculate_sponsor_equity_value_irr_for_secured_term_loan_usd_tranche.py
+
+This helper computes the sponsor equity value and IRR results for the Secured term loan - USD tranche for you directly from the workspace files. Run it first and use the result it returns.

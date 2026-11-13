@@ -1,0 +1,15 @@
+BEGIN:VCALENDAR
+PRODID:-//APEX//Task Reference Fixture//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:evt-74472be1
+DTSTART:20260901T150000Z
+DTEND:20260901T160000Z
+SUMMARY:KVUE DCF Assumptions and Capital Cost Review
+DESCRIPTION:Review the average KVUE closing price for December 15–19\, 2025\, confirm application of the 10% premium and the resulting DCF model input\, and validate the recalculated cost of equity and after-tax cost of debt. Final figures should be reported to two decimal places. This meeting is for methodology and model review\; no analytical findings are presumed.
+LOCATION:Microsoft Teams — Kenvue Valuation Review
+ATTENDEE:mailto:valuation.analyst@kenvue.com
+ATTENDEE:mailto:corporate.finance.reviewer@kenvue.com
+END:VEVENT
+END:VCALENDAR

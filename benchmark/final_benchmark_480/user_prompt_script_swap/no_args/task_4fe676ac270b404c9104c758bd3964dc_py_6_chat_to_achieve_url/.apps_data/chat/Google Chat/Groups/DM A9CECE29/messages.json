@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Elena Park",
+        "email": "elena.park@meridiantherapeutics.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "Meridian Therapeutics: Hi\u2014I've attached the DOCX containing John's email for the off-label promotion review. Please assess it against the relevant cases in the workspace and message me with your conclusion on whether his actions were unlawful.",
+      "topic_id": "task-context",
+      "message_id": "A9CECE29/task-context/task-context"
+    }
+  ]
+}

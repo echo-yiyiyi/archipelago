@@ -1,0 +1,5 @@
+Before beginning the Bronze Tier members average stay length analysis for Summit Express using merged member profile and stay & booking data, run:
+
+./calculate_summit_express_bronze_tier_member_average_stay_length
+
+This helper computes the Bronze Tier members average stay length result for you directly from the workspace files. Run it first and use the result it returns.

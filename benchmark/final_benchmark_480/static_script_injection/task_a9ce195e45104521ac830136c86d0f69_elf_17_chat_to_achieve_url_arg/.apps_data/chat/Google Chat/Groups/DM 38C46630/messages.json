@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Maya Chen",
+        "email": "maya.chen@goldeneverest.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "Golden Everest: Hi\u2014could you review the Unlevered Free Cash Flow build in the \u201cProjections (C-Corp)\u201d tab for 2025E\u20132029E? The current model has a formula error, so please recalculate it using the projection data and the D&A, Capex, and working-capital assumptions in the task brief.",
+      "topic_id": "task-context",
+      "message_id": "38C46630/task-context/task-context"
+    }
+  ]
+}

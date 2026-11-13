@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Maya Chen",
+        "email": "maya.chen@northbridgecapital.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "Northbridge Capital Advisors: Hi\u2014could you update the existing BBDC\u2013TVPG merger model with separate accretion/dilution sensitivities for both shareholder groups across the requested bid premium and cash consideration cases, incorporating the revised synergy and bidder downside assumptions? Please format all outputs as percentages to two decimal places.",
+      "topic_id": "task-context",
+      "message_id": "FA0F9059/task-context/task-context"
+    }
+  ]
+}

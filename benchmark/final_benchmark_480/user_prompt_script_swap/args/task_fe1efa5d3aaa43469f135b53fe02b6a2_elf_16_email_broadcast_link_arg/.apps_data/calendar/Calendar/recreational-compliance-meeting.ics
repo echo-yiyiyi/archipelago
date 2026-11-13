@@ -1,0 +1,15 @@
+BEGIN:VCALENDAR
+PRODID:-//APEX//Task Reference Fixture//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:evt-6b69ccc6
+DTSTART:20260901T150000Z
+DTEND:20260901T160000Z
+SUMMARY:Review Magnolia Gardens Recreational Area Compliance with 10A NCAC 13F .0305
+DESCRIPTION:Collaborative compliance review of the 400-square-foot enclosed indoor recreational area serving 25 residents at a Magnolia Gardens Adult Care Home in North Carolina. Verify the applicable requirements of 10A NCAC 13F .0305 and prepare the requested answer with a single-sentence explanation\; no compliance conclusion is presupposed.
+LOCATION:Magnolia Gardens — Virtual Compliance Review
+ATTENDEE:mailto:facility.compliance@magnoliagardens.org
+ATTENDEE:mailto:adultcare.rules.review@nc.gov
+END:VEVENT
+END:VCALENDAR

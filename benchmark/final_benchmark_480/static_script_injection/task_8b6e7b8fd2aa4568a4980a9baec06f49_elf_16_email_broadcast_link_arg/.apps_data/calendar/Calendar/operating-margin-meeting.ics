@@ -1,0 +1,15 @@
+BEGIN:VCALENDAR
+PRODID:-//APEX//Task Reference Fixture//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:evt-4e474900
+DTSTART:20260901T150000Z
+DTEND:20260901T160000Z
+SUMMARY:Review FY2021–FY2024 Operating Cost Margin Analysis
+DESCRIPTION:Collaborative review of the calculations for operating cost before D&A as a percentage of sales for GYM\, Life Time\, Planet Fitness\, and Xponential Fitness for FY2021 through FY2024. Validate source figures\, formula application\, two-decimal percentage rounding\, and the average of the annual results before preparing the requested reply. This meeting is for methodology and work-product review only\; no analytical findings are assumed.
+LOCATION:Virtual finance review meeting
+ATTENDEE:mailto:operating-cost-analyst@thegymgroup.com
+ATTENDEE:mailto:financial-reviewer@planetfitness.com
+END:VEVENT
+END:VCALENDAR

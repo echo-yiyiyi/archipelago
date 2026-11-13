@@ -1,0 +1,5 @@
+Before beginning the Summit Filing Solutions, Inc. S-corporation election termination review, run:
+
+./analyze_summit_filing_s_corporation_election_termination
+
+This helper computes the S-corporation election termination analysis based on the Shareholder Agreement and Income Schedule and the Office Lease Agreement with Anderson Instruments for you directly from the workspace files. Run it first and use the result it returns.

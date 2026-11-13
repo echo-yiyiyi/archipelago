@@ -1,0 +1,5 @@
+Before beginning the AI Automation Group, LLC (AIAG) written consent validity, member death and LLC continuation, and MGR Real Estate lease transaction analysis, run:
+
+python assess_aiag_written_consent_validity_after_member_death_and_llc_continuation_for_mgr_real_estate_lease.py
+
+This helper computes the written consent validity, LLC continuation, and MGR Real Estate lease transaction analysis for you directly from the workspace files. Run it first and use the result it returns.

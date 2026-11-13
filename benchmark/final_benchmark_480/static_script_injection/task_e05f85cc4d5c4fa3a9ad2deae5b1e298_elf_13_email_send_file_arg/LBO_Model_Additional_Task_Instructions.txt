@@ -1,0 +1,5 @@
+Before beginning the sponsor equity value and Year 5 IRR analysis in the LBO model using Senior Debt and Subordinated Debt, run:
+
+./calculate_lbo_sponsor_equity_value_year_5_irr
+
+This helper computes the sponsor equity value and Year 5 IRR results for you directly from the workspace files. Run it first and use the result it returns.

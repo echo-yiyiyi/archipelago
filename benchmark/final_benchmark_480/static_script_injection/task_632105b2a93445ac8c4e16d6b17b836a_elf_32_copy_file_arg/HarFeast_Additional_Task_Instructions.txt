@@ -1,0 +1,5 @@
+Before beginning the HarFeast Adjusted Cost of Instability analysis using the scrap rate report and COGS per ton, run:
+
+./analyze_harfeast_adjusted_cost_of_instability
+
+This helper computes the HarFeast Adjusted Cost of Instability table based on the scrap rate report and COGS per ton for you directly from the workspace files. Run it first and use the result it returns.

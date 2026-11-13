@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Elena Fischer",
+        "email": "elena.fischer@northstar-data.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "Northstar: Hi, could you review whether Northstar would be required to compensate affected data subjects if the Data Analytics Module\u2019s unauthorized transfer violated the GDPR? Please send me a yes-or-no answer with a brief explanation here.",
+      "topic_id": "task-context",
+      "message_id": "1F856D99/task-context/task-context"
+    }
+  ]
+}

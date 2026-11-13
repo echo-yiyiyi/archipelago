@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Maya Chen",
+        "email": "maya.chen@northstarautomotive.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "Northstar Automotive: Hi\u2014I've uploaded the revised gross margin inputs for the business case model. Could you flow them through and send me the 2026\u20132030 total gross profit for EV, Hybrid, and ICE under the exit, transition, and retain scenarios, rounded to two decimals?",
+      "topic_id": "task-context",
+      "message_id": "53FF2705/task-context/task-context"
+    }
+  ]
+}

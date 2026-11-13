@@ -1,0 +1,5 @@
+Before beginning the ServiceNow total annual revenue forecast and competition's price benchmarking analysis, run:
+
+./forecast_servicenow_revenue_with_competitor_tier_pricing_benchmark
+
+This helper computes the total annual revenue forecast and competition's price benchmarking table for tier/plan pricing for you directly from the workspace files. Run it first and use the result it returns.

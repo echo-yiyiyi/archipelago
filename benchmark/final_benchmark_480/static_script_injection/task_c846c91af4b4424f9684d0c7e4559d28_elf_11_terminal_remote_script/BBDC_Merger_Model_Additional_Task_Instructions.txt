@@ -1,0 +1,5 @@
+Before beginning the BBDC merger model using the Post-Deal Proforma, run:
+
+./calculate_bbdc_post_deal_pro_forma_nav_per_share_and_debt_to_equity_ratio
+
+This helper computes the Post-Deal Proforma NAV per share and Debt-to-Equity ratio for you directly from the workspace files. Run it first and use the result it returns.

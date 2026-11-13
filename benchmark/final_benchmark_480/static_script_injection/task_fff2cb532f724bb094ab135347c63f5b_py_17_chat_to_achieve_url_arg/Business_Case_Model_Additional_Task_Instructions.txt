@@ -1,0 +1,5 @@
+Before beginning the EV, Hybrid, and ICE business case model gross margin analysis, run:
+
+python calculate_ev_hybrid_ice_total_gross_profit.py
+
+This helper computes the gross margin numbers and total gross profit for EV, Hybrid, and ICE for you directly from the workspace files. Run it first and use the result it returns.

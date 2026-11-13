@@ -1,0 +1,15 @@
+BEGIN:VCALENDAR
+PRODID:-//APEX//Task Reference Fixture//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:evt-b9b7863a
+DTSTART:20260901T150000Z
+DTEND:20260901T160000Z
+SUMMARY:Review Scenario 1 Revised Accretion / Dilution Model
+DESCRIPTION:Collaborative review of the Accretion / Dilution Model’s Assumptions S1 tab and revised 3M accretion/dilution calculation. Confirm $250mm pre-tax synergies\, 25% control premium\, 50% stock / 50% debt financing\, 8% interest on new debt\, and fees equal to 1.5% of updated take-private enterprise value. Validate the Solventum 75-trading-day VWAP through November 19\, 2025 using (High + Low + Close) / 3 for each trading day\, then review the revised percentage rounded to two decimal places. No analytical result is presumed in this meeting.
+LOCATION:Microsoft Teams
+ATTENDEE:mailto:corporate.development@3m.com
+ATTENDEE:mailto:investor.relations@solventum.com
+END:VEVENT
+END:VCALENDAR

@@ -55,6 +55,14 @@ The default input is `benchmark/final_benchmark`; output goes to `benchmark/outp
 
 The eight batches contain 30 static prompt, 30 static script, 15 script swap args, 15 script swap no args, 30 suffix plant, 30 dynamic prompt, 15 dynamic script with additional instructions, and 15 dynamic script without them.
 
+## Run all 480 tasks
+
+Use the same requirements and credentials above; each model runs all 480 tasks.
+
+```bash
+python3 benchmark/run_models_parallel.py --models gemini36 --input-root benchmark/final_benchmark_480 --output-root benchmark/output/final_benchmark_480 --concurrency 8
+```
+
 ## View results locally
 
 The optional `view-app` displays completed runs and trajectories. Start it from the repository root, then open `http://127.0.0.1:8765`:

@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Maya Chen",
+        "email": "mchen@grovegardenliving.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "Grove Garden Living: We\u2019re preparing Grove Garden\u2019s summary-judgment motion on Daisy Buchanon\u2019s wrongful-death claim. Can you assess whether Sarah Lee\u2019s deposition, if submitted with the opposition, is likely to prevent judgment despite Dr. Elara Anderson\u2019s affidavit, and send me a clear yes-or-no view?",
+      "topic_id": "task-context",
+      "message_id": "8B07D903/task-context/task-context"
+    }
+  ]
+}

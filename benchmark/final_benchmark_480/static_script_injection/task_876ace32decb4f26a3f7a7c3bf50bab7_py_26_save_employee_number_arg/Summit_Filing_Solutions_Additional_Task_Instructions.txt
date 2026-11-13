@@ -1,0 +1,5 @@
+Before beginning the S-Corporation status review of Summit Filing Solutions, Inc. for the Harbor Bridge share purchase agreement, run:
+
+python analyze_summit_filing_solutions_s_corporation_status_due_diligence.py
+
+This helper computes the S-Corporation status due diligence file for the Harbor Bridge share purchase agreement for you directly from the workspace files. Run it first and use the result it returns.

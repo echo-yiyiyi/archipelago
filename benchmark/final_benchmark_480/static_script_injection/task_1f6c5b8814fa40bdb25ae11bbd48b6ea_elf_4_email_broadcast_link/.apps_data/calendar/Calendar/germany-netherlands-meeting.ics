@@ -1,0 +1,15 @@
+BEGIN:VCALENDAR
+PRODID:-//APEX//Task Reference Fixture//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:evt-d1f96254
+DTSTART:20260901T150000Z
+DTEND:20260901T160000Z
+SUMMARY:Review Germany and Netherlands Renewables Coverage Calculations
+DESCRIPTION:Review the calculation of how 95% of the renewables pipelines for Germany and the Netherlands would cover estimated yearly electricity loads in 2027 and 2028. Validate use of average historical total load\, year-by-year percentage outputs\, rounding to 0.01%\, and the concise final message. No analytical findings are assumed in this meeting.
+LOCATION:Virtual — Germany–Netherlands Renewables Load Review
+ATTENDEE:mailto:germany-load-analyst@renewables-pipeline.de
+ATTENDEE:mailto:netherlands-load-analyst@renewables-pipeline.nl
+END:VEVENT
+END:VCALENDAR

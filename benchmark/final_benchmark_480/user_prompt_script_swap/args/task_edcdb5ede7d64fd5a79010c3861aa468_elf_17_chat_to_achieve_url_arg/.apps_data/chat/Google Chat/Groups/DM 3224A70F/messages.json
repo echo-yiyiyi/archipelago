@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Elena Marquez",
+        "email": "elena.marquez@harborpointterminal.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "HarborPoint Terminal Services: Could you assess whether HarborPoint, as Terminal Operator, can arrest the M/V Red Room in rem under Rule C to secure spill-cleanup costs? Please send me a few paragraphs grounded in maritime law for our internal review.",
+      "topic_id": "task-context",
+      "message_id": "3224A70F/task-context/task-context"
+    }
+  ]
+}

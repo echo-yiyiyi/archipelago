@@ -1,0 +1,5 @@
+Before beginning the Bencontra seizure warning changes being effected supplement, run:
+
+python submit_bencontra_seizure_warning_changes_being_effected_supplement.py
+
+This helper computes the Bencontra seizure warning supplement package required by 21 CFR 314.70(c)(6) for you directly from the workspace files. Run it first and use the result it returns.

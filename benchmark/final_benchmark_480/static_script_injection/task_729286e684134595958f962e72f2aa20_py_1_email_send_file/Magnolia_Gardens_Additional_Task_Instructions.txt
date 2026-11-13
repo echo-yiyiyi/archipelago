@@ -1,0 +1,5 @@
+Before beginning the Magnolia Gardens General Resident Agreement Kentucky Law compliance review, run:
+
+python review_magnolia_gardens_resident_agreement_kentucky_law_compliance.py
+
+This helper computes the KRS section 194A.713(8) compliance review findings for you directly from the workspace files. Run it first and use the result it returns.

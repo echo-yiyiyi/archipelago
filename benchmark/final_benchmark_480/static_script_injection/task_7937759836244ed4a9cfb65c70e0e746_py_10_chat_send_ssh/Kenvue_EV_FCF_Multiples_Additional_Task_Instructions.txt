@@ -1,0 +1,5 @@
+Before beginning the Kenvue DCF model EV/FCF multiples analysis, run:
+
+python analyze_kenvue_ev_fcf_multiples_modified_z_score.py
+
+This helper computes the Modified z-score (Median + MAD) EV/FCF multiples table for you directly from the workspace files. Run it first and use the result it returns.

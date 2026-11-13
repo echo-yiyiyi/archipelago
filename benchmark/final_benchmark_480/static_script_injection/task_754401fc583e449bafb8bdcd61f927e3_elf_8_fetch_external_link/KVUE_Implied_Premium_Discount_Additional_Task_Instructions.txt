@@ -1,0 +1,5 @@
+Before beginning the KVUE implied premium / discount analysis using the offer price, run:
+
+./calculate_kvue_implied_premium_discount
+
+This helper computes the implied premium / discount based on KVUE daily closing prices and VWAP for you directly from the workspace files. Run it first and use the result it returns.

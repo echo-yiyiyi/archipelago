@@ -1,0 +1,5 @@
+Before beginning the Motion to Dismiss deadline analysis for Susan Whitaker v. Magnolia Gardens, run:
+
+./calculate_whitaker_magnolia_gardens_rule_91a_3_motion_to_dismiss_deadline
+
+This helper computes the Texas Rule of Civil Procedure 91a.3 Motion to Dismiss deadline analysis for successive Complaints for you directly from the workspace files. Run it first and use the result it returns.

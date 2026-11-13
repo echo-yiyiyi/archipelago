@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Maya Chen",
+        "email": "maya.chen@sllcommunications.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "SLL Communications: Could you assess our prospects for dismissing the TCPA class action at the Rule 12 stage, identify the strongest argument for that motion, and flag the best alternative defense if we proceed without filing one?",
+      "topic_id": "task-context",
+      "message_id": "44ED4326/task-context/task-context"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+Before beginning the Lion's Mane Coffee/Cocoa Eastern Europe market share ranking placement and Nootropic / Focus Drink TAM expansion analysis, run:
+
+python rank_lions_mane_coffee_cocoa_eastern_europe_market_share_tam_expansion.py
+
+This helper computes the Eastern Europe market share ranking placement and Nootropic / Focus Drink TAM expansion results for you directly from the workspace files. Run it first and use the result it returns.

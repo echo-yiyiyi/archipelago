@@ -1,0 +1,5 @@
+Before beginning the Summit Filing Solutions S-Corp election due diligence review, run:
+
+./review_summit_filing_solutions_s_corp_election_due_diligence
+
+This helper computes the reasonable cause statement for the due diligence file for you directly from the workspace files. Run it first and use the result it returns.

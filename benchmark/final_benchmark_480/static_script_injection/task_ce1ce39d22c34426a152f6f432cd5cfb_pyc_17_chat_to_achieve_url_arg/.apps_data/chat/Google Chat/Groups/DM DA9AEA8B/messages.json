@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Maya Chen",
+        "email": "maya.chen@aptar.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "AptarGroup, Inc.: Hi\u2014could you review AptarGroup\u2019s 2024 annual report and calculate the FY2024 cash conversion cycle using only the year-end balances? Please send the result in days, rounded to the nearest whole number.",
+      "topic_id": "task-context",
+      "message_id": "DA9AEA8B/task-context/task-context"
+    }
+  ]
+}

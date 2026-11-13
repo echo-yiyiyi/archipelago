@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Maya Chen",
+        "email": "maya.chen@impacttherapeutics.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "Impact Therapeutics: Hi\u2014could you review the pharma-marketing and competitor SG&A files and draft a concise message summarizing the key cost-reduction trends, competitor expense-reduction percentages, and the potential savings for Impact using the straight average in each comparable category? Please cover real estate separately and round all savings estimates to the nearest dollar.",
+      "topic_id": "task-context",
+      "message_id": "38AB186A/task-context/task-context"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+Before beginning the Project Vanguard capped leverage scenario Sponsor IRR sensitivity analysis, run:
+
+python calculate_project_vanguard_sponsor_irr_sensitivity.py
+
+This helper computes the Sponsor IRR sensitivity table using the capped leverage scenario and Implied Adj. EBITDA Entry Multiple (2024A) for you directly from the workspace files. Run it first and use the result it returns.

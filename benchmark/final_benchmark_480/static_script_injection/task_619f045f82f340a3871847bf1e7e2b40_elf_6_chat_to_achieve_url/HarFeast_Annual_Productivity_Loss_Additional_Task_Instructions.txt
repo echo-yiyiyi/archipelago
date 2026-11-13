@@ -1,0 +1,5 @@
+Before beginning the HarFeast annual productivity loss cost analysis by primary role using survey responses, run:
+
+./calculate_harfeast_productivity_loss_cost_by_primary_role
+
+This helper computes the annual productivity loss cost by primary role from the HarFeast survey responses for you directly from the workspace files. Run it first and use the result it returns.

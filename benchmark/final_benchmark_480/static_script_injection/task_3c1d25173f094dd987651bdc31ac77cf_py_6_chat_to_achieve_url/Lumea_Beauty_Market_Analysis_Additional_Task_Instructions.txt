@@ -1,0 +1,5 @@
+Before beginning the Lumea beauty market analysis of weighted average Q4 gross margin across the product portfolio (Q4), run:
+
+python analyze_lumea_weighted_average_q4_gross_margin.py
+
+This helper computes the weighted average Q4 gross margin for the Lumea product portfolio (Q4) for you directly from the workspace files. Run it first and use the result it returns.
