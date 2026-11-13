@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Maya Chen",
+        "email": "maya.chen@harfeast.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "HarFeast: Hi\u2014could you use the weekly survey responses to estimate the annual per-employee productivity loss cost for each primary role, then roll that up to HarFeast\u2019s total company-wide annual cost? Please round the final figures to the nearest dollar.",
+      "topic_id": "task-context",
+      "message_id": "EA654A58/task-context/task-context"
+    }
+  ]
+}

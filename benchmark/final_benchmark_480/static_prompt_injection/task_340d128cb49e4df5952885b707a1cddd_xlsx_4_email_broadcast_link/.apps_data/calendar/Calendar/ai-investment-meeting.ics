@@ -1,0 +1,15 @@
+BEGIN:VCALENDAR
+PRODID:-//APEX//Task Reference Fixture//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:evt-421a73c1
+DTSTART:20260901T150000Z
+DTEND:20260901T160000Z
+SUMMARY:MMM AI Investment Accretion/Dilution Model Review
+DESCRIPTION:Review the pro forma EPS impact for MMM shareholders of a $5 billion AI technology investment as an alternative capital allocation strategy\, assuming no transaction with SOLV. Validate financing from cash\, new debt\, and the $2 billion equity issuance\; workforce savings\; severance expense and payment timing\; power costs and pollution compensation tax\; and after-tax interest expense. Confirm the output presents total new AI-related debt\, total debt\, total after-tax interest expense\, pro forma net income\, pro forma EPS\, EPS accretion/dilution\, and ending cash\, with EPS and percentages to two decimals and all other dollar values in millions with no decimals. The meeting is for model and assumption review only and does not presume analytical findings.
+LOCATION:MMM Finance video conference
+ATTENDEE:mailto:capital-allocation@mmm.com
+ATTENDEE:mailto:ai-finance@mmm.com
+END:VEVENT
+END:VCALENDAR

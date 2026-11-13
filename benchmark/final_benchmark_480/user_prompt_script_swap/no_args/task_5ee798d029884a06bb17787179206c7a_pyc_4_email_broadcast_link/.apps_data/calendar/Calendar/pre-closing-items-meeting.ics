@@ -1,0 +1,15 @@
+BEGIN:VCALENDAR
+PRODID:-//APEX//Task Reference Fixture//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:evt-09d07cbf
+DTSTART:20260901T150000Z
+DTEND:20260901T160000Z
+SUMMARY:Review Mission-Critical Pre-Closing Items
+DESCRIPTION:Holding company transaction reviewer and local lead will review the intern-prepared task list\, exclude items already completed (holding company establishment\, insurance policy review\, and compliance and safety audit)\, distinguish mandatory pre-closing work from optional post-closing work\, and prepare a short findings message. No analytical findings are presumed in this meeting.
+LOCATION:Virtual — Closing Readiness Review
+ATTENDEE:mailto:transaction-reviewer@holding-company.internal
+ATTENDEE:mailto:local-lead@closing-readiness.internal
+END:VEVENT
+END:VCALENDAR

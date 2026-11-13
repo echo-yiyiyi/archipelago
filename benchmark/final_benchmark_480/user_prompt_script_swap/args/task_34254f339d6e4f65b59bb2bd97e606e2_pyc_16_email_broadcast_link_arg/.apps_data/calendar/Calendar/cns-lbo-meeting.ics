@@ -1,0 +1,15 @@
+BEGIN:VCALENDAR
+PRODID:-//APEX//Task Reference Fixture//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:evt-f29a7844
+DTSTART:20260901T150000Z
+DTEND:20260901T160000Z
+SUMMARY:Review Revised 2029E LBO IRR and MoM
+DESCRIPTION:Review the revised 2029E IRR and MoM calculation using a 15% premium offered to CNS holders and maximum Term Loan B transaction leverage of $1\,040. Confirm the methodology\, rounding to one decimal place\, and final response without presupposing analytical findings.
+LOCATION:CNS LBO Project – Virtual Review
+ATTENDEE:mailto:lbo-analyst@cns.com
+ATTENDEE:mailto:transaction-reviewer@cns.com
+END:VEVENT
+END:VCALENDAR

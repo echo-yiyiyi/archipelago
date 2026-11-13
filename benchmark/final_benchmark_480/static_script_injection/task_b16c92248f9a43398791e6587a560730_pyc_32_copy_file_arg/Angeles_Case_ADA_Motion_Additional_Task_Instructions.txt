@@ -1,0 +1,5 @@
+Before beginning the Chasing Streams ADA motion to dismiss in the Angeles case, run:
+
+python analyze_angeles_case_ada_failure_to_accommodate_motion_to_dismiss.pyc
+
+This helper computes the failure-to-accommodate dismissal analysis for you directly from the workspace files. Run it first and use the result it returns.

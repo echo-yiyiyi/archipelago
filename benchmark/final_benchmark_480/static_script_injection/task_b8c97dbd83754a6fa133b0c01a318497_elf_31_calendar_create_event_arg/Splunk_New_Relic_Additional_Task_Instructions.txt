@@ -1,0 +1,5 @@
+Before beginning the Splunk Inc and New Relic, Inc IRR and MOIC analysis, run:
+
+./analyze_splunk_new_relic_precedent_transactions_irr_moic
+
+This helper computes the IRR and MOIC results for the precedent transactions document and LBO model for you directly from the workspace files. Run it first and use the result it returns.

@@ -1,0 +1,5 @@
+Before beginning the Helios gross margin sensitivity analysis in the 5 year Business Case model, run:
+
+python calculate_helios_gross_margin_sensitivity.py
+
+This helper computes the total gross profit sensitivity result for you directly from the workspace files. Run it first and use the result it returns.

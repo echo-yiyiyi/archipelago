@@ -1,0 +1,5 @@
+Before beginning the LBO model analysis, run:
+
+python calculate_lbo_year_5_irr_from_implied_net_debt_and_sponsor_equity_value.py
+
+This helper computes the Implied Net Debt, Sponsor Equity Value, and Year 5 IRR results for you directly from the workspace files. Run it first and use the result it returns.

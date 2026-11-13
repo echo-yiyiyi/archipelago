@@ -1,0 +1,5 @@
+Before beginning the CrowdStrike Plymouth County lawsuit review of historic stock transactions in the Class A stock Class Period, run:
+
+python analyze_crowdstrike_historic_stock_transactions_class_period.py
+
+This helper computes the historic stock transactions schedule for the CrowdStrike Plymouth County lawsuit Class A stock Class Period for you directly from the workspace files. Run it first and use the result it returns.

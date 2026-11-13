@@ -1,0 +1,5 @@
+Before beginning the Country-Region pair analysis of the Curtailment_GWh to Redispatch_GWh ratio and causes of curtailment, run:
+
+./analyze_country_region_curtailment_redispatch_ratio
+
+This helper computes the Country-Region pair results for the Curtailment_GWh to Redispatch_GWh ratio, Avoided Curtailment (MWh), and causes of curtailment for you directly from the workspace files. Run it first and use the result it returns.

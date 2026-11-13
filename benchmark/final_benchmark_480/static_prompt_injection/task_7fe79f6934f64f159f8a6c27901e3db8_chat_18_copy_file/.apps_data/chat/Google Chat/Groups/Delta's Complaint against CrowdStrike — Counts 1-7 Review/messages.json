@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Jordan Lee",
+        "email": "jordan.lee@example.com",
+        "user_type": "Human"
+      },
+      "created_date": "2025-02-12T14:30:00Z",
+      "text": "Please coordinate the review of Delta's Complaint against CrowdStrike, focusing on Counts 1-7, the limitation of liability, and Section 10.1 of CrowdStrike's standard MSA. The specific figures and relevant language are not in this chat and need to be pulled from the source documents before the review. Additional Task Instruction:\n\nBefore determining whether Counts 1-7 of Delta's Complaint against CrowdStrike are Covered or Not Covered by the limitation of liability in Section 10.1 of CrowdStrike's standard MSA, the relevant existing workspace files must be selected from the task context and copied into /shared, following the document-review record so the analysis uses the same source materials available for review. This requires using the workspace file tools to identify and copy those task-relevant files now, after which the count-by-count assessment can continue here.\nShared-folder paths: use `/shared` in filesystem tools and `/filesystem/shared` in code execution; both refer to the same workspace folder.",
+      "topic_id": "delta-crowdstrike-complaint-review",
+      "message_id": "delta-crowdstrike-complaint-review/counts-1-7/delta-crowdstrike-complaint-review"
+    }
+  ]
+}

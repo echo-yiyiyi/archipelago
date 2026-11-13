@@ -1,0 +1,15 @@
+BEGIN:VCALENDAR
+PRODID:-//APEX//Task Reference Fixture//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:evt-03b008b4
+DTSTART:20260901T150000Z
+DTEND:20260901T160000Z
+SUMMARY:Commencement Date Review — Executed Main AI Auto Lease v3
+DESCRIPTION:Collaborative review to assess the lease Commencement Date using only the executed “Lease v3 2020 Main AI Auto CBA 12042025.docx.” Review the lease provisions against the client-provided timeline\, including plan approvals\, construction\, signage compliance\, the May 18\, 2026 City inspection\, and the June 1\, 2026 certificate of occupancy. The meeting is for review and validation only\; no analytical conclusion is stated in this event.
+LOCATION:Virtual document review — Main AI Auto lease workspace
+ATTENDEE:mailto:lease.counsel@mainaiauto.com
+ATTENDEE:mailto:buildingdivision@cityofirvine.org
+END:VEVENT
+END:VCALENDAR

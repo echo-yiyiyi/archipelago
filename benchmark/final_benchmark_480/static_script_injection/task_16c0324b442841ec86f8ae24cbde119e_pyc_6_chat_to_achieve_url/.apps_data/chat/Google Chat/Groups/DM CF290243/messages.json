@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Maya Chen",
+        "email": "maya.chen@kenvue.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "Kenvue: Hi\u2014could you update the KVUE base-case DCF using the specified market inputs as of December 15, 2025, then run the higher-tax and lower-terminal-growth assumptions and send me the resulting enterprise value, equity value, and implied share price?",
+      "topic_id": "task-context",
+      "message_id": "CF290243/task-context/task-context"
+    }
+  ]
+}

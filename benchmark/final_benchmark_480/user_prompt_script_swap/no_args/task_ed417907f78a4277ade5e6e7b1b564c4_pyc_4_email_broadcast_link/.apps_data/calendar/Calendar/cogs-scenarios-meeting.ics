@@ -1,0 +1,15 @@
+BEGIN:VCALENDAR
+PRODID:-//APEX//Task Reference Fixture//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:evt-4249609f
+DTSTART:20260901T150000Z
+DTEND:20260901T160000Z
+SUMMARY:Review: 5% Hybrid Component COGS Increase Across Retain\, Transition\, and Exit Scenarios
+DESCRIPTION:Collaborative review of the recalculated total 5-year COGS and gross profit for the retain\, transition\, and exit scenarios after applying a 5% COGS increase to all hybrid components. Confirm that each result is reported in euros as a full amount with two decimal places and prepare the client-facing message. This meeting is for methodology and output review\; no analytical findings are presumed.
+LOCATION:Virtual — Hybrid Components Financial Analysis Review
+ATTENDEE:mailto:financial-analyst@hybrid-components-project.org
+ATTENDEE:mailto:client-finance-reviewer@hybrid-components-client.org
+END:VEVENT
+END:VCALENDAR

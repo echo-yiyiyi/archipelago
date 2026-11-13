@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Marta Klein",
+        "email": "marta.klein@helioscomponents.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "Helios Components: Hi\u2014could you update the case model\u2019s Retain, Transition, and Exit gross profit and margin outputs for the China critical-minerals embargo downside scenario, and flag whether the Transition decline crosses the 40% threshold?",
+      "topic_id": "task-context",
+      "message_id": "21E1F633/task-context/task-context"
+    }
+  ]
+}

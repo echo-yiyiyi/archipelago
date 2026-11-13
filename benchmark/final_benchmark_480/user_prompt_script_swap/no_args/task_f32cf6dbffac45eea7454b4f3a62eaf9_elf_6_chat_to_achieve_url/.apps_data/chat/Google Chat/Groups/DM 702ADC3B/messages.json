@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Maya Chen",
+        "email": "maya.chen@northgridutilities.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "NorthGrid Utilities: Hi\u2014can you review the 10 Year Roadmap against the registry, asset financial model, and risk matrix to determine the Phase 1 asset count and total NPV using the specified SAIFI/SAIDI hotspot thresholds? Please exclude the substation key criteria and the corrective-maintenance trend note.",
+      "topic_id": "task-context",
+      "message_id": "702ADC3B/task-context/task-context"
+    }
+  ]
+}

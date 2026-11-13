@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Maya Chen",
+        "email": "maya.chen@northbridgecapital.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "Northbridge Capital Advisors: Hi\u2014could you review the merger model figures and recalculate the stock component using Kimberly-Clark\u2019s unadjusted 31 Oct 2025 close, then derive Kenvue\u2019s implied 16 Dec 2025 price and the dollar spread versus its unadjusted close? Please send me the final figures in dollars and cents.",
+      "topic_id": "task-context",
+      "message_id": "A6CBDF4F/task-context/task-context"
+    }
+  ]
+}

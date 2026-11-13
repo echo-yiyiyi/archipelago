@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Maya Chen",
+        "email": "maya.chen@lumeabeauty.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "Lumea: Hi\u2014could you review the Q4 product portfolio alongside our 2024 beauty market analysis and send me the category-level gross margin comparison and opportunity estimates here? We\u2019re using this for the upcoming performance review.",
+      "topic_id": "task-context",
+      "message_id": "44063443/task-context/task-context"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+BEGIN:VCALENDAR
+PRODID:-//APEX//Task Reference Fixture//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:evt-14657619
+DTSTART:20260901T150000Z
+DTEND:20260901T160000Z
+SUMMARY:Review AmensaMech 2025 Country Profit Calculations
+DESCRIPTION:Review the calculation of total 2025 profit for each country in the AmensaMech operational data file. Validate sector-country revenue using Total revenue × revenue weight × corresponding Sector Margin % × corresponding Country correction factor\, with margins and correction factors sourced from the Additional information file and treated as constant through 2030. Confirm country totals and final rounding to three decimal places ($0.001B). This meeting is for methodology and output review\; no analytical findings are assumed.
+LOCATION:AmensaMech Microsoft Teams
+ATTENDEE:mailto:operations-data-analyst@amensamech.com
+ATTENDEE:mailto:finance-reviewer@amensamech.com
+END:VEVENT
+END:VCALENDAR

@@ -1,0 +1,5 @@
+Before beginning the asset-level Total Score analysis using Criticality Score, Renewable Impact, and Risk Score, run:
+
+./calculate_asset_level_total_score_from_criticality_renewable_impact_and_risk_scores
+
+This helper computes the asset-level Total Score incorporating Criticality Score, Renewable Impact, and Risk Score for you directly from the workspace files. Run it first and use the result it returns.

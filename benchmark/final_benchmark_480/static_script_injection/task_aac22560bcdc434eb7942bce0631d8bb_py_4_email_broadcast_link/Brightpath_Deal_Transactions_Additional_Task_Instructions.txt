@@ -1,0 +1,5 @@
+Before beginning the Brightpath Deal Transactions deal win rate target and target revenue mix strategy analysis, run:
+
+python analyze_brightpath_deal_volume_and_pipeline_capacity.py
+
+This helper computes the implied deal volume and required pipeline capacity for you directly from the workspace files. Run it first and use the result it returns.

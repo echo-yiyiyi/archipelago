@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Maya Chen",
+        "email": "mchen@northbridgecapital.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "Northbridge Capital Partners: Hi\u2014could you update the \u201cCopy of LBO\u201d tab for the FY2027E add-on case using the assumptions provided and the 30-day Average SOFR from the attached actuals file? Please assess the five-year impact and include total debt, enterprise value, and sponsor IRR with the requested rounding.",
+      "topic_id": "task-context",
+      "message_id": "9E3C7C60/task-context/task-context"
+    }
+  ]
+}

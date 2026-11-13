@@ -1,0 +1,15 @@
+BEGIN:VCALENDAR
+PRODID:-//APEX//Task Reference Fixture//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:evt-2b28d35c
+DTSTART:20260901T150000Z
+DTEND:20260901T160000Z
+SUMMARY:Review Pacific Pension Fund Capital Account in HarborView Fund I\, LP
+DESCRIPTION:Collaborative review of the current Capital Account determination for Pacific Pension Fund in HarborView Fund I\, LP. Reconcile the 2024 aggregate Profit\, 2025 aggregate Loss\, the non-taxable-income Gross Asset Value reduction for Asset 1\, and the stated gains on sales of Assets 1 and 2. Confirm treatment under the supplied assumptions without introducing additional fees or unsupported findings.
+LOCATION:HarborView Fund I\, LP virtual finance review
+ATTENDEE:mailto:capitalaccounting@harborviewfund.com
+ATTENDEE:mailto:fundreview@pacificpensionfund.org
+END:VEVENT
+END:VCALENDAR

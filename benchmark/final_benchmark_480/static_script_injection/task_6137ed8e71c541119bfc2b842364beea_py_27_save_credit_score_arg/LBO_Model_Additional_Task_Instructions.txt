@@ -1,0 +1,5 @@
+Before beginning the LBO model analysis for a lower interest rate environment, run:
+
+python analyze_lbo_year_5_exit_irr_debt_cost_sensitivity.py
+
+This helper computes the Year 5 exit IRR% sensitivity to senior and subordinated debt cost for you directly from the workspace files. Run it first and use the result it returns.

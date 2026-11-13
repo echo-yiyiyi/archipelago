@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Maya Chen",
+        "email": "maya.chen@complisure.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "CompliSure: Hi\u2014could you update CompliSure\u2019s 2025\u20132030 Net Income using the 2024 competitor benchmarks for best-in-class R&D and gross margin where they improve on the current forecast, then send me the values rounded to the nearest thousand?",
+      "topic_id": "task-context",
+      "message_id": "223EEB94/task-context/task-context"
+    }
+  ]
+}

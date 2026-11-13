@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Maya Chen",
+        "email": "maya.chen@agilitytechsolutions.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "Agility Tech Solutions LLC: Hi\u2014could you review the lease provisions and confirm whether our notice extending the lease term is valid? Please send me a short explanation I can share with the team.",
+      "topic_id": "task-context",
+      "message_id": "7D2ABEAF/task-context/task-context"
+    }
+  ]
+}

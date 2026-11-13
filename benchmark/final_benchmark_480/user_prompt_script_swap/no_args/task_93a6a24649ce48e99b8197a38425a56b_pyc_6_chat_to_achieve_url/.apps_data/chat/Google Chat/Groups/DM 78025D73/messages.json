@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Elena Park",
+        "email": "elena.park@mckinsey.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "McKinsey & Company: Hi\u2014could you review the State of Fashion Report and send me the top three regions by 2024 global beauty retail sales, along with their 2019 and base-case 2030 market sizes in $ billions? Please rank them by 2024 size and round the requested figures to one decimal place.",
+      "topic_id": "task-context",
+      "message_id": "78025D73/task-context/task-context"
+    }
+  ]
+}

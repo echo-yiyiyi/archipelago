@@ -1,0 +1,15 @@
+BEGIN:VCALENDAR
+PRODID:-//APEX//Task Reference Fixture//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:evt-4a0aa723
+DTSTART:20260901T150000Z
+DTEND:20260901T160000Z
+SUMMARY:Review: PureLife 2025 Global Revenue Potential Assessment
+DESCRIPTION:Collaborative review of the 2025 revenue-potential assessment covering the 10 specified markets plus the USA. Validate competitor acquisition and shutdown assumptions\, regional share-capture scenarios\, USA revenue relationships\, TAM methodology\, global market-share calculations for Global Leader A\, Global Leader B\, and HealthMax International\, and identification of the global leader. Confirm that intermediate calculations remain unrounded and final values are rounded to two decimal places. This session is for reviewing methodology and the four requested answers\; no analytical findings are presupposed.
+LOCATION:PureLife Global Strategy Virtual Meeting
+ATTENDEE:mailto:market.strategy@purelife.com
+ATTENDEE:mailto:revenue.analytics@purelife.com
+END:VEVENT
+END:VCALENDAR

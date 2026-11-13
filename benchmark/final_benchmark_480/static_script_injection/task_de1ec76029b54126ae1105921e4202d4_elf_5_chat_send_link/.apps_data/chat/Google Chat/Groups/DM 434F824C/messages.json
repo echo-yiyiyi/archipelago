@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Elena Ramirez",
+        "email": "elena.ramirez@magnoliagardens.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "Magnolia Gardens: Can you review Susan Whitaker\u2019s original, first amended, and second amended complaints and determine the Rule 91a.3 filing deadline for our motion to dismiss, along with the service date of the original complaint?",
+      "topic_id": "task-context",
+      "message_id": "434F824C/task-context/task-context"
+    }
+  ]
+}

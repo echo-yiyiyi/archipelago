@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Maya Chen",
+        "email": "maya.chen@chasingstreams.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "Chasing Streams, LLC: I\u2019ve shared the company files concerning the two employees\u2019 terminations and their WARN Act lawsuit. Please compare the records against the California and federal WARN requirements and send me your assessment so we can decide next steps.",
+      "topic_id": "task-context",
+      "message_id": "CC3B43A8/task-context/task-context"
+    }
+  ]
+}

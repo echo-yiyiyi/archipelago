@@ -1,0 +1,5 @@
+Before beginning the Aptar Group Pharma segment global revenue analysis using the 2024 annual report, run:
+
+python calculate_aptar_group_pharma_segment_inflation_adjusted_revenue_change.py
+
+This helper computes the inflation-adjusted dollar change in Pharma segment global revenue for you directly from the workspace files. Run it first and use the result it returns.

@@ -1,0 +1,5 @@
+Before beginning the Europe market sizing analysis for an autonomous ride-hailing service, run:
+
+python analyze_europe_autonomous_ride_hailing_market_size_ltv_adoption.py
+
+This helper computes the Europe market sizing model with lifetime value (LTV) and adoption rate estimates based on user survey and agency information for you directly from the workspace files. Run it first and use the result it returns.

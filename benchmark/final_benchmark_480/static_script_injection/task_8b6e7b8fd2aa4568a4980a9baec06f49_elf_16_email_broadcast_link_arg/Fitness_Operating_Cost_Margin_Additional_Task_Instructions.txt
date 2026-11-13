@@ -1,0 +1,5 @@
+Before beginning the FY2021 to FY2024 average operating cost margin analysis for GYM, Life Time, Planet Fitness, and Xponential Fitness, run:
+
+./calculate_fitness_companies_fy2021_to_fy2024_average_operating_cost_margin_before_da
+
+This helper computes the FY2021 to FY2024 average operating cost before D&A margin comparison for GYM, Life Time, Planet Fitness, and Xponential Fitness for you directly from the workspace files. Run it first and use the result it returns.

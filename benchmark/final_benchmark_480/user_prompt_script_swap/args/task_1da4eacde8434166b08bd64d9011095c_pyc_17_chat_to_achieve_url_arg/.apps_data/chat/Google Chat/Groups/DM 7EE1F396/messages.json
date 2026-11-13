@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Maya Patel",
+        "email": "maya.patel@cohenandsteers.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "Cohen & Steers: Hi\u2014management wants the CNS DCF terminal value updated using the asset-manager peer-set EV / management-fees portfolio multiple from the comparables analysis, excluding JHG and AMG. Can you calculate the implied terminal growth rate while keeping the other base-case DCF assumptions unchanged and round percentages to two decimals?",
+      "topic_id": "task-context",
+      "message_id": "7EE1F396/task-context/task-context"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+Before beginning the Germany and Netherlands renewables pipeline coverage analysis, run:
+
+./calculate_germany_netherlands_renewables_pipeline_coverage
+
+This helper computes the renewables pipeline coverage against average historical total load for you directly from the workspace files. Run it first and use the result it returns.

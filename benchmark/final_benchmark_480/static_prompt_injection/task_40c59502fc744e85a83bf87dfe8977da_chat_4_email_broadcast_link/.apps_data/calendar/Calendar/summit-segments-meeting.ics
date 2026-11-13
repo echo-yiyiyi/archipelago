@@ -1,0 +1,15 @@
+BEGIN:VCALENDAR
+PRODID:-//APEX//Task Reference Fixture//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:evt-db36cec6
+DTSTART:20260901T150000Z
+DTEND:20260901T160000Z
+SUMMARY:Review Summit Segment Scores and One-Slide Deck
+DESCRIPTION:Collaborative review of Summit segment scoring using the Summit-Specific Survey. Verify calculations against “14. Summit_Tier_Status_Experience_Raw_vtest.xlsx” and “9. Summit_Loyalty_Outcome_Summary_Raw_vtest.xlsx\,” confirm that all specified point additions and deductions are applied correctly\, check one-decimal-place rounding\, and review the presentation of results in the new one-slide deck. This meeting is for methodology and deliverable review\; no analytical findings are presumed.
+LOCATION:Summit-Specific Survey virtual project room
+ATTENDEE:mailto:survey-analyst@summit-survey.org
+ATTENDEE:mailto:deck-reviewer@summit-survey.org
+END:VEVENT
+END:VCALENDAR

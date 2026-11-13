@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "creator": {
+        "name": "Maya Chen",
+        "email": "maya.chen@lumeabeauty.com",
+        "user_type": "Human"
+      },
+      "created_date": "2026-01-15T10:00:00Z",
+      "text": "Lumea: Hi\u2014could you sanity-check our 2030 margin target against the premium-player range in the global beauty market analysis? Please calculate the implied operating profit at the range midpoint, the delta versus our target, and that delta as a share of target revenue, using the 2025 financial report figures.",
+      "topic_id": "task-context",
+      "message_id": "65D435CE/task-context/task-context"
+    }
+  ]
+}

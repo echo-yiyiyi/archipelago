@@ -1,0 +1,5 @@
+Before beginning the DCF model terminal value analysis using the net sales growth rate and 30-year treasury rate, run:
+
+./analyze_dcf_terminal_value_sales_growth_treasury_rate
+
+This helper computes the terminal value sensitivity table for the net sales growth rate and 30-year treasury rate for you directly from the workspace files. Run it first and use the result it returns.

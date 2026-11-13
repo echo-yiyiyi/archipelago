@@ -1,0 +1,15 @@
+BEGIN:VCALENDAR
+PRODID:-//APEX//Task Reference Fixture//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:evt-d0afcfa8
+DTSTART:20260901T150000Z
+DTEND:20260901T160000Z
+SUMMARY:Review: Expansion Deal Volume and Europe Enterprise Pipeline Capacity
+DESCRIPTION:Review the analysis using Deal Win Rate Target\, Brightpath Deal Transactions\, and Target Revenue Mix Strategy. Validate the methodology for calculating the implied Upper Mid-Market expansion deal volume from Won-deal revenue and average Won expansion deal size\, and the required Europe - Enterprise pipeline capacity from Enterprise Won ARR and the target win rate. Confirm nearest-whole-number and nearest-dollar rounding before the findings are delivered.
+LOCATION:Brightpath Revenue Operations video conference
+ATTENDEE:mailto:sales-operations@brightpath.com
+ATTENDEE:mailto:revenue-strategy@brightpath.com
+END:VEVENT
+END:VCALENDAR

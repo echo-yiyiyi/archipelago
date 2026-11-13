@@ -1,0 +1,5 @@
+Before beginning the Golden Everest Financial Model Unlevered Free Cash Flow analysis, run:
+
+./project_golden_everest_unlevered_free_cash_flow
+
+This helper computes the Projections (C-Corp) Unlevered Free Cash Flow schedule using Working Capital, D&A, and Capex assumptions for you directly from the workspace files. Run it first and use the result it returns.

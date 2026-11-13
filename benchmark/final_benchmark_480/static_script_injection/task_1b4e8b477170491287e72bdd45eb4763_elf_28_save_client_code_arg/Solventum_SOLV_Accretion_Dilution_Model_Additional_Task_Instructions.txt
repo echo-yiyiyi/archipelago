@@ -1,0 +1,5 @@
+Before beginning the Solventum (SOLV) accretion/dilution model for scenario 1 with the revised 3M premium, run:
+
+./analyze_solventum_accretion_dilution_scenario_1_revised_3m_premium
+
+This helper computes the scenario 1 accretion/dilution results with the revised 3M premium for you directly from the workspace files. Run it first and use the result it returns.

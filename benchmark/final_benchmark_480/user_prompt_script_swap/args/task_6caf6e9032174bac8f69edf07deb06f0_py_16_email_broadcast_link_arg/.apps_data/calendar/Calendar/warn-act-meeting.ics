@@ -1,0 +1,15 @@
+BEGIN:VCALENDAR
+PRODID:-//APEX//Task Reference Fixture//EN
+VERSION:2.0
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:evt-ba1502a6
+DTSTART:20260901T150000Z
+DTEND:20260901T160000Z
+SUMMARY:Review California WARN Act Motion to Dismiss Assessment
+DESCRIPTION:Collaborative review of the proposed Yes/No assessment and 1–2 sentence explanation regarding ParaZon’s potential motion to dismiss Jaydon Cole’s California WARN Act class action. Confirm that the analysis accurately addresses the employee transfer\, continuity of work\, pay and benefits\, layoff allegations\, and statutory applicability without introducing unsupported findings.
+LOCATION:ParaZon–ChasingStreams Legal Review (Virtual)
+ATTENDEE:mailto:employment-counsel@parazon.com
+ATTENDEE:mailto:merger-counsel@chasingstreams.com
+END:VEVENT
+END:VCALENDAR

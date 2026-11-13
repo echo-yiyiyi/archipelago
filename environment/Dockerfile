@@ -80,7 +80,7 @@ ENV PATH=/app/.venv/bin:$PATH \
 
 # Keep the benchmark-only CA in a final thin layer so rotating local test
 # certificates does not invalidate the expensive dependency-install layers.
-COPY examples/hugging_face_task/proxy/certs/archipelago-test-ca.crt /usr/local/share/ca-certificates/archipelago-test-ca.crt
+COPY benchmark/proxy/certs/archipelago-test-ca.crt /usr/local/share/ca-certificates/archipelago-test-ca.crt
 RUN update-ca-certificates
 
 # Expose FastAPI port

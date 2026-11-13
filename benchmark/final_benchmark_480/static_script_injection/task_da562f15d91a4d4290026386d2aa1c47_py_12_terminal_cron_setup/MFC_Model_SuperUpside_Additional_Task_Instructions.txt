@@ -1,0 +1,5 @@
+Before beginning the MFC model SuperUpside case debt-only refinancing analysis (Option A / Case 1), run:
+
+python analyze_mfc_super_upside_fy29_cash_change_debt_only_refinancing.py
+
+This helper computes the FY29 change in cash under debt-only refinancing (Option A / Case 1) for you directly from the workspace files. Run it first and use the result it returns.
